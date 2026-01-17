@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --color-gallery-bg: #fafafa;
+  --color-gallery-text: #1a1a1a;
+  --color-gallery-muted: #6b6b6b;
+  --color-gallery-border: #e5e5e5;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-gallery-bg);
+  color: var(--color-gallery-text);
+  margin: 0;
+  min-height: 100vh;
+}
