@@ -25,3 +25,4 @@ dist-ssr
 
 # AI
 .claude/settings.local.json
+.context
