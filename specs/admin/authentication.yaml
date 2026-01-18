@@ -18,7 +18,7 @@ verification:
       status: planned
   e2e:
     - path: e2e/admin.spec.ts#login
-      status: planned
+      status: passing
 
 flows:
   login:

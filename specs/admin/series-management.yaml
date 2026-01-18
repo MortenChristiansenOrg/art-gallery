@@ -20,7 +20,7 @@ verification:
       status: planned
   e2e:
     - path: e2e/admin.spec.ts#series-crud
-      status: planned
+      status: passing
 
 flows:
   create-series:

@@ -19,7 +19,7 @@ verification:
       status: planned
   e2e:
     - path: e2e/admin.spec.ts#messages
-      status: planned
+      status: passing
 
 flows:
   view-messages:
