@@ -1,11 +1,12 @@
 id: artwork-management
 title: Artwork Management
-tags: [admin, crud]
-status: implemented
+tags: [admin, crud, content, core]
+status: partial
 
 description: |
   Admin can create, edit, delete, and reorder artworks.
-  Includes image upload, metadata editing, and publish control.
+  Includes image upload (single or bulk), metadata editing, and publish control.
+  Bulk upload: multi-select images, shared metadata applies to all, per-image title editing.
 
 implementation:
   - src/pages/Admin.tsx#Admin
@@ -22,17 +23,39 @@ verification:
   e2e:
     - path: e2e/admin.spec.ts#artwork-crud
       status: planned
+    - path: e2e/admin.spec.ts#bulk-upload
+      status: planned
 
 flows:
-  create-artwork:
+  create-artwork-bulk-filepicker:
     - Admin clicks "Add Artwork" button
     - Form modal opens
-    - Admin uploads image
-    - Admin fills metadata (title, year, medium, dimensions)
-    - Admin selects series (optional)
-    - Admin toggles published status
-    - Admin saves artwork
-    - New artwork appears in admin list
+    - Admin clicks file input to open file picker
+    - Admin selects multiple images (multi-select enabled)
+    - Thumbnail previews appear for each selected image with editable title field
+    - Titles default to filename without extension
+    - Admin fills shared metadata (series, year, medium, dimensions, description)
+    - Admin toggles published status (applies to all)
+    - Admin saves
+    - All images uploaded sequentially with progress indicator
+    - New artworks appear in admin list
+    - Modal closes on completion
+
+  create-artwork-bulk-dragdrop:
+    - Admin clicks "Add Artwork" button
+    - Form modal opens
+    - Admin drags image files from file explorer onto drop zone
+    - Thumbnail previews appear for each dropped image with editable title field
+    - Titles default to filename without extension
+    - Admin fills shared metadata (series, year, medium, dimensions, description)
+    - Admin toggles published status (applies to all)
+    - Admin saves
+    - All images uploaded sequentially with progress indicator
+    - New artworks appear in admin list
+    - Modal closes on completion
+
+  create-artwork-single:
+    - Identical to bulk flow but with single image selection
 
   edit-artwork:
     - Admin clicks edit button on artwork
@@ -55,6 +78,18 @@ interactions:
   - type: click
     element: add-artwork-button
     action: Opens create form modal
+  - type: change
+    element: file-input
+    action: Opens file picker with multi-select enabled
+  - type: drop
+    element: drop-zone
+    action: Accepts dragged image files, adds to selection
+  - type: change
+    element: title-input-[index]
+    action: Updates title for specific image in batch
+  - type: click
+    element: remove-image-button
+    action: Removes image from batch before upload
   - type: click
     element: edit-button
     action: Opens edit form modal
@@ -67,3 +102,34 @@ interactions:
   - type: change
     element: published-toggle
     action: Toggles artwork visibility
+
+requirements:
+  file-input:
+    - Add `multiple` attribute to input element
+    - Show list of selected files below input
+    - Support drag-and-drop onto drop zone area
+
+  image-list:
+    - Display each selected file as a row
+    - Show thumbnail preview for each image
+    - Editable title input per file
+    - Remove button per file
+
+  progress-indicator:
+    - Show upload progress when saving multiple files
+    - Display "Uploading 2 of 5..." or similar
+
+  large-file-handling:
+    - Images can be 20-30MB each
+    - Generate thumbnails client-side using canvas downscaling (avoid loading full-res into DOM)
+    - Use URL.createObjectURL for efficient memory handling
+    - Revoke object URLs when images removed or modal closed
+    - Consider chunked upload for very large files if needed
+
+  constraints:
+    - Title field required for each image (pre-filled from filename)
+    - Image file required for create (enforced by selection)
+    - Shared fields optional
+    - Sequential upload to avoid overwhelming server
+    - Error on one file should not stop others (continue and report failures at end)
+    - Max 50 images at once
