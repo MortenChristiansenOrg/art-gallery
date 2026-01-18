@@ -1,18 +1,264 @@
+/* ==========================================================================
+   Art Gallery Design System
+   See docs/design-system.md for full documentation
+   ========================================================================== */
+
+/* ==========================================================================
+   1. FONTS
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap');
+
 @import "tailwindcss";
 
+/* ==========================================================================
+   2. DESIGN TOKENS
+   ========================================================================== */
 @theme {
-  --font-serif: "Playfair Display", serif;
-  --font-sans: "Inter", system-ui, sans-serif;
-  --color-gallery-bg: #fafafa;
-  --color-gallery-text: #1a1a1a;
-  --color-gallery-muted: #6b6b6b;
-  --color-gallery-border: #e5e5e5;
+  /* Typography */
+  --font-serif: "Cormorant Garamond", "Garamond", serif;
+  --font-sans: "Jost", "Futura", sans-serif;
+
+  /* Colors - warm gallery palette */
+  --color-gallery-bg: #fcfbf9;
+  --color-gallery-surface: #ffffff;
+  --color-gallery-text: #1c1c1c;
+  --color-gallery-accent: #2d2d2d;
+  --color-gallery-muted: #6e6e6e;
+  --color-gallery-subtle: #a3a3a3;
+  --color-gallery-border: #e9e7e3;
+  --color-gallery-border-light: #f0eeea;
+  --color-gallery-hover: #f7f5f2;
+
+  /* Spacing */
+  --spacing-gallery: 2rem;
+
+  /* Transitions */
+  --transition-elegant: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ==========================================================================
+   3. BASE STYLES
+   ========================================================================== */
 body {
   font-family: var(--font-sans);
+  font-weight: 300;
   background-color: var(--color-gallery-bg);
   color: var(--color-gallery-text);
   margin: 0;
   min-height: 100vh;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: var(--color-gallery-text);
+  color: var(--color-gallery-surface);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gallery-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gallery-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gallery-muted);
+}
+
+/* ==========================================================================
+   4. ANIMATIONS
+   ========================================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revealLine {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s var(--transition-elegant) forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s var(--transition-elegant) forwards;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+.stagger-9 { animation-delay: 0.45s; }
+
+/* ==========================================================================
+   5. COMPONENT CLASSES
+   ========================================================================== */
+
+/* Elegant link underline */
+.elegant-underline {
+  position: relative;
+}
+
+.elegant-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s var(--transition-elegant);
+}
+
+.elegant-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Active underline */
+.elegant-underline-active::after {
+  transform: scaleX(1);
+}
+
+/* Gallery frame shadow */
+.gallery-frame {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    0 4px 8px rgba(0, 0, 0, 0.02);
+  transition:
+    box-shadow 0.5s var(--transition-elegant),
+    transform 0.5s var(--transition-elegant);
+}
+
+.gallery-frame:hover {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.06);
+  transform: translateY(-4px);
+}
+
+/* Skeleton shimmer */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-gallery-border-light) 25%,
+    var(--color-gallery-hover) 50%,
+    var(--color-gallery-border-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ==========================================================================
+   6. ACCESSIBILITY
+   ========================================================================== */
+*:focus-visible {
+  outline: 1px solid var(--color-gallery-text);
+  outline-offset: 4px;
+}
+
+/* ==========================================================================
+   7. FORM ELEMENTS
+   ========================================================================== */
+.input-elegant {
+  transition:
+    border-color 0.3s var(--transition-elegant),
+    background-color 0.3s var(--transition-elegant);
+}
+
+.input-elegant:focus {
+  border-color: var(--color-gallery-text);
+  background-color: var(--color-gallery-surface);
+}
+
+/* Button elegant hover */
+.btn-elegant {
+  position: relative;
+  overflow: hidden;
+  transition:
+    color 0.3s var(--transition-elegant),
+    background-color 0.3s var(--transition-elegant);
+}
+
+.btn-elegant::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-gallery-surface);
+  transform: translateY(100%);
+  transition: transform 0.3s var(--transition-elegant);
+  z-index: -1;
+}
+
+.btn-elegant:hover::before {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   8. THIRD-PARTY OVERRIDES
+   ========================================================================== */
+.yarl__container {
+  background-color: rgba(28, 28, 28, 0.97) !important;
+}
+
+.yarl__button {
+  color: var(--color-gallery-surface) !important;
+  opacity: 0.7;
+  transition: opacity 0.3s ease !important;
+}
+
+.yarl__button:hover {
+  opacity: 1;
 }
