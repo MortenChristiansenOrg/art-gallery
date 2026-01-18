@@ -1,0 +1,128 @@
+id: image-delivery
+title: Efficient Image Delivery
+tags: [gallery, public, performance]
+status: planned
+
+description: |
+  Optimizes delivery of large artwork images through responsive sizing,
+  tiled zoom viewing, and progressive loading. Full images never download directly.
+  High quality maintained through low compression with size-appropriate delivery.
+
+implementation:
+  -  # Image processing pipeline
+  -  # Responsive image component
+  -  # Tiled zoom viewer component
+  -  # Image proxy/CDN configuration
+
+verification:
+  unit:
+    - path: src/components/gallery/__tests__/ImageViewer.test.tsx
+      status: planned
+  e2e:
+    - path: e2e/image-delivery.spec.ts
+      status: planned
+      covers:
+        - responsive-loading
+        - zoom-pan-interaction
+        - touch-gestures
+
+flows:
+  grid-display:
+    - Artwork grid requests thumbnail size (e.g., 400px)
+    - Server returns pre-generated or on-demand resized image
+    - Low compression (quality 85-90) preserves detail
+    - Image dimensions match grid cell size
+
+  lightbox-replacement:
+    - User clicks artwork, opens new zoom viewer
+    - Initial load: screen-fitted image (max 2000px)
+    - Viewer replaces legacy lightbox entirely
+    - Supports fullscreen mode
+
+  zoom-interaction:
+    - User zooms via scroll wheel, pinch, or buttons
+    - Viewer calculates visible viewport at zoom level
+    - Requests only tiles covering visible area
+    - Tiles load progressively, cached for reuse
+    - Smooth interpolation during tile loading
+
+  pan-interaction:
+    - User drags to pan (mouse or touch)
+    - New tiles requested as viewport moves
+    - Predictive preloading for adjacent tiles
+    - Momentum scrolling on touch devices
+
+interactions:
+  - type: scroll
+    element: zoom-viewer
+    action: Zoom in/out centered on cursor position
+
+  - type: pinch
+    element: zoom-viewer
+    action: Zoom in/out centered on pinch midpoint
+
+  - type: drag
+    element: zoom-viewer
+    action: Pan image within bounds
+
+  - type: double-click
+    element: zoom-viewer
+    action: Toggle between fit-to-screen and 100% zoom
+
+  - type: double-tap
+    element: zoom-viewer
+    action: Toggle between fit-to-screen and 100% zoom (touch)
+
+  - type: click
+    element: zoom-buttons
+    action: Step zoom in/out
+
+  - type: keyboard
+    key: +/-
+    action: Zoom in/out
+
+  - type: keyboard
+    key: Escape
+    action: Close viewer
+
+  - type: keyboard
+    key: ArrowKeys
+    action: Pan image
+
+requirements:
+  - Full original images never sent to client (unless they are small enough)
+  - Grid thumbnails: max 600px, quality 85
+  - Initial viewer image: max 2000px width, quality 90
+  - Zoom tiles: 512x512px, quality 92
+  - Max zoom: 100% of original resolution
+  - Tile requests include viewport coords and zoom level
+  - All interactions work on mouse and touch
+  - Smooth 60fps pan/zoom animations
+  - Preload 1 tile radius around viewport
+  - Cache tiles in memory during session
+
+  - image-processing:
+      - On-demand resizing via Convex action + Cloudflare R2 cache
+      - Original stored in Convex, transformed versions cached to R2
+      - Sharp library for resizing/tiling in Convex action
+      - R2 provides free 10GB storage + unlimited bandwidth
+
+  - tile-format:
+      - WebP format + DZI tile pyramid
+      - Native OpenSeadragon compatibility
+      - Good compression without slow encode times
+
+  - viewer-library:
+      - Use OpenSeadragon
+      - Mature, purpose-built for high-res art viewing
+      - Native DZI support, touch gestures, keyboard nav included
+
+  - mobile-zoom:
+      - Full zoom capability on mobile (same as desktop)
+      - Prominent close button always visible
+      - Swipe down gesture to exit viewer
+
+  - load-times:
+      - Grid view: ~300ms target, show blurred/low-res placeholder while full thumbnail loads
+      - Detail viewer: longer acceptable, progressive tile loading
+      - Client-side caching for repeat views

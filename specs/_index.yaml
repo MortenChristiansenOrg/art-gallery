@@ -1,7 +1,7 @@
 # Auto-generated spec index - do not edit manually
 # Regenerate with: bun run scripts/generate-spec-index.ts
 
-generated: 2026-01-18T16:07:14.869Z
+generated: 2026-01-18T17:17:28.079Z
 specs:
   - id: admin-auth
     path: specs/admin/authentication.yaml
@@ -27,7 +27,7 @@ specs:
       - crud
       - content
       - core
-    status: partial
+    status: complete
   - id: contact-form
     path: specs/contact/contact-form.yaml
     title: Contact Form
@@ -42,6 +42,14 @@ specs:
       - admin
       - content
     status: implemented
+  - id: image-delivery
+    path: specs/gallery/image-delivery.yaml
+    title: Efficient Image Delivery
+    tags:
+      - gallery
+      - public
+      - performance
+    status: planned
   - id: messages
     path: specs/admin/messages.yaml
     title: Contact Messages
@@ -64,20 +72,24 @@ specs:
       - crud
     status: implemented
 by_tag:
-  contact:
-    - contact-form
-    - messages
+  gallery:
+    - artwork-browsing
+    - image-delivery
+    - series-filtering
   public:
     - artwork-browsing
     - contact-form
+    - image-delivery
     - series-filtering
-  gallery:
-    - artwork-browsing
-    - series-filtering
+  performance:
+    - image-delivery
   core:
     - admin-auth
     - artwork-browsing
     - artwork-management
+  contact:
+    - contact-form
+    - messages
   admin:
     - admin-auth
     - artwork-management
