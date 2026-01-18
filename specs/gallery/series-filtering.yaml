@@ -1,0 +1,38 @@
+id: series-filtering
+title: Series Filtering
+tags: [gallery, public]
+status: implemented
+
+description: |
+  Users can filter artworks by series to view related works together.
+  Series filter shows all available series as clickable buttons.
+
+implementation:
+  - src/components/gallery/SeriesFilter.tsx#SeriesFilter
+  - src/pages/Home.tsx#Home
+  - convex/series.ts#list
+  - convex/artworks.ts#listBySeries
+
+verification:
+  unit:
+    - path: src/components/gallery/__tests__/SeriesFilter.test.tsx
+      status: planned
+  e2e:
+    - path: e2e/gallery.spec.ts#filter-by-series
+      status: planned
+
+flows:
+  filter-by-series:
+    - User views gallery homepage
+    - Series filter displays all series names
+    - User clicks on a series name
+    - Gallery updates to show only artworks in that series
+    - User clicks "All" to reset filter
+
+interactions:
+  - type: click
+    element: series-button
+    action: Filters gallery to show only that series
+  - type: click
+    element: all-button
+    action: Resets filter to show all artworks

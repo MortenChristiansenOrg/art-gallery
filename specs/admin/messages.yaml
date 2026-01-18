@@ -1,0 +1,46 @@
+id: messages
+title: Contact Messages
+tags: [admin, contact]
+status: implemented
+
+description: |
+  Admin can view and manage contact form submissions.
+  Messages can be marked as read/unread.
+
+implementation:
+  - src/pages/Admin.tsx#Admin
+  - convex/messages.ts#list
+  - convex/messages.ts#markRead
+  - convex/messages.ts#remove
+
+verification:
+  unit:
+    - path: src/pages/__tests__/Admin.test.tsx#messages
+      status: planned
+  e2e:
+    - path: e2e/admin.spec.ts#messages
+      status: planned
+
+flows:
+  view-messages:
+    - Admin navigates to messages section
+    - List of messages displayed
+    - Unread messages highlighted
+    - Shows sender name, email, message preview
+
+  read-message:
+    - Admin clicks on message
+    - Full message content shown
+    - Message marked as read automatically
+
+  delete-message:
+    - Admin clicks delete on message
+    - Message removed from list
+
+interactions:
+  - type: click
+    element: message-row
+    action: Shows full message, marks as read
+  - type: click
+    element: delete-message-button
+    action: Removes message

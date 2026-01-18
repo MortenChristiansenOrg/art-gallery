@@ -1,0 +1,49 @@
+id: artwork-browsing
+title: Artwork Browsing
+tags: [gallery, public, core]
+status: implemented
+
+description: |
+  Users can browse artworks in a responsive grid with lightbox viewing.
+  Only published artworks are shown to public visitors.
+
+implementation:
+  - src/pages/Home.tsx#Home
+  - src/components/gallery/ArtworkGrid.tsx#ArtworkGrid
+  - src/components/gallery/ArtworkCard.tsx#ArtworkCard
+  - convex/artworks.ts#list
+
+verification:
+  unit:
+    - path: src/components/gallery/__tests__/ArtworkGrid.test.tsx
+      status: planned
+  e2e:
+    - path: e2e/gallery.spec.ts#browse-artworks
+      status: planned
+
+flows:
+  browse:
+    - User visits homepage
+    - Gallery grid loads with all published artworks
+    - User clicks artwork card
+    - Lightbox opens with full image
+    - User can navigate between images or close
+
+  view-detail:
+    - User clicks artwork title/info icon
+    - Navigates to /artwork/:id page
+    - Shows full metadata (title, year, medium, dimensions)
+
+interactions:
+  - type: click
+    element: artwork-card
+    action: Opens lightbox
+  - type: click
+    element: artwork-title
+    action: Navigates to detail page
+  - type: keyboard
+    key: Escape
+    action: Closes lightbox
+  - type: keyboard
+    key: ArrowLeft/ArrowRight
+    action: Navigate lightbox images

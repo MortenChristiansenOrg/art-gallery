@@ -1,0 +1,69 @@
+id: artwork-management
+title: Artwork Management
+tags: [admin, crud]
+status: implemented
+
+description: |
+  Admin can create, edit, delete, and reorder artworks.
+  Includes image upload, metadata editing, and publish control.
+
+implementation:
+  - src/pages/Admin.tsx#Admin
+  - src/components/admin/ArtworkForm.tsx#ArtworkForm
+  - convex/artworks.ts#create
+  - convex/artworks.ts#update
+  - convex/artworks.ts#remove
+  - convex/files.ts#generateUploadUrl
+
+verification:
+  unit:
+    - path: src/components/admin/__tests__/ArtworkForm.test.tsx
+      status: planned
+  e2e:
+    - path: e2e/admin.spec.ts#artwork-crud
+      status: planned
+
+flows:
+  create-artwork:
+    - Admin clicks "Add Artwork" button
+    - Form modal opens
+    - Admin uploads image
+    - Admin fills metadata (title, year, medium, dimensions)
+    - Admin selects series (optional)
+    - Admin toggles published status
+    - Admin saves artwork
+    - New artwork appears in admin list
+
+  edit-artwork:
+    - Admin clicks edit button on artwork
+    - Form modal opens with existing data
+    - Admin modifies fields
+    - Admin saves changes
+    - List updates with new data
+
+  delete-artwork:
+    - Admin clicks delete button
+    - Confirmation dialog shown
+    - On confirm, artwork removed
+    - List updates
+
+  reorder-artworks:
+    - Admin drags artwork to new position
+    - Order saved automatically
+
+interactions:
+  - type: click
+    element: add-artwork-button
+    action: Opens create form modal
+  - type: click
+    element: edit-button
+    action: Opens edit form modal
+  - type: click
+    element: delete-button
+    action: Shows confirmation dialog
+  - type: drag
+    element: artwork-row
+    action: Reorders artwork in list
+  - type: change
+    element: published-toggle
+    action: Toggles artwork visibility

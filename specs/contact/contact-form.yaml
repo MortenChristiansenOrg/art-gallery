@@ -1,0 +1,43 @@
+id: contact-form
+title: Contact Form
+tags: [contact, public]
+status: implemented
+
+description: |
+  Public visitors can send messages via contact form.
+  Messages stored in database for admin review.
+
+implementation:
+  - src/pages/About.tsx#About
+  - convex/messages.ts#create
+
+verification:
+  unit:
+    - path: src/pages/__tests__/About.test.tsx#contact-form
+      status: planned
+  e2e:
+    - path: e2e/contact.spec.ts#submit-form
+      status: planned
+
+flows:
+  submit-message:
+    - User navigates to contact/about page
+    - Fills in name, email, message fields
+    - Clicks submit button
+    - Form validates input
+    - On success, confirmation shown
+    - On error, validation messages shown
+
+interactions:
+  - type: input
+    element: name-field
+    action: Enters name
+  - type: input
+    element: email-field
+    action: Enters email address
+  - type: input
+    element: message-field
+    action: Enters message text
+  - type: submit
+    element: contact-form
+    action: Validates and submits message

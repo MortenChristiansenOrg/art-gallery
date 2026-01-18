@@ -1,0 +1,37 @@
+id: content-editing
+title: Content Editing
+tags: [admin, content]
+status: implemented
+
+description: |
+  Admin can edit site content like about page text.
+  Content stored as key-value pairs in siteContent table.
+
+implementation:
+  - src/pages/Admin.tsx#Admin
+  - convex/siteContent.ts#get
+  - convex/siteContent.ts#set
+
+verification:
+  unit:
+    - path: src/pages/__tests__/Admin.test.tsx#content
+      status: planned
+  e2e:
+    - path: e2e/admin.spec.ts#content-editing
+      status: planned
+
+flows:
+  edit-about:
+    - Admin navigates to content section
+    - About page text shown in editor
+    - Admin modifies text
+    - Admin saves changes
+    - Public about page updates
+
+interactions:
+  - type: change
+    element: content-editor
+    action: Updates content text
+  - type: click
+    element: save-content-button
+    action: Persists content changes
