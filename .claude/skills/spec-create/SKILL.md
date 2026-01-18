@@ -38,7 +38,7 @@ verification:
     - path: # test file path
       status: planned
   e2e:
-    - path: # e2e test path
+    - path: # e2e test path (MUST include at least 1 E2E test covering each flow)
       status: planned
 
 flows:

@@ -1,7 +1,7 @@
 id: artwork-management
 title: Artwork Management
 tags: [admin, crud, content, core]
-status: partial
+status: complete
 
 description: |
   Admin can create, edit, delete, and reorder artworks.
@@ -19,12 +19,12 @@ implementation:
 verification:
   unit:
     - path: src/components/admin/__tests__/ArtworkForm.test.tsx
-      status: planned
+      status: passing
   e2e:
     - path: e2e/admin.spec.ts#artwork-crud
-      status: planned
+      status: passing
     - path: e2e/admin.spec.ts#bulk-upload
-      status: planned
+      status: passing
 
 flows:
   create-artwork-bulk-filepicker:
