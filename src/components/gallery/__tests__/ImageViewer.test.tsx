@@ -172,3 +172,114 @@ describe("ImageViewer", () => {
     expect(mockDestroy).toHaveBeenCalled();
   });
 });
+
+describe("ImageViewer DZI URL construction", () => {
+  const originalEnv = import.meta.env.VITE_CONVEX_URL;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    document.body.style.overflow = "";
+  });
+
+  afterEach(() => {
+    document.body.style.overflow = "";
+    // Reset env
+    if (originalEnv !== undefined) {
+      vi.stubEnv("VITE_CONVEX_URL", originalEnv);
+    }
+  });
+
+  it("constructs correct DZI URL for cloud deployment (.cloud -> .site)", async () => {
+    vi.stubEnv("VITE_CONVEX_URL", "https://happy-panda-123.convex.cloud");
+
+    render(
+      <ImageViewer
+        imageUrl="https://example.com/image.jpg"
+        dziUrl="/dzi/abc123.dzi"
+        title="Test"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    const OpenSeadragon = (await import("openseadragon")).default;
+    expect(OpenSeadragon).toHaveBeenCalled();
+    const callArgs = vi.mocked(OpenSeadragon).mock.calls[0][0];
+    expect(callArgs.tileSources).toBe("https://happy-panda-123.convex.site/dzi/abc123.dzi");
+  });
+
+  it("constructs correct DZI URL for local dev with 127.0.0.1 (port 3210 -> 3211)", async () => {
+    vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
+
+    render(
+      <ImageViewer
+        imageUrl="https://example.com/image.jpg"
+        dziUrl="/dzi/abc123.dzi"
+        title="Test"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    const OpenSeadragon = (await import("openseadragon")).default;
+    expect(OpenSeadragon).toHaveBeenCalled();
+    const callArgs = vi.mocked(OpenSeadragon).mock.calls[0][0];
+    expect(callArgs.tileSources).toBe("http://127.0.0.1:3211/dzi/abc123.dzi");
+  });
+
+  it("constructs correct DZI URL for local dev with localhost (port 3210 -> 3211)", async () => {
+    vi.stubEnv("VITE_CONVEX_URL", "http://localhost:3210");
+
+    render(
+      <ImageViewer
+        imageUrl="https://example.com/image.jpg"
+        dziUrl="/dzi/abc123.dzi"
+        title="Test"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    const OpenSeadragon = (await import("openseadragon")).default;
+    expect(OpenSeadragon).toHaveBeenCalled();
+    const callArgs = vi.mocked(OpenSeadragon).mock.calls[0][0];
+    expect(callArgs.tileSources).toBe("http://localhost:3211/dzi/abc123.dzi");
+  });
+
+  it("falls back to simple image when no DZI URL provided", async () => {
+    vi.stubEnv("VITE_CONVEX_URL", "https://happy-panda-123.convex.cloud");
+
+    render(
+      <ImageViewer
+        imageUrl="https://example.com/image.jpg"
+        title="Test"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    const OpenSeadragon = (await import("openseadragon")).default;
+    expect(OpenSeadragon).toHaveBeenCalled();
+    const callArgs = vi.mocked(OpenSeadragon).mock.calls[0][0];
+    expect(callArgs.tileSources).toEqual({ type: "image", url: "https://example.com/image.jpg" });
+  });
+
+  it("falls back to simple image when CONVEX_URL is undefined", async () => {
+    vi.stubEnv("VITE_CONVEX_URL", undefined as unknown as string);
+
+    render(
+      <ImageViewer
+        imageUrl="https://example.com/image.jpg"
+        dziUrl="/dzi/abc123.dzi"
+        title="Test"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    const OpenSeadragon = (await import("openseadragon")).default;
+    expect(OpenSeadragon).toHaveBeenCalled();
+    const callArgs = vi.mocked(OpenSeadragon).mock.calls[0][0];
+    expect(callArgs.tileSources).toEqual({ type: "image", url: "https://example.com/image.jpg" });
+  });
+});

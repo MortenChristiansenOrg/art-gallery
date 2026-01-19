@@ -8,12 +8,44 @@ const http = httpRouter();
 // Serve DZI XML manifest
 // GET /dzi/{artworkId}.dzi
 http.route({
-  path: "/dzi/{artworkId}.dzi",
+  pathPrefix: "/dzi/",
   method: "GET",
   handler: httpAction(async (ctx, request) => {
     const url = new URL(request.url);
     const pathParts = url.pathname.split("/");
+
+    // Handle tile requests: /dzi/{artworkId}_files/{level}/{col}_{row}.jpg
+    if (pathParts.length === 5 && pathParts[2].endsWith("_files")) {
+      const artworkId = pathParts[2].replace("_files", "") as Id<"artworks">;
+      const level = parseInt(pathParts[3], 10);
+      const tileFilename = pathParts[4];
+      const tileCoords = tileFilename.replace(".jpg", "").split("_");
+      const col = parseInt(tileCoords[0], 10);
+      const row = parseInt(tileCoords[1], 10);
+
+      if (isNaN(level) || isNaN(col) || isNaN(row)) {
+        return new Response("Bad request", { status: 400 });
+      }
+
+      const tile = await ctx.runQuery(internal.tiles.getTileInternal, {
+        artworkId,
+        level,
+        col,
+        row,
+      });
+
+      if (!tile || !tile.url) {
+        return new Response("Not found", { status: 404 });
+      }
+
+      return Response.redirect(tile.url, 302);
+    }
+
+    // Handle DZI manifest: /dzi/{artworkId}.dzi
     const filename = pathParts[pathParts.length - 1];
+    if (!filename.endsWith(".dzi")) {
+      return new Response("Not found", { status: 404 });
+    }
     const artworkId = filename.replace(".dzi", "") as Id<"artworks">;
 
     const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
@@ -45,49 +77,9 @@ http.route({
   }),
 });
 
-// Serve tile images
-// GET /dzi/{artworkId}_files/{level}/{col}_{row}.jpg
-http.route({
-  path: "/dzi/{artworkId}_files/{level}/{tile}.jpg",
-  method: "GET",
-  handler: httpAction(async (ctx, request) => {
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split("/");
-
-    // Parse: /dzi/{artworkId}_files/{level}/{col}_{row}.jpg
-    const tileFilename = pathParts[pathParts.length - 1]; // "0_0.jpg"
-    const levelStr = pathParts[pathParts.length - 2]; // "0"
-    const filesDir = pathParts[pathParts.length - 3]; // "{artworkId}_files"
-
-    const artworkId = filesDir.replace("_files", "") as Id<"artworks">;
-    const level = parseInt(levelStr, 10);
-    const tileCoords = tileFilename.replace(".jpg", "").split("_");
-    const col = parseInt(tileCoords[0], 10);
-    const row = parseInt(tileCoords[1], 10);
-
-    if (isNaN(level) || isNaN(col) || isNaN(row)) {
-      return new Response("Bad request", { status: 400 });
-    }
-
-    const tile = await ctx.runQuery(internal.tiles.getTileInternal, {
-      artworkId,
-      level,
-      col,
-      row,
-    });
-
-    if (!tile || !tile.url) {
-      return new Response("Not found", { status: 404 });
-    }
-
-    // Redirect to actual storage URL
-    return Response.redirect(tile.url, 302);
-  }),
-});
-
 // CORS preflight for DZI endpoints
 http.route({
-  path: "/dzi/{path}",
+  pathPrefix: "/dzi/",
   method: "OPTIONS",
   handler: httpAction(async () => {
     return new Response(null, {

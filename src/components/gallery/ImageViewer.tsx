@@ -43,10 +43,15 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
     setIsLoading(true);
 
     // Use DZI tiles if available, otherwise fall back to single image
-    const convexSiteUrl = import.meta.env.VITE_CONVEX_URL?.replace(
-      ".cloud",
-      ".site"
-    );
+    // For cloud: transform .cloud to .site
+    // For local: use port 3211 for HTTP routes
+    const convexUrl = import.meta.env.VITE_CONVEX_URL;
+    let convexSiteUrl: string | undefined;
+    if (convexUrl?.includes(".cloud")) {
+      convexSiteUrl = convexUrl.replace(".cloud", ".site");
+    } else if (convexUrl?.includes("127.0.0.1:3210") || convexUrl?.includes("localhost:3210")) {
+      convexSiteUrl = convexUrl.replace(":3210", ":3211");
+    }
     const tileSources = dziUrl && convexSiteUrl
       ? `${convexSiteUrl}${dziUrl}`
       : { type: "image", url: imageUrl };
