@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -57,6 +57,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createArtwork = useMutation(api.artworks.create);
   const updateArtwork = useMutation(api.artworks.update);
+  const generateImageVariants = useAction(api.images.generateVariants);
 
   const [form, setForm] = useState({
     description: artwork?.description ?? "",
@@ -199,6 +200,11 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
           published: form.published,
           ...(imageId && { imageId }),
         });
+
+        // Generate variants for new image
+        if (imageId) {
+          generateImageVariants({ storageId: imageId, artworkId: artwork._id }).catch(console.error);
+        }
       } else {
         // Create mode - bulk upload (use undefined for optional empty fields)
         const sharedData = {
@@ -231,11 +237,14 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
 
             const { storageId } = await result.json();
 
-            await createArtwork({
+            const artworkId = await createArtwork({
               title: title.trim(),
               imageId: storageId,
               ...sharedData,
             });
+
+            // Generate image variants in the background
+            generateImageVariants({ storageId, artworkId }).catch(console.error);
           } catch (err) {
             errors.push(`${title}: ${err instanceof Error ? err.message : "Unknown error"}`);
           }

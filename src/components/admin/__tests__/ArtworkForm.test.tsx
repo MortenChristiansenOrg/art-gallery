@@ -7,6 +7,7 @@ import { ArtworkForm } from '../ArtworkForm'
 const mockGenerateUploadUrl = vi.fn()
 const mockCreateArtwork = vi.fn()
 const mockUpdateArtwork = vi.fn()
+const mockGenerateImageVariants = vi.fn()
 
 let mutationCallIndex = 0
 
@@ -22,6 +23,7 @@ vi.mock('convex/react', () => ({
     if (index % 3 === 1) return mockCreateArtwork
     return mockUpdateArtwork
   }),
+  useAction: vi.fn(() => mockGenerateImageVariants),
 }))
 
 // Mock fetch
@@ -80,6 +82,7 @@ describe('ArtworkForm', () => {
     })
     mockCreateArtwork.mockResolvedValue('artwork-id')
     mockUpdateArtwork.mockResolvedValue(undefined)
+    mockGenerateImageVariants.mockResolvedValue({ thumbnailId: 'thumb-123', viewerImageId: 'viewer-123' })
   })
 
   afterEach(() => {

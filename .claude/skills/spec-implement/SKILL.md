@@ -74,6 +74,6 @@ bun run scripts/generate-spec-index.ts
 Create `.context/retrospective.md` reflecting on:
 
 - Are there any parts of the implementation that seem likely to cause problems?
-- Skill improvement suggestions
-- New skill ideas for future automation
-- Opportunities for scripted checks/tasks
+- Skill improvement suggestions (only broadly useful ones)
+- New skill ideas for future automation (only broadly useful ones)
+- Opportunities for scripted checks/tasks (only broadly useful ones)

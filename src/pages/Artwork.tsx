@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { ImageViewer } from "../components/gallery";
 
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const artwork = useQuery(
     api.artworks.get,
-    id ? { id: id as Id<"artworks"> } : "skip"
+    id ? { id: id as Id<"artworks">, publishedOnly: true } : "skip"
   );
 
   const series = useQuery(api.series.list);
@@ -104,15 +103,15 @@ export function Artwork() {
             gallery-frame
             lg:flex-1 lg:min-w-0
           "
-          onClick={() => setLightboxOpen(true)}
+          onClick={() => setViewerOpen(true)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && setLightboxOpen(true)}
+          onKeyDown={(e) => e.key === 'Enter' && setViewerOpen(true)}
           aria-label="View artwork in fullscreen"
         >
-          {artwork.imageUrl ? (
+          {(artwork.viewerImageUrl || artwork.imageUrl) ? (
             <img
-              src={artwork.imageUrl}
+              src={artwork.viewerImageUrl || artwork.imageUrl!}
               alt={artwork.title}
               className="
                 w-full h-auto
@@ -270,18 +269,14 @@ export function Artwork() {
         </aside>
       </div>
 
-      {/* Lightbox */}
-      {artwork.imageUrl && (
-        <Lightbox
-          open={lightboxOpen}
-          close={() => setLightboxOpen(false)}
-          slides={[{ src: artwork.imageUrl, alt: artwork.title }]}
-          animation={{
-            fade: 300,
-          }}
-          controller={{
-            closeOnBackdropClick: true,
-          }}
+      {/* Image Viewer - use DZI tiles if available, fall back to viewer image */}
+      {(artwork.viewerImageUrl || artwork.imageUrl) && (
+        <ImageViewer
+          imageUrl={artwork.viewerImageUrl || artwork.imageUrl!}
+          dziUrl={artwork.dziUrl}
+          title={artwork.title}
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
         />
       )}
     </article>

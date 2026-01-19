@@ -1,18 +1,23 @@
 import { Link } from "react-router-dom";
 import type { Id } from "../../convex/_generated/dataModel";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface ArtworkCardProps {
   id: Id<"artworks">;
   title: string;
   imageUrl: string | null;
+  thumbnailUrl?: string | null;
   year?: number;
   onClick?: () => void;
   index?: number;
 }
 
-export function ArtworkCard({ id, title, imageUrl, year, onClick, index = 0 }: ArtworkCardProps) {
+export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, index = 0 }: ArtworkCardProps) {
   // Stagger class based on index (1-9 cycle)
   const staggerClass = `stagger-${(index % 9) + 1}`;
+
+  // Use thumbnail if available, otherwise fall back to full image
+  const displayUrl = thumbnailUrl || imageUrl;
 
   const content = (
     <article
@@ -32,26 +37,13 @@ export function ArtworkCard({ id, title, imageUrl, year, onClick, index = 0 }: A
         {/* Inner matting effect */}
         <div className="relative overflow-hidden bg-[var(--color-gallery-hover)]">
           {/* Aspect ratio container */}
-          <div className="aspect-[4/5]">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={title}
-                className="
-                  w-full h-full object-cover
-                  transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]
-                  group-hover:scale-[1.03]
-                "
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[var(--color-gallery-subtle)] text-sm tracking-wide">
-                  No image
-                </span>
-              </div>
-            )}
-          </div>
+          <OptimizedImage
+            src={displayUrl}
+            alt={title}
+            aspectRatio="4/5"
+            loading="lazy"
+            className="transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
+          />
 
           {/* Subtle overlay on hover */}
           <div

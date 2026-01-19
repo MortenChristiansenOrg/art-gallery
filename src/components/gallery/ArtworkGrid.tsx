@@ -5,6 +5,7 @@ interface Artwork {
   _id: Id<"artworks">;
   title: string;
   imageUrl: string | null;
+  thumbnailUrl?: string | null;
   year?: number;
 }
 
@@ -26,6 +27,7 @@ export function ArtworkGrid({ artworks }: ArtworkGridProps) {
           id={artwork._id}
           title={artwork.title}
           imageUrl={artwork.imageUrl}
+          thumbnailUrl={artwork.thumbnailUrl}
           year={artwork.year}
           index={index}
         />
