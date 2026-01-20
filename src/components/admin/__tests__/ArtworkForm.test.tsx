@@ -26,6 +26,13 @@ vi.mock('convex/react', () => ({
   useAction: vi.fn(() => mockGenerateImageVariants),
 }))
 
+vi.mock('../../../lib/auth', () => ({
+  useAuth: vi.fn(() => ({
+    token: 'mock-token',
+    isAuthenticated: true,
+  })),
+}))
+
 // Mock fetch
 const mockFetch = vi.fn()
 global.fetch = mockFetch

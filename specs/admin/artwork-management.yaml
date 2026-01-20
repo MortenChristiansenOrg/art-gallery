@@ -9,22 +9,25 @@ description: |
   Bulk upload: multi-select images, shared metadata applies to all, per-image title editing.
 
 implementation:
-  - src/pages/Admin.tsx#Admin
-  - src/components/admin/ArtworkForm.tsx#ArtworkForm
-  - convex/artworks.ts#create
-  - convex/artworks.ts#update
-  - convex/artworks.ts#remove
+  - src/pages/Admin.tsx:10#Admin
+  - src/components/admin/ArtworkForm.tsx:56#ArtworkForm
+  - convex/artworks.ts:85#create
+  - convex/artworks.ts:111#update
+  - convex/artworks.ts:157#remove
+  - convex/artworks.ts:175#reorder
   - convex/files.ts#generateUploadUrl
 
 verification:
   unit:
     - path: src/components/admin/__tests__/ArtworkForm.test.tsx
-      status: passing
+      status: implemented
   e2e:
     - path: e2e/admin.spec.ts#artwork-crud
-      status: passing
+      status: implemented
     - path: e2e/admin.spec.ts#bulk-upload
-      status: passing
+      status: implemented
+    - path: e2e/admin.spec.ts#artwork-reordering
+      status: implemented
 
 flows:
   create-artwork-bulk-filepicker:
@@ -71,8 +74,12 @@ flows:
     - List updates
 
   reorder-artworks:
-    - Admin drags artwork to new position
-    - Order saved automatically
+    - Admin views artwork list (all artworks or filtered by series)
+    - Admin drags artwork item to new position in list
+    - Visual feedback shows drop target location
+    - On drop, new order saved automatically to backend
+    - Order persists on page reload
+    - When filtered by series, reorder only affects order within that series
 
 interactions:
   - type: click
@@ -139,3 +146,14 @@ requirements:
     - Processing status tracked per artwork: pending | processing | ready | failed
     - Admin list shows processing status badge for each artwork
     - Published toggle only affects visibility after processing complete
+
+  artwork-reordering:
+    - Drag-and-drop reordering of artwork items in admin list
+    - Works in "all artworks" view (reorders global display order)
+    - Works in series-filtered view (reorders within that series only)
+    - Visual drag handle or entire row draggable
+    - Drop indicator shows target position during drag
+    - Auto-save on drop (no manual save button needed)
+    - Optimistic UI update with rollback on error
+    - Order stored as numeric `displayOrder` field on artwork
+    - Series-specific order stored as separate `seriesOrder` field per series assignment

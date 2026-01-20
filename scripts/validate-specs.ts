@@ -57,8 +57,10 @@ const rootDir = resolve(import.meta.dir, "..");
 const specsDir = resolve(rootDir, "specs");
 
 function checkFileRef(ref: string): boolean {
-  // Handle file#export format
-  const filePath = ref.split("#")[0];
+  // Handle file:line#export format
+  let filePath = ref.split("#")[0];
+  // Remove line number suffix (e.g., :10)
+  filePath = filePath.replace(/:\d+$/, "");
   const fullPath = resolve(rootDir, filePath);
   return existsSync(fullPath);
 }

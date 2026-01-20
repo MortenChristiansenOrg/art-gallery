@@ -35,6 +35,7 @@ Follow the spec's flows, interactions, and requirements:
 
 - Create/modify implementation files
 - Reference spec's `implementation:` section for target locations
+- Reference docs/design-system.md for frontend design
 - Mark implementation refs with actual file:line or file#export
 
 ### 5. Write Tests
@@ -63,11 +64,8 @@ Update the spec file:
 
 ### 8. Regenerate Index
 
-Run `/spec-index` or:
-
-```bash
-bun run scripts/generate-spec-index.ts
-```
+Run `/spec-validate` (and fix any errors)
+Run `/spec-index`
 
 ### 9. Retrospective
 
@@ -77,3 +75,5 @@ Create `.context/retrospective.md` reflecting on:
 - Skill improvement suggestions (only broadly useful ones)
 - New skill ideas for future automation (only broadly useful ones)
 - Opportunities for scripted checks/tasks (only broadly useful ones)
+
+For each potential thing to change about the implementation or the skills, present the user with an option to make the change.

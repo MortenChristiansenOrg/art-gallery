@@ -1,7 +1,7 @@
 # Auto-generated spec index - do not edit manually
 # Regenerate with: bun run scripts/generate-spec-index.ts
 
-generated: 2026-01-20T15:30:39.197Z
+generated: 2026-01-20T16:30:25.116Z
 specs:
   - id: admin-auth
     path: specs/admin/authentication.yaml
@@ -72,6 +72,14 @@ specs:
       - crud
     status: implemented
 by_tag:
+  contact:
+    - contact-form
+    - messages
+  public:
+    - artwork-browsing
+    - contact-form
+    - image-delivery
+    - series-filtering
   admin:
     - admin-auth
     - artwork-management
@@ -81,9 +89,6 @@ by_tag:
   crud:
     - artwork-management
     - series-management
-  contact:
-    - contact-form
-    - messages
   content:
     - artwork-management
     - content-editing
@@ -95,11 +100,6 @@ by_tag:
     - artwork-management
   gallery:
     - artwork-browsing
-    - image-delivery
-    - series-filtering
-  public:
-    - artwork-browsing
-    - contact-form
     - image-delivery
     - series-filtering
   performance:

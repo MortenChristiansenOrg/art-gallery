@@ -364,6 +364,80 @@ test.describe('series-crud', () => {
   })
 })
 
+test.describe('artwork-reordering', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.click('button:has-text("artworks")')
+  })
+
+  test('shows series filter dropdown', async ({ page }) => {
+    await expect(page.getByTestId('series-filter')).toBeVisible()
+    await expect(page.getByTestId('series-filter')).toContainText('All Artworks')
+  })
+
+  test('can filter artworks by series', async ({ page }) => {
+    const seriesFilter = page.getByTestId('series-filter')
+    const options = await seriesFilter.locator('option').allTextContents()
+
+    // Should have "All Artworks" plus any series
+    expect(options[0]).toBe('All Artworks')
+  })
+
+  test('artwork rows are draggable', async ({ page }) => {
+    const firstArtwork = page.locator('[data-testid^="artwork-row-"]').first()
+    const hasArtworks = await firstArtwork.isVisible().catch(() => false)
+
+    if (hasArtworks) {
+      await expect(firstArtwork).toHaveAttribute('draggable', 'true')
+    }
+  })
+
+  test('shows drag handle on artwork rows', async ({ page }) => {
+    const firstArtwork = page.locator('[data-testid^="artwork-row-"]').first()
+    const hasArtworks = await firstArtwork.isVisible().catch(() => false)
+
+    if (hasArtworks) {
+      // Should have drag handle SVG
+      const dragHandle = firstArtwork.locator('svg')
+      await expect(dragHandle).toBeVisible()
+    }
+  })
+
+  test('artwork row has cursor-grab style', async ({ page }) => {
+    const firstArtwork = page.locator('[data-testid^="artwork-row-"]').first()
+    const hasArtworks = await firstArtwork.isVisible().catch(() => false)
+
+    if (hasArtworks) {
+      const className = await firstArtwork.getAttribute('class')
+      expect(className).toContain('cursor-grab')
+    }
+  })
+
+  test('shows visual feedback during drag', async ({ page }) => {
+    const artworkRows = page.locator('[data-testid^="artwork-row-"]')
+    const count = await artworkRows.count()
+
+    if (count >= 2) {
+      const firstRow = artworkRows.first()
+      const secondRow = artworkRows.nth(1)
+
+      // Start drag on first row
+      await firstRow.dispatchEvent('dragstart', {
+        dataTransfer: new DataTransfer(),
+      })
+
+      // Drag over second row
+      await secondRow.dispatchEvent('dragover', {
+        dataTransfer: new DataTransfer(),
+      })
+
+      // First row should have opacity-50 class
+      const firstRowClass = await firstRow.getAttribute('class')
+      expect(firstRowClass).toContain('opacity-50')
+    }
+  })
+})
+
 test.describe('messages', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page)

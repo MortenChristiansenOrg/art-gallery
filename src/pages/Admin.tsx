@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useOptimistic, useTransition } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
@@ -17,8 +17,15 @@ export function Admin() {
   const [showSeriesForm, setShowSeriesForm] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Id<"artworks"> | null>(null);
   const [editingSeries, setEditingSeries] = useState<Id<"series"> | null>(null);
+  const [seriesFilter, setSeriesFilter] = useState<Id<"series"> | "">("");
+  const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
+  const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
 
-  const artworks = useQuery(api.artworks.list, { publishedOnly: false });
+  const artworks = useQuery(api.artworks.list, {
+    publishedOnly: false,
+    seriesId: seriesFilter || undefined,
+  });
   const series = useQuery(api.series.list);
   const messages = useQuery(api.messages.list);
   const unreadCount = useQuery(api.messages.unreadCount);
@@ -29,8 +36,77 @@ export function Admin() {
   const deleteMessage = useMutation(api.messages.remove);
   const markMessageRead = useMutation(api.messages.markRead);
   const setContent = useMutation(api.siteContent.set);
+  const reorderArtworks = useMutation(api.artworks.reorder);
 
   const [aboutText, setAboutText] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const handleDragStart = useCallback((e: React.DragEvent, id: Id<"artworks">) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, id: Id<"artworks">) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === id) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position = e.clientY < midpoint ? "before" : "after";
+
+    setDropTargetId(id);
+    setDropPosition(position);
+  }, [draggedId]);
+
+  const handleDragLeave = useCallback(() => {
+    setDropTargetId(null);
+    setDropPosition(null);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedId || !dropTargetId || !artworks || !token) return;
+
+    const dragIndex = artworks.findIndex(a => a._id === draggedId);
+    let targetIndex = artworks.findIndex(a => a._id === dropTargetId);
+
+    if (dropPosition === "after") targetIndex++;
+    if (dragIndex < targetIndex) targetIndex--;
+
+    if (dragIndex === targetIndex) {
+      setDraggedId(null);
+      setDropTargetId(null);
+      setDropPosition(null);
+      return;
+    }
+
+    // Reorder array
+    const newOrder = [...artworks];
+    const [moved] = newOrder.splice(dragIndex, 1);
+    newOrder.splice(targetIndex, 0, moved);
+
+    // Extract IDs for mutation
+    const ids = newOrder.map(a => a._id);
+
+    startTransition(async () => {
+      try {
+        await reorderArtworks({ token, ids });
+      } catch (err) {
+        console.error("Reorder failed:", err);
+      }
+    });
+
+    setDraggedId(null);
+    setDropTargetId(null);
+    setDropPosition(null);
+  }, [draggedId, dropTargetId, dropPosition, artworks, token, reorderArtworks]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedId(null);
+    setDropTargetId(null);
+    setDropPosition(null);
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -107,69 +183,117 @@ export function Admin() {
 
       {tab === "artworks" && (
         <div>
-          <button
-            onClick={() => setShowArtworkForm(true)}
-            className="mb-6 px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
-          >
-            Add Artwork
-          </button>
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => setShowArtworkForm(true)}
+              className="px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
+              data-testid="add-artwork-button"
+            >
+              Add Artwork
+            </button>
+            <select
+              value={seriesFilter}
+              onChange={(e) => setSeriesFilter(e.target.value as Id<"series"> | "")}
+              className="px-3 py-2 border border-[var(--color-gallery-border)] bg-transparent text-sm"
+              data-testid="series-filter"
+            >
+              <option value="">All Artworks</option>
+              {series?.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {isPending && (
+              <span className="text-sm text-[var(--color-gallery-muted)]">Saving...</span>
+            )}
+          </div>
 
-          <div className="space-y-4">
-            {artworks?.map((artwork) => (
-              <div
-                key={artwork._id}
-                className="flex items-center gap-4 p-4 border border-[var(--color-gallery-border)]"
-              >
-                {artwork.imageUrl && (
-                  <img
-                    src={artwork.imageUrl}
-                    alt={artwork.title}
-                    className="w-16 h-16 object-cover"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="font-medium">{artwork.title}</p>
-                  <div className="flex gap-2 text-sm">
-                    <span className="text-[var(--color-gallery-muted)]">
-                      {artwork.published ? "Published" : "Draft"}
-                    </span>
-                    {(!artwork.thumbnailId || artwork.dziStatus !== "complete") && (
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs ${
-                          artwork.dziStatus === "failed"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {artwork.dziStatus === "failed"
-                          ? "Processing failed"
-                          : artwork.dziStatus === "generating"
-                            ? "Generating tiles..."
-                            : "Processing..."}
+          <div className="space-y-1">
+            {artworks?.map((artwork) => {
+              const isDragging = draggedId === artwork._id;
+              const isDropTarget = dropTargetId === artwork._id;
+
+              return (
+                <div
+                  key={artwork._id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, artwork._id)}
+                  onDragOver={(e) => handleDragOver(e, artwork._id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center gap-4 p-4 border border-[var(--color-gallery-border)] cursor-grab active:cursor-grabbing transition-all ${
+                    isDragging ? "opacity-50" : ""
+                  } ${isDropTarget && dropPosition === "before" ? "border-t-2 border-t-blue-500" : ""} ${
+                    isDropTarget && dropPosition === "after" ? "border-b-2 border-b-blue-500" : ""
+                  }`}
+                  data-testid={`artwork-row-${artwork._id}`}
+                >
+                  <div
+                    className="flex items-center justify-center w-6 h-6 text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]"
+                    title="Drag to reorder"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M2 4h12v1H2zm0 3.5h12v1H2zm0 3.5h12v1H2z" />
+                    </svg>
+                  </div>
+                  {artwork.imageUrl && (
+                    <img
+                      src={artwork.imageUrl}
+                      alt={artwork.title}
+                      className="w-16 h-16 object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium">{artwork.title}</p>
+                    <div className="flex gap-2 text-sm">
+                      <span className="text-[var(--color-gallery-muted)]">
+                        {artwork.published ? "Published" : "Draft"}
                       </span>
-                    )}
+                      {(!artwork.thumbnailId || artwork.dziStatus !== "complete") && (
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            artwork.dziStatus === "failed"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {artwork.dziStatus === "failed"
+                            ? "Processing failed"
+                            : artwork.dziStatus === "generating"
+                              ? "Generating tiles..."
+                              : "Processing..."}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingArtwork(artwork._id)}
+                      className="text-sm underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete this artwork?") && token) {
+                          deleteArtwork({ token, id: artwork._id });
+                        }
+                      }}
+                      className="text-sm text-red-600"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setEditingArtwork(artwork._id)}
-                    className="text-sm underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm("Delete this artwork?") && token) {
-                        deleteArtwork({ token, id: artwork._id });
-                      }
-                    }}
-                    className="text-sm text-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
