@@ -1,7 +1,7 @@
 id: artwork-management
 title: Artwork Management
 tags: [admin, crud, content, core]
-status: complete
+status: implemented
 
 description: |
   Admin can create, edit, delete, and reorder artworks.

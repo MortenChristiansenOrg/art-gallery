@@ -30,6 +30,7 @@ const KNOWN_TAGS = [
   "security",
   "crud",
   "content",
+  "performance",
 ];
 
 interface ValidationError {

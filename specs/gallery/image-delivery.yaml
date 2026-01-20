@@ -9,14 +9,14 @@ description: |
   High quality maintained through low compression with size-appropriate delivery.
 
 implementation:
-  - convex/images.ts:1 # Server-side image resizing with Sharp
-  - convex/schema.ts:9 # thumbnailId and viewerImageId fields
-  - convex/artworks.ts:30 # Query returns variant URLs
-  - src/components/gallery/OptimizedImage.tsx:1 # Responsive image component with loading states
-  - src/components/gallery/ImageViewer.tsx:1 # OpenSeadragon-based zoom viewer
-  - src/components/gallery/ArtworkCard.tsx:19 # Uses thumbnailUrl for grid
-  - src/components/admin/ArtworkForm.tsx:241 # Triggers variant generation on upload
-  - src/pages/Artwork.tsx:275 # Uses viewerImageUrl for zoom viewer
+  - convex/images.ts # Server-side image resizing with Sharp
+  - convex/schema.ts # thumbnailId and viewerImageId fields
+  - convex/artworks.ts # Query returns variant URLs
+  - src/components/gallery/OptimizedImage.tsx # Responsive image component with loading states
+  - src/components/gallery/ImageViewer.tsx # OpenSeadragon-based zoom viewer
+  - src/components/gallery/ArtworkCard.tsx # Uses thumbnailUrl for grid
+  - src/components/admin/ArtworkForm.tsx # Triggers variant generation on upload
+  - src/pages/Artwork.tsx # Uses viewerImageUrl for zoom viewer
 
 verification:
   unit:

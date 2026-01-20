@@ -1,16 +1,49 @@
 id: admin-auth
 title: Admin Authentication
 tags: [admin, security, core]
-status: implemented
+status: planned
 
 description: |
   Password-based authentication for admin panel access.
-  Uses session storage for persistence within browser session.
+
+  CRITICAL: ALL authorization checks MUST be server-side. Client-side auth state
+  is only for UX (showing/hiding UI elements). Never trust client for security.
+
+security-requirements:
+  server-side-enforcement:
+    - ALL Convex queries/mutations requiring auth must validate server-side
+    - Admin-only endpoints must check auth before returning data
+    - Data visibility filtering (e.g. publish state) must happen server-side
+    - HTTP endpoints must validate auth headers/tokens
+
+  data-access-rules:
+    - Public queries return only publicly visible data
+    - Admin queries return all data after server-side auth validation
+    - Admin mutations (create/update/delete protected resources) require auth
+    - Public mutations (e.g. contact forms) do not require auth
+    - File/asset serving respects same visibility rules as data queries
+
+  client-side-only-for-ux:
+    - Session storage only for UX state (show/hide admin UI)
+    - Never filter sensitive data client-side
+    - Client auth state can be spoofed - assume it will be
+
+  test-coverage:
+    - All auth checks must have thorough test coverage
+    - Test both valid auth and missing/invalid auth scenarios
+    - Test that restricted data is not leaked without auth
+    - Test that protected mutations reject unauthenticated requests
+    - Test token validation and expiration
+    - Security tests should attempt to bypass auth
 
 implementation:
+  # client
   - src/lib/auth.tsx#AuthProvider
   - src/lib/auth.tsx#useAuth
   - src/pages/Admin.tsx#Admin
+  # server (planned)
+  - convex/artworks.ts#requireAuth
+  - convex/http.ts#validateAuth
 
 verification:
   unit:
@@ -19,30 +52,41 @@ verification:
   e2e:
     - path: e2e/admin.spec.ts#login
       status: passing
+  security:
+    - description: Restricted data not returned without auth
+      status: planned
+    - description: Direct API calls without auth rejected
+      status: planned
 
 flows:
   login:
     - User navigates to /admin
     - Login form displayed
     - User enters password
-    - On success, redirected to admin dashboard
+    - Server validates password, returns token
+    - Client stores token, uses for subsequent requests
     - On failure, error message shown
 
   logout:
     - User clicks logout button
-    - Session cleared
+    - Client clears token
     - Redirected to login form
 
   session-persistence:
-    - User logs in
-    - Refreshes page
-    - Remains authenticated (within same session)
-    - Closing browser clears session
+    - User logs in, receives token
+    - Token stored in session storage
+    - All admin requests include token
+    - Server validates token on every request
+
+  public-vs-admin-data:
+    - Public queries: Server returns only publicly visible data
+    - Admin queries: Server checks auth, returns all if valid
+    - No client-side filtering for security purposes
 
 interactions:
   - type: submit
     element: login-form
-    action: Validates password and authenticates
+    action: Server validates password, returns auth token
   - type: click
     element: logout-button
-    action: Clears session and logs out
+    action: Clears token and logs out
