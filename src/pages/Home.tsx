@@ -59,6 +59,20 @@ export function Home() {
       {/* Series filter */}
       {allSeries.length > 0 && <SeriesFilter series={allSeries} />}
 
+      {/* Series header with description */}
+      {currentSeries && (
+        <div className="mb-12 max-w-2xl">
+          <h1 className="text-2xl font-light tracking-wide text-[var(--color-gallery-text)]">
+            {currentSeries.name}
+          </h1>
+          {currentSeries.description && (
+            <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--color-gallery-subtle)] font-light">
+              {currentSeries.description}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Gallery grid */}
       {artworks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 opacity-0 animate-fade-in">
