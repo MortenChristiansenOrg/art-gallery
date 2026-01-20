@@ -14,9 +14,14 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
   const viewerRef = useRef<OpenSeadragon.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
 
   const handleClose = useCallback(() => {
-    onClose();
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 250);
   }, [onClose]);
 
   // Handle escape key
@@ -132,7 +137,13 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95"
+      className={`
+        fixed inset-0 z-50
+        bg-[var(--color-gallery-bg)]/[0.97]
+        backdrop-blur-sm
+        transition-opacity duration-300 ease-[var(--transition-elegant)]
+        ${isClosing ? 'opacity-0' : 'opacity-100'}
+      `}
       role="dialog"
       aria-modal="true"
       aria-label={`Viewing ${title}`}
@@ -140,14 +151,18 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       {/* Loading indicator */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          <div className="w-8 h-8 border border-[var(--color-gallery-border)] border-t-[var(--color-gallery-text)] rounded-full animate-spin" />
         </div>
       )}
 
       {/* OpenSeadragon container */}
       <div
         ref={containerRef}
-        className="absolute inset-0"
+        className={`
+          absolute inset-0
+          transition-all duration-300 ease-[var(--transition-elegant)]
+          ${isClosing ? 'opacity-90' : 'opacity-100'}
+        `}
         data-testid="image-viewer-container"
       />
 
@@ -155,19 +170,19 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       <button
         onClick={handleClose}
         className="
-          absolute top-4 right-4 z-20
+          absolute top-4 right-4 lg:top-6 lg:right-6 z-20
           w-10 h-10 flex items-center justify-center
-          bg-black/50 hover:bg-black/70
-          text-white/80 hover:text-white
-          rounded-full
-          transition-all duration-200
-          backdrop-blur-sm
+          border border-[var(--color-gallery-border)]
+          bg-[var(--color-gallery-surface)]/90 hover:bg-[var(--color-gallery-surface)]
+          text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
+          transition-all duration-300 ease-[var(--transition-elegant)]
+          hover:border-[var(--color-gallery-subtle)]
         "
         aria-label="Close viewer"
         data-testid="close-viewer"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
@@ -175,28 +190,33 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       <div
         className="
           absolute bottom-4 left-1/2 -translate-x-1/2 z-20
-          flex items-center gap-2
-          bg-black/50 backdrop-blur-sm
-          px-3 py-2 rounded-full
+          lg:bottom-6
+          flex items-center gap-1
+          border border-[var(--color-gallery-border)]
+          bg-[var(--color-gallery-surface)]/90
+          px-2 py-1.5
         "
       >
         <button
           onClick={handleZoomOut}
           className="
             w-8 h-8 flex items-center justify-center
-            text-white/80 hover:text-white
-            transition-colors duration-200
+            text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
+            transition-colors duration-300
           "
           aria-label="Zoom out"
           data-testid="zoom-out"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12H4" />
           </svg>
         </button>
 
         <div
-          className="w-12 text-center text-sm text-white/60 font-mono"
+          className="
+            w-14 text-center text-[0.7rem] tracking-[0.1em]
+            text-[var(--color-gallery-subtle)] font-[var(--font-sans)]
+          "
           aria-label={`Zoom level: ${zoomLevel}%`}
         >
           {zoomLevel}%
@@ -206,30 +226,30 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
           onClick={handleZoomIn}
           className="
             w-8 h-8 flex items-center justify-center
-            text-white/80 hover:text-white
-            transition-colors duration-200
+            text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
+            transition-colors duration-300
           "
           aria-label="Zoom in"
           data-testid="zoom-in"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
           </svg>
         </button>
 
-        <div className="w-[1px] h-4 bg-white/20 mx-1" />
+        <div className="w-[1px] h-4 bg-[var(--color-gallery-border)] mx-1" />
 
         <button
           onClick={handleResetZoom}
           className="
             w-8 h-8 flex items-center justify-center
-            text-white/80 hover:text-white
-            transition-colors duration-200
+            text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
+            transition-colors duration-300
           "
           aria-label="Reset zoom"
           data-testid="reset-zoom"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
         </button>
@@ -238,21 +258,25 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       {/* Title */}
       <div
         className="
-          absolute top-4 left-4 z-20
-          max-w-[60%]
-          bg-black/50 backdrop-blur-sm
-          px-4 py-2 rounded-lg
+          absolute top-4 left-4 lg:top-6 lg:left-6 z-20
+          max-w-[50%]
+          border border-[var(--color-gallery-border)]
+          bg-[var(--color-gallery-surface)]/90
+          px-4 py-2
         "
       >
-        <h2 className="text-white/90 text-sm font-light truncate">{title}</h2>
+        <h2 className="text-[var(--color-gallery-text)] text-[0.8rem] font-light tracking-[0.02em] truncate">
+          {title}
+        </h2>
       </div>
 
-      {/* Instructions (hidden after first interaction) */}
+      {/* Instructions */}
       <div
         className="
-          absolute bottom-20 left-1/2 -translate-x-1/2 z-10
-          text-white/40 text-xs text-center
+          absolute bottom-16 lg:bottom-18 left-1/2 -translate-x-1/2 z-10
+          text-[var(--color-gallery-subtle)] text-[0.7rem] tracking-[0.1em] uppercase text-center
           pointer-events-none
+          font-[var(--font-sans)] font-light
         "
       >
         <p>Scroll to zoom · Drag to pan</p>
