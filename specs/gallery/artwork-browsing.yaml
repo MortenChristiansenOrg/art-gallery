@@ -24,7 +24,7 @@ verification:
 flows:
   browse:
     - User visits homepage
-    - Gallery grid loads with all published artworks
+    - Gallery grid loads with all published artworks that have completed image processing
     - User clicks artwork card
     - Lightbox opens with full image
     - User can navigate between images or close

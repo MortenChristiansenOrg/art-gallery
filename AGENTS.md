@@ -2,10 +2,6 @@
 
 The .context folder is ignored by git. Use it to store any temporary files you use yo keep track of your work.
 
-## Testing
-
-All functionality must be verified with tests. See `docs/testing.md` for full strategy.
-
 **Commands:**
 
 - `bun run test` - unit tests (watch)
@@ -15,12 +11,14 @@ All functionality must be verified with tests. See `docs/testing.md` for full st
 ## Specifications
 
 The `specs/` folder is the source of truth for feature requirements. Each spec defines:
+
 - Implementation file references
 - User flows
 - Interactions
 - Test status
 
 **Structure:**
+
 ```
 specs/
 ├── _index.yaml       # Auto-generated index
@@ -31,10 +29,12 @@ specs/
 ```
 
 **Commands:**
+
 - `bun run spec:validate` - validate all specs
 - `bun run spec:index` - regenerate index
 
 **Skills:**
+
 - `/spec-validate` - validate spec format
 - `/spec-create` - create new spec interactively
 - `/spec-index` - regenerate index
@@ -50,3 +50,8 @@ specs/
 4. Implement according to spec
 5. Update spec status and test refs as you go
 6. Run `/spec-index` after changes
+
+## Testing
+
+All functionality must be verified with tests. See `docs/testing.md` for full strategy.
+After adding or changing functionality, make sure the changes are covered by passing tests.

@@ -132,3 +132,9 @@ requirements:
       - Grid view: ~300ms target, show blurred/low-res placeholder while full thumbnail loads
       - Detail viewer: longer acceptable, progressive tile loading
       - Client-side caching for repeat views
+
+  - visibility-gating:
+      - Artworks excluded from public queries until all image variants generated
+      - Required variants before visible: thumbnail (600px) and DZI tiles
+      - Processing status stored on artwork record
+      - Failed processing prevents public visibility until resolved

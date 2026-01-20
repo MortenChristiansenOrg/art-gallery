@@ -114,9 +114,26 @@ export function Admin() {
                 )}
                 <div className="flex-1">
                   <p className="font-medium">{artwork.title}</p>
-                  <p className="text-sm text-[var(--color-gallery-muted)]">
-                    {artwork.published ? "Published" : "Draft"}
-                  </p>
+                  <div className="flex gap-2 text-sm">
+                    <span className="text-[var(--color-gallery-muted)]">
+                      {artwork.published ? "Published" : "Draft"}
+                    </span>
+                    {(!artwork.thumbnailId || artwork.dziStatus !== "complete") && (
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          artwork.dziStatus === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {artwork.dziStatus === "failed"
+                          ? "Processing failed"
+                          : artwork.dziStatus === "generating"
+                            ? "Generating tiles..."
+                            : "Processing..."}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button

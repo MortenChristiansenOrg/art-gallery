@@ -133,3 +133,9 @@ requirements:
     - Sequential upload to avoid overwhelming server
     - Error on one file should not stop others (continue and report failures at end)
     - Max 50 images at once
+
+  visibility-gating:
+    - Artworks not visible to public until thumbnail and DZI generation complete
+    - Processing status tracked per artwork: pending | processing | ready | failed
+    - Admin list shows processing status badge for each artwork
+    - Published toggle only affects visibility after processing complete
