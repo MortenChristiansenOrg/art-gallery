@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useAuth } from "../../lib/auth";
 
 interface SeriesFormProps {
   series?: {
@@ -14,6 +15,7 @@ interface SeriesFormProps {
 }
 
 export function SeriesForm({ series, onClose }: SeriesFormProps) {
+  const { token } = useAuth();
   const createSeries = useMutation(api.series.create);
   const updateSeries = useMutation(api.series.update);
 
@@ -34,12 +36,13 @@ export function SeriesForm({ series, onClose }: SeriesFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.slug) return;
+    if (!form.name || !form.slug || !token) return;
 
     setLoading(true);
     try {
       if (series) {
         await updateSeries({
+          token,
           id: series._id,
           name: form.name,
           description: form.description || undefined,
@@ -47,6 +50,7 @@ export function SeriesForm({ series, onClose }: SeriesFormProps) {
         });
       } else {
         await createSeries({
+          token,
           name: form.name,
           description: form.description || undefined,
           slug: form.slug,

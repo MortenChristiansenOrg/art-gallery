@@ -31,12 +31,14 @@ bun dev
 ```
 
 ## Admin
-Access admin at `/admin`. Default password is `admin` (change via `VITE_ADMIN_PASSWORD` env var).
+Access admin at `/admin`. Set password via Convex environment:
+```bash
+npx convex env set ADMIN_PASSWORD your-password
+```
 
 ## Deploy to Vercel
 1. Push to GitHub
 2. Import project in Vercel
-3. Add environment variables:
-   - `VITE_CONVEX_URL` (from Convex dashboard)
-   - `VITE_ADMIN_PASSWORD`
-4. Deploy
+3. Add `VITE_CONVEX_URL` from Convex dashboard
+4. Set `ADMIN_PASSWORD` in Convex dashboard (Settings → Environment Variables)
+5. Deploy

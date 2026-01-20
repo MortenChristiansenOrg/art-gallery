@@ -9,6 +9,7 @@
  */
 
 import type * as artworks from "../artworks.js";
+import type * as auth from "../auth.js";
 import type * as dzi from "../dzi.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
@@ -26,6 +27,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   artworks: typeof artworks;
+  auth: typeof auth;
   dzi: typeof dzi;
   files: typeof files;
   http: typeof http;

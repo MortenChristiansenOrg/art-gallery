@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAuth } from "./auth";
 
 export const list = query({
   handler: async (ctx) => {
@@ -35,14 +36,17 @@ export const send = mutation({
 });
 
 export const markRead = mutation({
-  args: { id: v.id("messages") },
+  args: { token: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     await ctx.db.patch(args.id, { read: true });
   },
 });
 
 export const markAllRead = mutation({
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    requireAuth(args.token);
     const unread = await ctx.db
       .query("messages")
       .withIndex("by_read", (q) => q.eq("read", false))
@@ -54,8 +58,9 @@ export const markAllRead = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("messages") },
+  args: { token: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     await ctx.db.delete(args.id);
   },
 });

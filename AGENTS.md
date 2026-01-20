@@ -55,3 +55,8 @@ specs/
 
 All functionality must be verified with tests. See `docs/testing.md` for full strategy.
 After adding or changing functionality, make sure the changes are covered by passing tests.
+
+## Environment
+
+Always use bun commands over npm commands.
+When running the chrome browse use the Windows path (you are in WSL).

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useAuth } from "../../lib/auth";
 
 const MAX_IMAGES = 50;
 const THUMBNAIL_SIZE = 80;
@@ -53,6 +54,7 @@ function getFilenameWithoutExtension(filename: string): string {
 }
 
 export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
+  const { token } = useAuth();
   const series = useQuery(api.series.list);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createArtwork = useMutation(api.artworks.create);
@@ -159,6 +161,8 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!token) return;
+
     // Edit mode validation
     if (artwork && !editTitle) return;
 
@@ -179,7 +183,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
 
         if (selectedImages.length > 0) {
           const file = selectedImages[0].file;
-          const uploadUrl = await generateUploadUrl();
+          const uploadUrl = await generateUploadUrl({ token });
           const result = await fetch(uploadUrl, {
             method: "POST",
             headers: { "Content-Type": file.type },
@@ -190,6 +194,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
         }
 
         await updateArtwork({
+          token,
           id: artwork._id,
           title: editTitle,
           description: form.description,
@@ -224,7 +229,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
           setUploadProgress({ current: i + 1, total });
 
           try {
-            const uploadUrl = await generateUploadUrl();
+            const uploadUrl = await generateUploadUrl({ token });
             const result = await fetch(uploadUrl, {
               method: "POST",
               headers: { "Content-Type": file.type },
@@ -238,6 +243,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
             const { storageId } = await result.json();
 
             const artworkId = await createArtwork({
+              token,
               title: title.trim(),
               imageId: storageId,
               ...sharedData,

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { requireAuth } from "./auth";
 
 // Build DZI URL from artwork ID
 function getDziUrl(artworkId: string, dziStatus?: string): string | null {
@@ -83,6 +84,7 @@ export const get = query({
 
 export const create = mutation({
   args: {
+    token: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
     imageId: v.id("_storage"),
@@ -93,11 +95,13 @@ export const create = mutation({
     published: v.boolean(),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
+    const { token: _, ...data } = args;
     const existing = await ctx.db.query("artworks").collect();
     const maxOrder = existing.reduce((max, a) => Math.max(max, a.order), -1);
 
     return ctx.db.insert("artworks", {
-      ...args,
+      ...data,
       order: maxOrder + 1,
       createdAt: Date.now(),
     });
@@ -106,6 +110,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    token: v.string(),
     id: v.id("artworks"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -118,7 +123,8 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    requireAuth(args.token);
+    const { id, token: _, ...updates } = args;
 
     // If imageId is being updated, cleanup old tiles and reset DZI status
     if (updates.imageId) {
@@ -149,8 +155,9 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("artworks") },
+  args: { token: v.string(), id: v.id("artworks") },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     const artwork = await ctx.db.get(args.id);
     if (artwork) {
       await ctx.storage.delete(artwork.imageId);
@@ -167,9 +174,11 @@ export const remove = mutation({
 
 export const reorder = mutation({
   args: {
+    token: v.string(),
     ids: v.array(v.id("artworks")),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     for (let i = 0; i < args.ids.length; i++) {
       await ctx.db.patch(args.ids[i], { order: i });
     }

@@ -8,8 +8,10 @@ import type { Id } from "../../convex/_generated/dataModel";
 type Tab = "artworks" | "series" | "messages" | "content";
 
 export function Admin() {
-  const { isAuthenticated, login, logout } = useAuth();
+  const { isAuthenticated, token, login, logout } = useAuth();
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("artworks");
   const [showArtworkForm, setShowArtworkForm] = useState(false);
   const [showSeriesForm, setShowSeriesForm] = useState(false);
@@ -35,10 +37,19 @@ export function Admin() {
       <div className="max-w-sm mx-auto px-6 py-20">
         <h1 className="font-[var(--font-serif)] text-2xl mb-6 text-center">Admin</h1>
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            if (!login(password)) {
-              alert("Invalid password");
+            setLoginError("");
+            setLoginLoading(true);
+            try {
+              const success = await login(password);
+              if (!success) {
+                setLoginError("Invalid password");
+              }
+            } catch (err) {
+              setLoginError(err instanceof Error ? err.message : "Login failed");
+            } finally {
+              setLoginLoading(false);
             }
           }}
           className="space-y-4"
@@ -50,11 +61,15 @@ export function Admin() {
             placeholder="Password"
             className="w-full px-4 py-3 border border-[var(--color-gallery-border)] bg-transparent"
           />
+          {loginError && (
+            <p className="text-red-600 text-sm">{loginError}</p>
+          )}
           <button
             type="submit"
-            className="w-full px-4 py-3 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)]"
+            disabled={loginLoading}
+            className="w-full px-4 py-3 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] disabled:opacity-50"
           >
-            Login
+            {loginLoading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
@@ -144,8 +159,8 @@ export function Admin() {
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm("Delete this artwork?")) {
-                        deleteArtwork({ id: artwork._id });
+                      if (confirm("Delete this artwork?") && token) {
+                        deleteArtwork({ token, id: artwork._id });
                       }
                     }}
                     className="text-sm text-red-600"
@@ -187,8 +202,8 @@ export function Admin() {
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm("Delete this series?")) {
-                        deleteSeries({ id: s._id });
+                      if (confirm("Delete this series?") && token) {
+                        deleteSeries({ token, id: s._id });
                       }
                     }}
                     className="text-sm text-red-600"
@@ -220,9 +235,9 @@ export function Admin() {
                   <p className="text-sm text-[var(--color-gallery-muted)]">{msg.email}</p>
                 </div>
                 <div className="flex gap-2">
-                  {!msg.read && (
+                  {!msg.read && token && (
                     <button
-                      onClick={() => markMessageRead({ id: msg._id })}
+                      onClick={() => markMessageRead({ token, id: msg._id })}
                       className="text-sm underline"
                     >
                       Mark read
@@ -230,8 +245,8 @@ export function Admin() {
                   )}
                   <button
                     onClick={() => {
-                      if (confirm("Delete this message?")) {
-                        deleteMessage({ id: msg._id });
+                      if (confirm("Delete this message?") && token) {
+                        deleteMessage({ token, id: msg._id });
                       }
                     }}
                     className="text-sm text-red-600"
@@ -261,7 +276,9 @@ export function Admin() {
           />
           <button
             onClick={() => {
-              setContent({ key: "about", value: aboutText });
+              if (token) {
+                setContent({ token, key: "about", value: aboutText });
+              }
             }}
             className="mt-4 px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
           >

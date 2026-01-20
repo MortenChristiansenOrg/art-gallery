@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireAuth } from "./auth";
 
 export const list = query({
   handler: async (ctx) => {
@@ -38,17 +39,20 @@ export const getBySlug = query({
 
 export const create = mutation({
   args: {
+    token: v.string(),
     name: v.string(),
     description: v.optional(v.string()),
     slug: v.string(),
     coverImageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
+    const { token: _, ...data } = args;
     const existing = await ctx.db.query("series").collect();
     const maxOrder = existing.reduce((max, s) => Math.max(max, s.order), -1);
 
     return ctx.db.insert("series", {
-      ...args,
+      ...data,
       order: maxOrder + 1,
     });
   },
@@ -56,6 +60,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
+    token: v.string(),
     id: v.id("series"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -64,7 +69,8 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    requireAuth(args.token);
+    const { id, token: _, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -73,8 +79,9 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("series") },
+  args: { token: v.string(), id: v.id("series") },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     const series = await ctx.db.get(args.id);
     if (series) {
       if (series.coverImageId) {
@@ -95,9 +102,11 @@ export const remove = mutation({
 
 export const reorder = mutation({
   args: {
+    token: v.string(),
     ids: v.array(v.id("series")),
   },
   handler: async (ctx, args) => {
+    requireAuth(args.token);
     for (let i = 0; i < args.ids.length; i++) {
       await ctx.db.patch(args.ids[i], { order: i });
     }

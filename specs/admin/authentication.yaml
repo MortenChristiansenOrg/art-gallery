@@ -1,7 +1,7 @@
 id: admin-auth
 title: Admin Authentication
 tags: [admin, security, core]
-status: planned
+status: implemented
 
 description: |
   Password-based authentication for admin panel access.
@@ -37,26 +37,37 @@ security-requirements:
     - Security tests should attempt to bypass auth
 
 implementation:
+  # server auth
+  - convex/auth.ts:43#login
+  - convex/auth.ts:55#validateSession
+  - convex/auth.ts:61#requireAuth
+  # protected mutations
+  - convex/artworks.ts:97#create
+  - convex/artworks.ts:125#update
+  - convex/artworks.ts:159#remove
+  - convex/series.ts:48#create
+  - convex/series.ts:71#update
+  - convex/series.ts:83#remove
+  - convex/messages.ts:40#markRead
+  - convex/messages.ts:46#markAllRead
+  - convex/messages.ts:60#remove
+  - convex/siteContent.ts:22#set
+  - convex/files.ts:7#generateUploadUrl
   # client
-  - src/lib/auth.tsx#AuthProvider
-  - src/lib/auth.tsx#useAuth
-  - src/pages/Admin.tsx#Admin
-  # server (planned)
-  - convex/artworks.ts#requireAuth
-  - convex/http.ts#validateAuth
+  - src/lib/auth.tsx:23#AuthProvider
+  - src/lib/auth.tsx:60#useAuth
+  - src/pages/Admin.tsx:11
 
 verification:
   unit:
     - path: src/lib/__tests__/auth.test.tsx
-      status: planned
+      status: implemented
   e2e:
     - path: e2e/admin.spec.ts#login
       status: passing
   security:
-    - description: Restricted data not returned without auth
-      status: planned
-    - description: Direct API calls without auth rejected
-      status: planned
+    - path: e2e/auth-security.spec.ts
+      status: implemented
 
 flows:
   login:
