@@ -53,6 +53,12 @@ flows:
     - Admin clicks Apply Crop
     - Cropped image saved as cover
 
+  cover-image-drag-drop:
+    - Admin drags image file over upload zone
+    - Drop zone shows visual feedback (border highlight)
+    - Admin drops file
+    - Image cropper opens automatically
+
 interactions:
   - type: click
     element: add-collection-button
@@ -66,3 +72,6 @@ interactions:
   - type: drag
     element: crop-handle
     action: Resizes crop region
+  - type: drop
+    element: cover-upload-zone
+    action: Opens cropper with dropped image

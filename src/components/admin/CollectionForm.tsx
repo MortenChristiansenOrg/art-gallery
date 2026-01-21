@@ -45,8 +45,10 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const handleNameChange = (name: string) => {
     setForm({
@@ -83,6 +85,30 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
     setUploadedImageUrl(url);
     setShowCropper(true);
     e.target.value = "";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setCoverSource("upload");
+      setUploadedImageUrl(url);
+      setShowCropper(true);
+    }
   };
 
   const handleCrop = (blob: Blob) => {
@@ -253,13 +279,20 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <button
-                    type="button"
+                  <div
+                    ref={dropZoneRef}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-2 border border-dashed border-[var(--color-gallery-border)] text-sm w-full hover:border-[var(--color-gallery-text)]/50"
+                    className={`px-3 py-4 border-2 border-dashed text-sm w-full text-center cursor-pointer transition-colors ${
+                      isDragging
+                        ? "border-[var(--color-gallery-text)] bg-[var(--color-gallery-text)]/5"
+                        : "border-[var(--color-gallery-border)] hover:border-[var(--color-gallery-text)]/50"
+                    }`}
                   >
-                    Upload Image
-                  </button>
+                    {isDragging ? "Drop image here" : "Click or drag image here"}
+                  </div>
                 </div>
               )}
             </div>

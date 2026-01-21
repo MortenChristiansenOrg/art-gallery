@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CollectionForm } from '../CollectionForm'
 
@@ -153,9 +153,9 @@ describe('CollectionForm', () => {
       })
     })
 
-    it('shows upload image button', () => {
+    it('shows upload drop zone', () => {
       render(<CollectionForm onClose={mockOnClose} />)
-      expect(screen.getByRole('button', { name: /upload image/i })).toBeInTheDocument()
+      expect(screen.getByText(/Click or drag image here/)).toBeInTheDocument()
     })
   })
 
@@ -241,6 +241,56 @@ describe('CollectionForm', () => {
 
       const coverImg = screen.getByAltText('Cover preview')
       expect(coverImg).toHaveAttribute('src', 'http://example.com/cover.jpg')
+    })
+  })
+
+  describe('Drag and Drop', () => {
+    it('shows visual feedback when dragging over drop zone', () => {
+      render(<CollectionForm onClose={mockOnClose} />)
+      const dropZone = screen.getByText(/Click or drag image here/)
+
+      fireEvent.dragOver(dropZone, { dataTransfer: { files: [] } })
+
+      expect(screen.getByText('Drop image here')).toBeInTheDocument()
+    })
+
+    it('hides visual feedback when drag leaves', () => {
+      render(<CollectionForm onClose={mockOnClose} />)
+      const dropZone = screen.getByText(/Click or drag image here/)
+
+      fireEvent.dragOver(dropZone, { dataTransfer: { files: [] } })
+      expect(screen.getByText('Drop image here')).toBeInTheDocument()
+
+      fireEvent.dragLeave(screen.getByText('Drop image here'), { relatedTarget: null })
+      expect(screen.getByText(/Click or drag image here/)).toBeInTheDocument()
+    })
+
+    it('accepts dropped image file', async () => {
+      render(<CollectionForm onClose={mockOnClose} />)
+      const dropZone = screen.getByText(/Click or drag image here/)
+
+      const file = new File(['mock-content'], 'cover.jpg', { type: 'image/jpeg' })
+      const dataTransfer = { files: [file] }
+
+      fireEvent.drop(dropZone, { dataTransfer })
+
+      // Should show cropper (image cropper modal appears)
+      await waitFor(() => {
+        expect(screen.getByText('Crop Cover Image')).toBeInTheDocument()
+      })
+    })
+
+    it('ignores non-image files on drop', () => {
+      render(<CollectionForm onClose={mockOnClose} />)
+      const dropZone = screen.getByText(/Click or drag image here/)
+
+      const file = new File(['mock-content'], 'document.pdf', { type: 'application/pdf' })
+      const dataTransfer = { files: [file] }
+
+      fireEvent.drop(dropZone, { dataTransfer })
+
+      // Cropper should NOT appear
+      expect(screen.queryByText('Crop Cover Image')).not.toBeInTheDocument()
     })
   })
 
