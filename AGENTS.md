@@ -51,6 +51,16 @@ specs/
 5. Update spec status and test refs as you go
 6. Run `/spec-index` after changes
 
+## Plans
+
+All plans must include instructions to add or update specs to reflect the changes.
+
+## Implementation
+
+When implementing plans and features, delegate to sub agents where it makes sense to speed up the work.
+Make sure the changes to Convex are built to the system is ready to test.
+All planned work in specs related to the current work must be implemented, including test coverage.
+
 ## Testing
 
 All functionality must be verified with tests. See `docs/testing.md` for full strategy.

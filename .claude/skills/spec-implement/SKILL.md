@@ -37,6 +37,8 @@ Follow the spec's flows, interactions, and requirements:
 - Reference spec's `implementation:` section for target locations
 - Reference docs/design-system.md for frontend design
 - Mark implementation refs with actual file:line or file#export
+- Rebuild the Convex database to make sure they work correctly
+- Make sure all type errors are fixed (regardless of whether they relate to the current work or not)
 
 ### 5. Write Tests
 
