@@ -14,7 +14,7 @@ implementation:
 verification:
   unit:
     - path: src/pages/__tests__/About.test.tsx#contact-form
-      status: planned
+      status: implemented
   e2e:
     - path: e2e/contact.spec.ts#submit-form
       status: passing

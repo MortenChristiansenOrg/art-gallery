@@ -15,10 +15,10 @@ implementation:
 verification:
   unit:
     - path: src/pages/__tests__/Admin.test.tsx#content
-      status: planned
+      status: implemented
   e2e:
     - path: e2e/admin.spec.ts#content-editing
-      status: planned
+      status: implemented
 
 flows:
   edit-about:

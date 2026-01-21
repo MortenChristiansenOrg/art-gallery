@@ -1,11 +1,11 @@
-import { useState, useRef, useCallback, useOptimistic, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
-import { ArtworkForm, SeriesForm } from "../components/admin";
+import { ArtworkForm, CollectionForm } from "../components/admin";
 import type { Id } from "../../convex/_generated/dataModel";
 
-type Tab = "artworks" | "series" | "messages" | "content";
+type Tab = "artworks" | "collections" | "messages" | "content";
 
 export function Admin() {
   const { isAuthenticated, token, login, logout } = useAuth();
@@ -14,25 +14,25 @@ export function Admin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [tab, setTab] = useState<Tab>("artworks");
   const [showArtworkForm, setShowArtworkForm] = useState(false);
-  const [showSeriesForm, setShowSeriesForm] = useState(false);
+  const [showCollectionForm, setShowCollectionForm] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Id<"artworks"> | null>(null);
-  const [editingSeries, setEditingSeries] = useState<Id<"series"> | null>(null);
-  const [seriesFilter, setSeriesFilter] = useState<Id<"series"> | "">("");
+  const [editingCollection, setEditingCollection] = useState<Id<"collections"> | null>(null);
+  const [collectionFilter, setCollectionFilter] = useState<Id<"collections"> | "">("");
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
 
   const artworks = useQuery(api.artworks.list, {
     publishedOnly: false,
-    seriesId: seriesFilter || undefined,
+    collectionId: collectionFilter || undefined,
   });
-  const series = useQuery(api.series.list);
+  const collections = useQuery(api.collections.list);
   const messages = useQuery(api.messages.list);
   const unreadCount = useQuery(api.messages.unreadCount);
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
 
   const deleteArtwork = useMutation(api.artworks.remove);
-  const deleteSeries = useMutation(api.series.remove);
+  const deleteCollection = useMutation(api.collections.remove);
   const deleteMessage = useMutation(api.messages.remove);
   const markMessageRead = useMutation(api.messages.markRead);
   const setContent = useMutation(api.siteContent.set);
@@ -153,7 +153,7 @@ export function Admin() {
   }
 
   const editArtwork = artworks?.find((a) => a._id === editingArtwork);
-  const editSeriesItem = series?.find((s) => s._id === editingSeries);
+  const editCollectionItem = collections?.find((c) => c._id === editingCollection);
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
@@ -165,7 +165,7 @@ export function Admin() {
       </div>
 
       <div className="flex gap-4 border-b border-[var(--color-gallery-border)] mb-8">
-        {(["artworks", "series", "messages", "content"] as Tab[]).map((t) => (
+        {(["artworks", "collections", "messages", "content"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -192,15 +192,15 @@ export function Admin() {
               Add Artwork
             </button>
             <select
-              value={seriesFilter}
-              onChange={(e) => setSeriesFilter(e.target.value as Id<"series"> | "")}
+              value={collectionFilter}
+              onChange={(e) => setCollectionFilter(e.target.value as Id<"collections"> | "")}
               className="px-3 py-2 border border-[var(--color-gallery-border)] bg-transparent text-sm"
-              data-testid="series-filter"
+              data-testid="collection-filter"
             >
               <option value="">All Artworks</option>
-              {series?.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
+              {collections?.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -298,36 +298,36 @@ export function Admin() {
         </div>
       )}
 
-      {tab === "series" && (
+      {tab === "collections" && (
         <div>
           <button
-            onClick={() => setShowSeriesForm(true)}
+            onClick={() => setShowCollectionForm(true)}
             className="mb-6 px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
           >
-            Add Series
+            Add Collection
           </button>
 
           <div className="space-y-4">
-            {series?.map((s) => (
+            {collections?.map((c) => (
               <div
-                key={s._id}
+                key={c._id}
                 className="flex items-center gap-4 p-4 border border-[var(--color-gallery-border)]"
               >
                 <div className="flex-1">
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-[var(--color-gallery-muted)]">/{s.slug}</p>
+                  <p className="font-medium">{c.name}</p>
+                  <p className="text-sm text-[var(--color-gallery-muted)]">/{c.slug}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setEditingSeries(s._id)}
+                    onClick={() => setEditingCollection(c._id)}
                     className="text-sm underline"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm("Delete this series?") && token) {
-                        deleteSeries({ token, id: s._id });
+                      if (confirm("Delete this collection?") && token) {
+                        deleteCollection({ token, id: c._id });
                       }
                     }}
                     className="text-sm text-red-600"
@@ -421,12 +421,12 @@ export function Admin() {
         />
       )}
 
-      {(showSeriesForm || editingSeries) && (
-        <SeriesForm
-          series={editSeriesItem}
+      {(showCollectionForm || editingCollection) && (
+        <CollectionForm
+          collection={editCollectionItem}
           onClose={() => {
-            setShowSeriesForm(false);
-            setEditingSeries(null);
+            setShowCollectionForm(false);
+            setEditingCollection(null);
           }}
         />
       )}

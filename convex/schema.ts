@@ -8,7 +8,8 @@ export default defineSchema({
     imageId: v.id("_storage"),
     thumbnailId: v.optional(v.id("_storage")), // 600px max, quality 85
     viewerImageId: v.optional(v.id("_storage")), // 2000px max, quality 90
-    seriesId: v.optional(v.id("series")),
+    collectionId: v.optional(v.id("collections")),
+    seriesId: v.optional(v.any()), // DEPRECATED: old field, kept for backwards compat
     year: v.optional(v.number()),
     medium: v.optional(v.string()),
     dimensions: v.optional(v.string()),
@@ -35,7 +36,7 @@ export default defineSchema({
       )
     ),
   })
-    .index("by_series", ["seriesId"])
+    .index("by_collection", ["collectionId"])
     .index("by_order", ["order"])
     .index("by_published", ["published"]),
 
@@ -49,7 +50,7 @@ export default defineSchema({
     .index("by_artwork", ["artworkId"])
     .index("by_tile", ["artworkId", "level", "col", "row"]),
 
-  series: defineTable({
+  collections: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
     slug: v.string(),

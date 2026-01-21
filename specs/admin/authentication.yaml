@@ -45,9 +45,9 @@ implementation:
   - convex/artworks.ts#create
   - convex/artworks.ts#update
   - convex/artworks.ts#remove
-  - convex/series.ts#create
-  - convex/series.ts#update
-  - convex/series.ts#remove
+  - convex/collections.ts#create
+  - convex/collections.ts#update
+  - convex/collections.ts#remove
   - convex/messages.ts#markRead
   - convex/messages.ts#markAllRead
   - convex/messages.ts#remove

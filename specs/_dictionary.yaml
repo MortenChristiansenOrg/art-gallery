@@ -6,9 +6,13 @@ terms:
     definition: A single art piece with image, title, metadata
     schema: convex/schema.ts#artworks
 
-  series:
+  collection:
     definition: A collection of related artworks grouped by theme or project
-    schema: convex/schema.ts#series
+    schema: convex/schema.ts#collections
+
+  cabinet-of-curiosities:
+    definition: Virtual collection for uncategorized artworks
+    slug: cabinet-of-curiosities
 
   lightbox:
     definition: Full-screen image viewer overlay for viewing artworks

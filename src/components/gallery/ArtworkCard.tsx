@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { OptimizedImage } from "./OptimizedImage";
 
 interface ArtworkCardProps {
@@ -10,9 +10,10 @@ interface ArtworkCardProps {
   year?: number;
   onClick?: () => void;
   index?: number;
+  collectionSlug?: string;
 }
 
-export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, index = 0 }: ArtworkCardProps) {
+export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, index = 0, collectionSlug }: ArtworkCardProps) {
   // Stagger class based on index (1-9 cycle)
   const staggerClass = `stagger-${(index % 9) + 1}`;
 
@@ -93,5 +94,9 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
     );
   }
 
-  return <Link to={`/artwork/${id}`}>{content}</Link>;
+  return (
+    <Link to={`/artwork/${id}`} state={{ fromCollection: collectionSlug }}>
+      {content}
+    </Link>
+  );
 }

@@ -12,15 +12,15 @@ function getDziUrl(artworkId: string, dziStatus?: string): string | null {
 
 export const list = query({
   args: {
-    seriesId: v.optional(v.id("series")),
+    collectionId: v.optional(v.id("collections")),
     publishedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     let artworks;
-    if (args.seriesId) {
+    if (args.collectionId) {
       artworks = await ctx.db
         .query("artworks")
-        .withIndex("by_series", (q) => q.eq("seriesId", args.seriesId))
+        .withIndex("by_collection", (q) => q.eq("collectionId", args.collectionId))
         .collect();
     } else {
       artworks = await ctx.db.query("artworks").collect();
@@ -37,6 +37,39 @@ export const list = query({
 
     return Promise.all(
       artworks.map(async (artwork) => ({
+        ...artwork,
+        imageUrl: await ctx.storage.getUrl(artwork.imageId),
+        thumbnailUrl: artwork.thumbnailId
+          ? await ctx.storage.getUrl(artwork.thumbnailId)
+          : null,
+        viewerImageUrl: artwork.viewerImageId
+          ? await ctx.storage.getUrl(artwork.viewerImageId)
+          : null,
+        dziUrl: getDziUrl(artwork._id, artwork.dziStatus),
+      }))
+    );
+  },
+});
+
+export const listUncategorized = query({
+  args: {
+    publishedOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const artworks = await ctx.db.query("artworks").collect();
+
+    let filtered = artworks.filter((a) => !a.collectionId);
+
+    if (args.publishedOnly) {
+      filtered = filtered.filter(
+        (a) => a.published && a.thumbnailId && a.dziStatus === "complete"
+      );
+    }
+
+    filtered.sort((a, b) => a.order - b.order);
+
+    return Promise.all(
+      filtered.map(async (artwork) => ({
         ...artwork,
         imageUrl: await ctx.storage.getUrl(artwork.imageId),
         thumbnailUrl: artwork.thumbnailId
@@ -88,7 +121,7 @@ export const create = mutation({
     title: v.string(),
     description: v.optional(v.string()),
     imageId: v.id("_storage"),
-    seriesId: v.optional(v.id("series")),
+    collectionId: v.optional(v.id("collections")),
     year: v.optional(v.number()),
     medium: v.optional(v.string()),
     dimensions: v.optional(v.string()),
@@ -115,7 +148,7 @@ export const update = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     imageId: v.optional(v.id("_storage")),
-    seriesId: v.optional(v.id("series")),
+    collectionId: v.optional(v.id("collections")),
     year: v.optional(v.number()),
     medium: v.optional(v.string()),
     dimensions: v.optional(v.string()),

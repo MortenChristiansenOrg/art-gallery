@@ -10,12 +10,12 @@
 
 import type * as artworks from "../artworks.js";
 import type * as auth from "../auth.js";
+import type * as collections from "../collections.js";
 import type * as dzi from "../dzi.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as images from "../images.js";
 import type * as messages from "../messages.js";
-import type * as series from "../series.js";
 import type * as siteContent from "../siteContent.js";
 import type * as tiles from "../tiles.js";
 
@@ -28,12 +28,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   artworks: typeof artworks;
   auth: typeof auth;
+  collections: typeof collections;
   dzi: typeof dzi;
   files: typeof files;
   http: typeof http;
   images: typeof images;
   messages: typeof messages;
-  series: typeof series;
   siteContent: typeof siteContent;
   tiles: typeof tiles;
 }>;

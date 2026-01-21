@@ -1,51 +1,33 @@
 import { useQuery } from "convex/react";
-import { useSearchParams } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
-import { ArtworkGrid, SeriesFilter } from "../components/gallery";
+import { CollectionsGrid } from "../components/gallery";
 
 export function Home() {
-  const [searchParams] = useSearchParams();
-  const seriesSlug = searchParams.get("series");
+  const collections = useQuery(api.collections.listWithCounts);
+  const uncategorizedCount = useQuery(api.collections.getUncategorizedCount);
 
-  const allSeries = useQuery(api.series.list);
-  const currentSeries = seriesSlug
-    ? allSeries?.find((s) => s.slug === seriesSlug)
-    : undefined;
-
-  const artworks = useQuery(api.artworks.list, {
-    seriesId: currentSeries?._id,
-    publishedOnly: true,
-  });
-
-  if (artworks === undefined || allSeries === undefined) {
+  if (collections === undefined || uncategorizedCount === undefined) {
     return (
-      <div className="max-w-7xl mx-auto px-8 lg:px-12 py-16">
+      <div className="max-w-6xl mx-auto px-8 lg:px-12 py-16">
         {/* Loading skeleton */}
-        <div className="space-y-16">
-          {/* Filter skeleton */}
-          <div className="flex gap-6 pb-8 border-b border-[var(--color-gallery-border-light)]">
-            <div className="h-3 w-12 skeleton-shimmer rounded" />
-            <div className="h-3 w-20 skeleton-shimmer rounded" />
-            <div className="h-3 w-16 skeleton-shimmer rounded" />
+        <div className="space-y-8">
+          {/* Header skeleton */}
+          <div className="text-center mb-16">
+            <div className="h-8 w-48 skeleton-shimmer rounded mx-auto" />
+            <div className="h-4 w-64 skeleton-shimmer rounded mx-auto mt-4" />
           </div>
 
           {/* Grid skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 lg:gap-x-10 lg:gap-y-16">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="space-y-5">
-                <div
-                  className="
-                    bg-[var(--color-gallery-surface)]
-                    border border-[var(--color-gallery-border-light)]
-                    p-4
-                  "
-                >
-                  <div className="aspect-[4/5] skeleton-shimmer" />
-                </div>
-                <div className="space-y-2 px-1">
-                  <div className="h-4 w-3/4 skeleton-shimmer rounded" />
-                  <div className="h-3 w-12 skeleton-shimmer rounded" />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="
+                  bg-[var(--color-gallery-surface)]
+                  border border-[var(--color-gallery-border-light)]
+                "
+              >
+                <div className="aspect-[4/3] skeleton-shimmer" />
               </div>
             ))}
           </div>
@@ -54,27 +36,38 @@ export function Home() {
     );
   }
 
+  const hasContent = collections.length > 0 || uncategorizedCount > 0;
+
   return (
-    <section className="max-w-7xl mx-auto px-8 lg:px-12 py-16">
-      {/* Series filter */}
-      {allSeries.length > 0 && <SeriesFilter series={allSeries} />}
+    <section className="max-w-6xl mx-auto px-8 lg:px-12 py-16">
+      {/* Page header */}
+      <header className="text-center mb-16 opacity-0 animate-fade-in">
+        <h1
+          className="
+            font-[var(--font-serif)] text-3xl lg:text-4xl
+            font-light tracking-wide
+            text-[var(--color-gallery-text)]
+          "
+        >
+          Collections
+        </h1>
+        <p
+          className="
+            mt-4 text-[var(--color-gallery-muted)]
+            text-[0.95rem] font-light tracking-wide
+          "
+        >
+          Explore curated exhibitions
+        </p>
+      </header>
 
-      {/* Series header with description */}
-      {currentSeries && (
-        <div className="mb-12 max-w-2xl">
-          <h1 className="text-2xl font-light tracking-wide text-[var(--color-gallery-text)]">
-            {currentSeries.name}
-          </h1>
-          {currentSeries.description && (
-            <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--color-gallery-subtle)] font-light">
-              {currentSeries.description}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Gallery grid */}
-      {artworks.length === 0 ? (
+      {/* Collections grid */}
+      {hasContent ? (
+        <CollectionsGrid
+          collections={collections}
+          uncategorizedCount={uncategorizedCount}
+        />
+      ) : (
         <div className="flex flex-col items-center justify-center py-32 opacity-0 animate-fade-in">
           <p
             className="
@@ -82,21 +75,9 @@ export function Home() {
               text-[0.9rem] tracking-wide font-light
             "
           >
-            No works to display
+            No collections to display
           </p>
-          {currentSeries && (
-            <p
-              className="
-                mt-2 text-[var(--color-gallery-subtle)]
-                text-[0.8rem] tracking-wide font-light
-              "
-            >
-              Try selecting a different series
-            </p>
-          )}
         </div>
-      ) : (
-        <ArtworkGrid artworks={artworks} />
       )}
     </section>
   );

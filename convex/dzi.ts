@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+// Id type available from dataModel if needed
 import { Jimp } from "jimp";
 
 const TILE_SIZE = 512;
@@ -175,7 +175,7 @@ export const generateBatch = internalAction({
         );
 
         // Store tile
-        const tileBlob = new Blob([tileBuffer], { type: "image/jpeg" });
+        const tileBlob = new Blob([new Uint8Array(tileBuffer)], { type: "image/jpeg" });
         const tileStorageId = await ctx.storage.store(tileBlob);
 
         // Record tile in DB

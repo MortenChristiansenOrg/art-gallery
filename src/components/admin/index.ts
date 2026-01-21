@@ -1,2 +1,3 @@
 export { ArtworkForm } from "./ArtworkForm";
-export { SeriesForm } from "./SeriesForm";
+export { CollectionForm } from "./CollectionForm";
+export { ImageCropper } from "./ImageCropper";

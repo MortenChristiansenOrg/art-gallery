@@ -1,5 +1,5 @@
 import { ArtworkCard } from "./ArtworkCard";
-import type { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 interface Artwork {
   _id: Id<"artworks">;
@@ -11,9 +11,10 @@ interface Artwork {
 
 interface ArtworkGridProps {
   artworks: Artwork[];
+  collectionSlug?: string;
 }
 
-export function ArtworkGrid({ artworks }: ArtworkGridProps) {
+export function ArtworkGrid({ artworks, collectionSlug }: ArtworkGridProps) {
   return (
     <div
       className="
@@ -30,6 +31,7 @@ export function ArtworkGrid({ artworks }: ArtworkGridProps) {
           thumbnailUrl={artwork.thumbnailUrl}
           year={artwork.year}
           index={index}
+          collectionSlug={collectionSlug}
         />
       ))}
     </div>

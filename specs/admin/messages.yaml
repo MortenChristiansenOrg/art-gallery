@@ -16,7 +16,7 @@ implementation:
 verification:
   unit:
     - path: src/pages/__tests__/Admin.test.tsx#messages
-      status: planned
+      status: implemented
   e2e:
     - path: e2e/admin.spec.ts#messages
       status: passing

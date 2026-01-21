@@ -1,7 +1,7 @@
 # Auto-generated spec index - do not edit manually
 # Regenerate with: bun run scripts/generate-spec-index.ts
 
-generated: 2026-01-20T16:30:25.116Z
+generated: 2026-01-21T16:59:35.758Z
 specs:
   - id: admin-auth
     path: specs/admin/authentication.yaml
@@ -27,6 +27,27 @@ specs:
       - crud
       - content
       - core
+    status: implemented
+  - id: collection-management
+    path: specs/admin/collection-management.yaml
+    title: Collection Management
+    tags:
+      - admin
+      - crud
+    status: implemented
+  - id: collection-view
+    path: specs/gallery/collection-view.yaml
+    title: Collection View Page
+    tags:
+      - gallery
+      - public
+    status: implemented
+  - id: collections-landing
+    path: specs/gallery/collections-landing.yaml
+    title: Collections Landing Page
+    tags:
+      - gallery
+      - public
     status: implemented
   - id: contact-form
     path: specs/contact/contact-form.yaml
@@ -57,50 +78,38 @@ specs:
       - admin
       - contact
     status: implemented
-  - id: series-filtering
-    path: specs/gallery/series-filtering.yaml
-    title: Series Filtering
-    tags:
-      - gallery
-      - public
-    status: implemented
-  - id: series-management
-    path: specs/admin/series-management.yaml
-    title: Series Management
-    tags:
-      - admin
-      - crud
-    status: implemented
 by_tag:
-  contact:
-    - contact-form
-    - messages
-  public:
-    - artwork-browsing
-    - contact-form
-    - image-delivery
-    - series-filtering
   admin:
     - admin-auth
     - artwork-management
+    - collection-management
     - content-editing
     - messages
-    - series-management
-  crud:
-    - artwork-management
-    - series-management
+  contact:
+    - contact-form
+    - messages
   content:
     - artwork-management
     - content-editing
+  crud:
+    - artwork-management
+    - collection-management
   security:
     - admin-auth
   core:
     - admin-auth
     - artwork-browsing
     - artwork-management
+  public:
+    - artwork-browsing
+    - collection-view
+    - collections-landing
+    - contact-form
+    - image-delivery
   gallery:
     - artwork-browsing
+    - collection-view
+    - collections-landing
     - image-delivery
-    - series-filtering
   performance:
     - image-delivery

@@ -16,7 +16,7 @@ implementation:
 verification:
   unit:
     - path: src/components/gallery/__tests__/ArtworkGrid.test.tsx
-      status: planned
+      status: implemented
   e2e:
     - path: e2e/gallery.spec.ts#browse-artworks
       status: passing

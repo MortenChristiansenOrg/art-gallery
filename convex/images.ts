@@ -42,8 +42,8 @@ export const generateVariants = action({
     const viewerBuffer = await resizeImage(imageBuffer, width, height, VIEWER_MAX, VIEWER_QUALITY);
 
     // Upload variants to storage
-    const thumbnailBlob = new Blob([thumbnailBuffer], { type: "image/jpeg" });
-    const viewerBlob = new Blob([viewerBuffer], { type: "image/jpeg" });
+    const thumbnailBlob = new Blob([new Uint8Array(thumbnailBuffer)], { type: "image/jpeg" });
+    const viewerBlob = new Blob([new Uint8Array(viewerBuffer)], { type: "image/jpeg" });
 
     const thumbnailId = await ctx.storage.store(thumbnailBlob);
     const viewerImageId = await ctx.storage.store(viewerBlob);
@@ -169,8 +169,8 @@ async function generateVariantsForArtwork(
   const thumbnailBuffer = await resizeImage(imageBuffer, width, height, THUMBNAIL_MAX, THUMBNAIL_QUALITY);
   const viewerBuffer = await resizeImage(imageBuffer, width, height, VIEWER_MAX, VIEWER_QUALITY);
 
-  const thumbnailBlob = new Blob([thumbnailBuffer], { type: "image/jpeg" });
-  const viewerBlob = new Blob([viewerBuffer], { type: "image/jpeg" });
+  const thumbnailBlob = new Blob([new Uint8Array(thumbnailBuffer)], { type: "image/jpeg" });
+  const viewerBlob = new Blob([new Uint8Array(viewerBuffer)], { type: "image/jpeg" });
 
   const thumbnailId = await ctx.storage.store(thumbnailBlob);
   const viewerImageId = await ctx.storage.store(viewerBlob);

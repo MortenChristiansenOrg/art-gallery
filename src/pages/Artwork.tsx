@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -7,14 +7,18 @@ import { ImageViewer } from "../components/gallery";
 
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const [viewerOpen, setViewerOpen] = useState(false);
+
+  // Get collection slug from navigation state (if coming from collection page)
+  const fromCollection = (location.state as { fromCollection?: string } | null)?.fromCollection;
 
   const artwork = useQuery(
     api.artworks.get,
     id ? { id: id as Id<"artworks">, publishedOnly: true } : "skip"
   );
 
-  const series = useQuery(api.series.list);
+  const collections = useQuery(api.collections.list);
 
   if (artwork === undefined) {
     return (
@@ -58,20 +62,37 @@ export function Artwork() {
             transition-colors duration-300
           "
         >
-          Return to gallery
+          Return to collections
         </Link>
       </div>
     );
   }
 
-  const artworkSeries = series?.find((s) => s._id === artwork.seriesId);
+  const artworkCollection = collections?.find((c) => c._id === artwork.collectionId);
+
+  // Determine back link
+  let backLink = "/";
+  let backLabel = "All collections";
+
+  if (fromCollection) {
+    backLink = `/collection/${fromCollection}`;
+    backLabel = fromCollection === "cabinet-of-curiosities"
+      ? "Cabinet of Curiosities"
+      : artworkCollection?.name || "Collection";
+  } else if (artworkCollection) {
+    backLink = `/collection/${artworkCollection.slug}`;
+    backLabel = artworkCollection.name;
+  } else if (artwork.collectionId === undefined) {
+    backLink = "/collection/cabinet-of-curiosities";
+    backLabel = "Cabinet of Curiosities";
+  }
 
   return (
     <article className="max-w-6xl mx-auto px-8 lg:px-12 py-12 lg:py-16 opacity-0 animate-fade-in">
       {/* Back navigation */}
       <nav className="mb-10">
         <Link
-          to="/"
+          to={backLink}
           className="
             group inline-flex items-center gap-3
             text-[0.8rem] tracking-[0.1em] uppercase font-light
@@ -87,7 +108,7 @@ export function Artwork() {
               group-hover:-translate-x-1
             "
           />
-          Back to works
+          {backLabel}
         </Link>
       </nav>
 
@@ -218,7 +239,7 @@ export function Artwork() {
                 </dd>
               </div>
             )}
-            {artworkSeries && (
+            {artworkCollection && (
               <div>
                 <dt
                   className="
@@ -227,11 +248,11 @@ export function Artwork() {
                     font-light mb-1
                   "
                 >
-                  Series
+                  Collection
                 </dt>
                 <dd>
                   <Link
-                    to={`/?series=${artworkSeries.slug}`}
+                    to={`/collection/${artworkCollection.slug}`}
                     className="
                       relative inline-block text-[0.9rem] font-light
                       text-[var(--color-gallery-text)]
@@ -239,7 +260,7 @@ export function Artwork() {
                       transition-colors duration-300
                     "
                   >
-                    {artworkSeries.name}
+                    {artworkCollection.name}
                     <span
                       className="
                         absolute -bottom-0.5 left-0 w-full h-[1px]
