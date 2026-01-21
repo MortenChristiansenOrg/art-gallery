@@ -28,6 +28,7 @@ export function ImageCropper({
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
+  const [cursor, setCursor] = useState("default");
 
   // Load image
   useEffect(() => {
@@ -134,36 +135,62 @@ export function ImageCropper({
     []
   );
 
+  const isOverResizeHandle = useCallback(
+    (pos: { x: number; y: number }) => {
+      const handleSize = 20;
+      const resizeHandleX = cropArea.x + cropArea.width;
+      const resizeHandleY = cropArea.y + cropArea.height;
+      return (
+        Math.abs(pos.x - resizeHandleX) < handleSize &&
+        Math.abs(pos.y - resizeHandleY) < handleSize
+      );
+    },
+    [cropArea]
+  );
+
+  const isOverCropArea = useCallback(
+    (pos: { x: number; y: number }) => {
+      return (
+        pos.x >= cropArea.x &&
+        pos.x <= cropArea.x + cropArea.width &&
+        pos.y >= cropArea.y &&
+        pos.y <= cropArea.y + cropArea.height
+      );
+    },
+    [cropArea]
+  );
+
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDragging || isResizing) return;
+      const pos = getMousePos(e);
+      if (isOverResizeHandle(pos)) {
+        setCursor("nwse-resize");
+      } else if (isOverCropArea(pos)) {
+        setCursor("move");
+      } else {
+        setCursor("default");
+      }
+    },
+    [isDragging, isResizing, getMousePos, isOverResizeHandle, isOverCropArea]
+  );
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       const pos = getMousePos(e);
 
-      // Check if clicking resize handle (bottom-right corner)
-      const handleSize = 20;
-      const resizeHandleX = cropArea.x + cropArea.width;
-      const resizeHandleY = cropArea.y + cropArea.height;
-
-      if (
-        Math.abs(pos.x - resizeHandleX) < handleSize &&
-        Math.abs(pos.y - resizeHandleY) < handleSize
-      ) {
+      if (isOverResizeHandle(pos)) {
         setIsResizing(true);
         setDragStart(pos);
         return;
       }
 
-      // Check if clicking inside crop area
-      if (
-        pos.x >= cropArea.x &&
-        pos.x <= cropArea.x + cropArea.width &&
-        pos.y >= cropArea.y &&
-        pos.y <= cropArea.y + cropArea.height
-      ) {
+      if (isOverCropArea(pos)) {
         setIsDragging(true);
         setDragStart({ x: pos.x - cropArea.x, y: pos.y - cropArea.y });
       }
     },
-    [cropArea, getMousePos]
+    [cropArea, getMousePos, isOverResizeHandle, isOverCropArea]
   );
 
   const handleMouseMove = useCallback(
@@ -183,21 +210,28 @@ export function ImageCropper({
 
         setCropArea((prev) => ({ ...prev, x: newX, y: newY }));
       } else if (isResizing) {
+        // Calculate desired width from mouse position
         let newWidth = pos.x - cropArea.x;
         let newHeight = newWidth / aspectRatio;
 
-        // Minimum size
-        newWidth = Math.max(100, newWidth);
-        newHeight = Math.max(100 / aspectRatio, newHeight);
+        // Minimum size (maintaining aspect ratio)
+        const minWidth = 100;
+        const minHeight = minWidth / aspectRatio;
+        if (newWidth < minWidth) {
+          newWidth = minWidth;
+          newHeight = minHeight;
+        }
 
-        // Constrain to canvas bounds
-        newWidth = Math.min(newWidth, displayWidth - cropArea.x);
-        newHeight = Math.min(newHeight, displayHeight - cropArea.y);
+        // Maximum size based on canvas bounds (maintaining aspect ratio)
+        const maxWidthByCanvas = displayWidth - cropArea.x;
+        const maxHeightByCanvas = displayHeight - cropArea.y;
+        const maxWidthByAspect = maxHeightByCanvas * aspectRatio;
 
-        // Maintain aspect ratio
-        if (newWidth / aspectRatio > displayHeight - cropArea.y) {
-          newHeight = displayHeight - cropArea.y;
-          newWidth = newHeight * aspectRatio;
+        // Use the more constraining limit
+        const maxWidth = Math.min(maxWidthByCanvas, maxWidthByAspect);
+        if (newWidth > maxWidth) {
+          newWidth = maxWidth;
+          newHeight = newWidth / aspectRatio;
         }
 
         setCropArea((prev) => ({ ...prev, width: newWidth, height: newHeight }));
@@ -278,8 +312,8 @@ export function ImageCropper({
           <canvas
             ref={canvasRef}
             onMouseDown={handleMouseDown}
-            className="cursor-move"
-            style={{ maxWidth: "100%", maxHeight: "100%" }}
+            onMouseMove={handleCanvasMouseMove}
+            style={{ maxWidth: "100%", maxHeight: "100%", cursor }}
           />
         </div>
 
