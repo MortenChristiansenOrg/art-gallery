@@ -122,7 +122,7 @@ export function Artwork() {
             border border-[var(--color-gallery-border)]
             p-4 sm:p-6
             gallery-frame
-            lg:flex-1 lg:min-w-0
+            lg:flex-1 lg:min-w-0 lg:self-start
           "
           onClick={() => setViewerOpen(true)}
           role="button"
