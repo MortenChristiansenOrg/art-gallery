@@ -129,6 +129,10 @@ html {
   animation: fadeInUp 0.7s var(--transition-elegant) forwards;
 }
 
+.animate-reveal-line {
+  animation: revealLine 0.8s var(--transition-elegant) forwards;
+}
+
 /* Staggered animation delays */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
