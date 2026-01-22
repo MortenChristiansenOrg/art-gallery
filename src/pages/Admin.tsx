@@ -17,16 +17,19 @@ export function Admin() {
   const [showCollectionForm, setShowCollectionForm] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Id<"artworks"> | null>(null);
   const [editingCollection, setEditingCollection] = useState<Id<"collections"> | null>(null);
-  const [collectionFilter, setCollectionFilter] = useState<Id<"collections"> | "">("");
+  const [collectionFilter, setCollectionFilter] = useState<Id<"collections"> | "cabinet">("cabinet");
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
 
-  const artworks = useQuery(api.artworks.list, {
-    publishedOnly: false,
-    collectionId: collectionFilter || undefined,
-  });
   const collections = useQuery(api.collections.list);
+
+  const artworks = useQuery(
+    collectionFilter === "cabinet" ? api.artworks.listUncategorized : api.artworks.list,
+    collectionFilter === "cabinet"
+      ? { publishedOnly: false }
+      : { publishedOnly: false, collectionId: collectionFilter }
+  );
   const messages = useQuery(api.messages.list);
   const unreadCount = useQuery(api.messages.unreadCount);
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
@@ -193,11 +196,11 @@ export function Admin() {
             </button>
             <select
               value={collectionFilter}
-              onChange={(e) => setCollectionFilter(e.target.value as Id<"collections"> | "")}
+              onChange={(e) => setCollectionFilter(e.target.value as Id<"collections"> | "cabinet")}
               className="px-3 py-2 border border-[var(--color-gallery-border)] bg-transparent text-sm"
               data-testid="collection-filter"
             >
-              <option value="">All Artworks</option>
+              <option value="cabinet">Cabinet of Curiosities</option>
               {collections?.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -414,6 +417,7 @@ export function Admin() {
       {(showArtworkForm || editingArtwork) && (
         <ArtworkForm
           artwork={editArtwork}
+          collectionId={collectionFilter === "cabinet" ? undefined : collectionFilter}
           onClose={() => {
             setShowArtworkForm(false);
             setEditingArtwork(null);

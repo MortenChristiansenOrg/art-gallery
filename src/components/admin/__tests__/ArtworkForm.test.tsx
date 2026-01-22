@@ -12,7 +12,6 @@ const mockGenerateImageVariants = vi.fn()
 let mutationCallIndex = 0
 
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn(() => [{ _id: 'series1', name: 'Series 1' }]),
   useMutation: vi.fn(() => {
     // The component calls useMutation in this order:
     // 1. generateUploadUrl
@@ -25,6 +24,8 @@ vi.mock('convex/react', () => ({
   }),
   useAction: vi.fn(() => mockGenerateImageVariants),
 }))
+
+const mockCollectionId = 'collection-123' as any
 
 vi.mock('../../../lib/auth', () => ({
   useAuth: vi.fn(() => ({
@@ -98,29 +99,34 @@ describe('ArtworkForm', () => {
 
   describe('Create Mode', () => {
     it('renders create form with correct title', () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       expect(screen.getByText('Add Artwork')).toBeInTheDocument()
     })
 
     it('shows drop zone with multi-select hint', () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       expect(screen.getByText(/Click or drag images here/)).toBeInTheDocument()
       expect(screen.getByText(/max 50/)).toBeInTheDocument()
     })
 
+    it('does not show collection dropdown', () => {
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
+      expect(screen.queryByLabelText(/Collection/i)).not.toBeInTheDocument()
+    })
+
     it('disables submit when no images selected', () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       expect(screen.getByTestId('submit-button')).toBeDisabled()
     })
 
     it('accepts file input with multiple attribute', () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
       expect(input).toHaveAttribute('multiple')
     })
 
     it('displays selected images with editable titles', async () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const file = createMockFile('test-artwork.jpg')
@@ -137,7 +143,7 @@ describe('ArtworkForm', () => {
     })
 
     it('removes image when remove button clicked', async () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const file = createMockFile('test-artwork.jpg')
@@ -157,7 +163,7 @@ describe('ArtworkForm', () => {
 
     it('shows upload progress during bulk upload', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       // Slow down the mutation to see progress
@@ -180,9 +186,9 @@ describe('ArtworkForm', () => {
       }, { timeout: 2000 })
     })
 
-    it('calls createArtwork for each image in bulk upload', async () => {
+    it('calls createArtwork for each image with collectionId', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const files = [createMockFile('art1.jpg'), createMockFile('art2.jpg')]
@@ -198,11 +204,16 @@ describe('ArtworkForm', () => {
 
       await waitFor(() => {
         expect(mockCreateArtwork).toHaveBeenCalledTimes(2)
+        expect(mockCreateArtwork).toHaveBeenCalledWith(
+          expect.objectContaining({
+            collectionId: mockCollectionId,
+          })
+        )
       })
     })
 
     it('sets title from filename without extension', async () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const file = createMockFile('my-artwork.jpg')
@@ -216,7 +227,7 @@ describe('ArtworkForm', () => {
 
     it('allows editing individual image titles', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const file = createMockFile('original.jpg')
@@ -235,7 +246,7 @@ describe('ArtworkForm', () => {
 
     it('applies shared metadata to all images', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       const files = [createMockFile('art1.jpg'), createMockFile('art2.jpg')]
@@ -264,6 +275,7 @@ describe('ArtworkForm', () => {
             year: 2024,
             medium: 'Acrylic',
             published: true,
+            collectionId: mockCollectionId,
           })
         )
       })
@@ -271,7 +283,7 @@ describe('ArtworkForm', () => {
 
     it('continues uploading after single failure', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
 
       // First upload succeeds, second fails, third succeeds
@@ -303,7 +315,7 @@ describe('ArtworkForm', () => {
     })
 
     it('handles drag and drop', async () => {
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
       const dropZone = screen.getByText(/Click or drag images here/).parentElement!
 
       const file = createMockFile('dropped.jpg')
@@ -330,30 +342,35 @@ describe('ArtworkForm', () => {
     }
 
     it('renders edit form with correct title', () => {
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
       expect(screen.getByText('Edit Artwork')).toBeInTheDocument()
     })
 
     it('shows title input with existing value', () => {
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
       const titleInput = screen.getByDisplayValue('Existing Artwork')
       expect(titleInput).toBeInTheDocument()
     })
 
+    it('does not show collection dropdown in edit mode', () => {
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
+      expect(screen.queryByLabelText(/Collection/i)).not.toBeInTheDocument()
+    })
+
     it('does not show multiple attribute on file input', () => {
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
       const input = screen.getByTestId('file-input')
       expect(input).not.toHaveAttribute('multiple')
     })
 
     it('enables submit without new image', () => {
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
       expect(screen.getByTestId('submit-button')).not.toBeDisabled()
     })
 
-    it('calls updateArtwork on submit', async () => {
+    it('calls updateArtwork with collectionId on submit', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
 
       const submitButton = screen.getByTestId('submit-button')
       await user.click(submitButton)
@@ -363,6 +380,7 @@ describe('ArtworkForm', () => {
           expect.objectContaining({
             id: 'artwork-123',
             title: 'Existing Artwork',
+            collectionId: mockCollectionId,
           })
         )
       })
@@ -370,7 +388,7 @@ describe('ArtworkForm', () => {
 
     it('can replace image in edit mode', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
 
       const input = screen.getByTestId('file-input')
       const file = createMockFile('new-image.jpg')
@@ -395,7 +413,7 @@ describe('ArtworkForm', () => {
 
     it('can clear description field', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm artwork={mockArtwork as any} onClose={mockOnClose} />)
+      render(<ArtworkForm artwork={mockArtwork as any} collectionId={mockCollectionId} onClose={mockOnClose} />)
 
       // Find and clear the description textarea
       const descriptionField = screen.getByDisplayValue('A description')
@@ -418,7 +436,7 @@ describe('ArtworkForm', () => {
   describe('Cancel', () => {
     it('calls onClose when cancel clicked', async () => {
       const user = userEvent.setup()
-      render(<ArtworkForm onClose={mockOnClose} />)
+      render(<ArtworkForm collectionId={mockCollectionId} onClose={mockOnClose} />)
 
       const cancelButton = screen.getByText('Cancel')
       await user.click(cancelButton)

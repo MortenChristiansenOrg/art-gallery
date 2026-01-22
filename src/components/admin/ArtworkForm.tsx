@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useMutation, useQuery, useAction } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "../../lib/auth";
@@ -24,6 +24,7 @@ interface ArtworkFormProps {
     dimensions?: string;
     published: boolean;
   };
+  collectionId?: Id<"collections">;
   onClose: () => void;
 }
 
@@ -53,9 +54,8 @@ function getFilenameWithoutExtension(filename: string): string {
   return filename.replace(/\.[^/.]+$/, "");
 }
 
-export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
+export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps) {
   const { token } = useAuth();
-  const collections = useQuery(api.collections.list);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createArtwork = useMutation(api.artworks.create);
   const updateArtwork = useMutation(api.artworks.update);
@@ -63,7 +63,6 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
 
   const [form, setForm] = useState({
     description: artwork?.description ?? "",
-    collectionId: artwork?.collectionId ?? "",
     year: artwork?.year?.toString() ?? "",
     medium: artwork?.medium ?? "",
     dimensions: artwork?.dimensions ?? "",
@@ -198,7 +197,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
           id: artwork._id,
           title: editTitle,
           description: form.description,
-          collectionId: form.collectionId ? (form.collectionId as Id<"collections">) : undefined,
+          collectionId,
           year: form.year ? parseInt(form.year) : undefined,
           medium: form.medium,
           dimensions: form.dimensions,
@@ -214,7 +213,7 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
         // Create mode - bulk upload (use undefined for optional empty fields)
         const sharedData = {
           description: form.description || undefined,
-          collectionId: form.collectionId ? (form.collectionId as Id<"collections">) : undefined,
+          collectionId,
           year: form.year ? parseInt(form.year) : undefined,
           medium: form.medium || undefined,
           dimensions: form.dimensions || undefined,
@@ -379,22 +378,6 @@ export function ArtworkForm({ artwork, onClose }: ArtworkFormProps) {
           )}
 
           {/* Shared metadata fields */}
-          <div>
-            <label className="block text-sm mb-1">Collection</label>
-            <select
-              value={form.collectionId}
-              onChange={(e) => setForm({ ...form, collectionId: e.target.value })}
-              className="w-full px-3 py-2 border border-[var(--color-gallery-border)] bg-transparent text-sm"
-            >
-              <option value="">None</option>
-              {collections?.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm mb-1">Year</label>

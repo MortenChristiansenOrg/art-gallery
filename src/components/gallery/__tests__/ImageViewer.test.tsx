@@ -63,16 +63,22 @@ describe("ImageViewer", () => {
   });
 
   it("calls onClose when close button clicked", () => {
+    vi.useFakeTimers();
     render(<ImageViewer {...defaultProps} />);
     const closeButton = screen.getByTestId("close-viewer");
     fireEvent.click(closeButton);
+    vi.advanceTimersByTime(250);
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("calls onClose on Escape key", () => {
+    vi.useFakeTimers();
     render(<ImageViewer {...defaultProps} />);
     fireEvent.keyDown(window, { key: "Escape" });
+    vi.advanceTimersByTime(250);
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("prevents body scroll when open", () => {

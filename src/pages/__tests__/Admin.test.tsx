@@ -30,11 +30,13 @@ const mockSetContent = vi.fn()
 let queryCallIndex = 0
 
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn(() => {
-    // Queries are called in order: artworks, collections, messages, unreadCount, siteContent
+  useQuery: vi.fn((query, args) => {
+    // Queries are called in order: collections, artworks/listUncategorized, messages, unreadCount, siteContent
     const index = queryCallIndex++
-    if (index % 5 === 0) return mockArtworks   // artworks
-    if (index % 5 === 1) return mockCollections // collections
+    // Skip returns undefined
+    if (args === "skip") return undefined
+    if (index % 5 === 0) return mockCollections // collections
+    if (index % 5 === 1) return mockArtworks    // artworks (list or listUncategorized)
     if (index % 5 === 2) return mockMessages    // messages
     if (index % 5 === 3) return mockUnreadCount // unreadCount
     return mockAboutContent                     // siteContent
@@ -89,7 +91,8 @@ describe('Admin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockArtworks = []
-    mockCollections = []
+    // Default collection needed for artworks tab to show artworks
+    mockCollections = [{ _id: 'col-1', name: 'Default Collection', slug: 'default' }]
     mockMessages = []
     mockUnreadCount = 0
     mockAboutContent = ''
@@ -403,6 +406,47 @@ describe('Admin', () => {
       await user.type(textarea, 'New about content')
 
       expect(textarea).toHaveValue('New about content')
+    })
+  })
+
+  describe('collection filter', () => {
+    it('shows Cabinet of Curiosities option', () => {
+      render(<Admin />)
+
+      const select = screen.getByTestId('collection-filter')
+      expect(select).toBeInTheDocument()
+      expect(screen.getByText('Cabinet of Curiosities')).toBeInTheDocument()
+    })
+
+    it('defaults to Cabinet of Curiosities', () => {
+      render(<Admin />)
+
+      const select = screen.getByTestId('collection-filter') as HTMLSelectElement
+      expect(select.value).toBe('cabinet')
+    })
+
+    it('shows uncategorized artworks by default', () => {
+      mockArtworks = [createMockArtwork({
+        _id: 'uncategorized-art',
+        title: 'Uncategorized Artwork',
+      })]
+
+      render(<Admin />)
+
+      expect(screen.getByText('Uncategorized Artwork')).toBeInTheDocument()
+    })
+
+    it('shows other collections in dropdown', () => {
+      mockCollections = [
+        { _id: 'col-1', name: 'Landscapes', slug: 'landscapes' },
+        { _id: 'col-2', name: 'Portraits', slug: 'portraits' },
+      ]
+
+      render(<Admin />)
+
+      expect(screen.getByText('Cabinet of Curiosities')).toBeInTheDocument()
+      expect(screen.getByText('Landscapes')).toBeInTheDocument()
+      expect(screen.getByText('Portraits')).toBeInTheDocument()
     })
   })
 })

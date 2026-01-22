@@ -31,30 +31,32 @@ verification:
 
 flows:
   create-artwork-bulk-filepicker:
+    - Admin selects a collection from filter dropdown (default collection pre-selected)
     - Admin clicks "Add Artwork" button
-    - Form modal opens
+    - Form modal opens (no collection dropdown - inherits from filter)
     - Admin clicks file input to open file picker
     - Admin selects multiple images (multi-select enabled)
     - Thumbnail previews appear for each selected image with editable title field
     - Titles default to filename without extension
-    - Admin fills shared metadata (series, year, medium, dimensions, description)
+    - Admin fills shared metadata (year, medium, dimensions, description)
     - Admin toggles published status (applies to all)
     - Admin saves
     - All images uploaded sequentially with progress indicator
-    - New artworks appear in admin list
+    - New artworks added to selected collection, appear in admin list
     - Modal closes on completion
 
   create-artwork-bulk-dragdrop:
+    - Admin selects a collection from filter dropdown (default collection pre-selected)
     - Admin clicks "Add Artwork" button
-    - Form modal opens
+    - Form modal opens (no collection dropdown - inherits from filter)
     - Admin drags image files from file explorer onto drop zone
     - Thumbnail previews appear for each dropped image with editable title field
     - Titles default to filename without extension
-    - Admin fills shared metadata (series, year, medium, dimensions, description)
+    - Admin fills shared metadata (year, medium, dimensions, description)
     - Admin toggles published status (applies to all)
     - Admin saves
     - All images uploaded sequentially with progress indicator
-    - New artworks appear in admin list
+    - New artworks added to selected collection, appear in admin list
     - Modal closes on completion
 
   create-artwork-single:
@@ -74,12 +76,12 @@ flows:
     - List updates
 
   reorder-artworks:
-    - Admin views artwork list (all artworks or filtered by series)
+    - Admin views artwork list filtered by selected collection
     - Admin drags artwork item to new position in list
     - Visual feedback shows drop target location
     - On drop, new order saved automatically to backend
     - Order persists on page reload
-    - When filtered by series, reorder only affects order within that series
+    - Reorder affects order within selected collection only
 
 interactions:
   - type: click
@@ -111,6 +113,18 @@ interactions:
     action: Toggles artwork visibility
 
 requirements:
+  collection-filtering:
+    - Admin always views artworks filtered by collection (no "All Artworks" option)
+    - Default collection selected on page load (first collection in list)
+    - Collection selector dropdown shows all available collections
+    - Changing collection filter updates artwork list immediately
+
+  artwork-form-collection:
+    - Collection field NOT shown in add/edit artwork dialog
+    - New artworks inherit collection from currently selected filter
+    - ArtworkForm receives collectionId as prop from parent
+    - Editing artwork preserves existing collection unless filter changes
+
   file-input:
     - Add `multiple` attribute to input element
     - Show list of selected files below input
@@ -149,11 +163,9 @@ requirements:
 
   artwork-reordering:
     - Drag-and-drop reordering of artwork items in admin list
-    - Works in "all artworks" view (reorders global display order)
-    - Works in series-filtered view (reorders within that series only)
+    - Works within currently selected collection only
     - Visual drag handle or entire row draggable
     - Drop indicator shows target position during drag
     - Auto-save on drop (no manual save button needed)
     - Optimistic UI update with rollback on error
     - Order stored as numeric `displayOrder` field on artwork
-    - Series-specific order stored as separate `seriesOrder` field per series assignment
