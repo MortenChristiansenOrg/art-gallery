@@ -16,7 +16,7 @@ jobs:
       - run: bunx vite build
 
   e2e:
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
