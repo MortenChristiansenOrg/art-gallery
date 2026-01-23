@@ -24,12 +24,15 @@ export function Admin() {
 
   const collections = useQuery(api.collections.list);
 
-  const artworks = useQuery(
-    collectionFilter === "cabinet" ? api.artworks.listUncategorized : api.artworks.list,
-    collectionFilter === "cabinet"
-      ? { publishedOnly: false }
-      : { publishedOnly: false, collectionId: collectionFilter }
+  const uncategorizedArtworks = useQuery(
+    api.artworks.listUncategorized,
+    collectionFilter === "cabinet" ? { publishedOnly: false } : "skip"
   );
+  const collectionArtworks = useQuery(
+    api.artworks.list,
+    collectionFilter !== "cabinet" ? { publishedOnly: false, collectionId: collectionFilter } : "skip"
+  );
+  const artworks = uncategorizedArtworks ?? collectionArtworks;
   const messages = useQuery(api.messages.list);
   const unreadCount = useQuery(api.messages.unreadCount);
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });

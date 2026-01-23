@@ -10,7 +10,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [iconList, setIconList] = useState<string[]>([]);
   const [fetchingSvg, setFetchingSvg] = useState<string | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Fetch icon list once
   useEffect(() => {

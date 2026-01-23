@@ -1,13 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ArtworkGrid } from '../ArtworkGrid'
 
 describe('ArtworkGrid', () => {
   const mockArtworks = [
-    { _id: 'art1' as const, title: 'Artwork One', imageUrl: 'http://example.com/1.jpg', year: 2023 },
-    { _id: 'art2' as const, title: 'Artwork Two', imageUrl: 'http://example.com/2.jpg', year: 2022 },
-    { _id: 'art3' as const, title: 'Artwork Three', imageUrl: 'http://example.com/3.jpg' },
+    { _id: 'art1' as any, title: 'Artwork One', imageUrl: 'http://example.com/1.jpg', year: 2023 },
+    { _id: 'art2' as any, title: 'Artwork Two', imageUrl: 'http://example.com/2.jpg', year: 2022 },
+    { _id: 'art3' as any, title: 'Artwork Three', imageUrl: 'http://example.com/3.jpg' },
   ]
 
   const renderWithRouter = (ui: React.ReactElement) => {
@@ -79,7 +79,7 @@ describe('ArtworkGrid', () => {
   it('uses thumbnailUrl when available', () => {
     const artworksWithThumbnails = [
       {
-        _id: 'art1' as const,
+        _id: 'art1' as any,
         title: 'With Thumbnail',
         imageUrl: 'http://example.com/full.jpg',
         thumbnailUrl: 'http://example.com/thumb.jpg',
@@ -95,7 +95,7 @@ describe('ArtworkGrid', () => {
   it('falls back to imageUrl when no thumbnail', () => {
     const artworksWithoutThumbnails = [
       {
-        _id: 'art1' as const,
+        _id: 'art1' as any,
         title: 'No Thumbnail',
         imageUrl: 'http://example.com/full.jpg',
         thumbnailUrl: null,

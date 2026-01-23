@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Admin } from '../Admin'
 
@@ -30,7 +30,7 @@ const mockSetContent = vi.fn()
 let queryCallIndex = 0
 
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn((query, args) => {
+  useQuery: vi.fn((_query, args) => {
     // Queries are called in order: collections, artworks/listUncategorized, messages, unreadCount, siteContent
     const index = queryCallIndex++
     // Skip returns undefined

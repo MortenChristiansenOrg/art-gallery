@@ -5,7 +5,7 @@ import { CollectionCard, CabinetCard } from '../CollectionCard'
 
 describe('CollectionCard', () => {
   const mockCollection = {
-    _id: 'col1' as const,
+    _id: 'col1' as any,
     name: 'Abstract Works',
     description: 'A collection of abstract paintings',
     slug: 'abstract-works',
