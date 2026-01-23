@@ -7,7 +7,7 @@ on:
 
 jobs:
   checks:
-    runs-on: blacksmith-2vcpu-windows-2025
+    runs-on: blacksmith-2vcpu-ubuntu-2025
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -21,7 +21,7 @@ jobs:
           path: coverage/
 
   e2e:
-    runs-on: blacksmith-2vcpu-windows-2025
+    runs-on: blacksmith-2vcpu-ubuntu-2025
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -35,7 +35,7 @@ jobs:
           path: playwright-report/
 
   preview:
-    runs-on: blacksmith-2vcpu-windows-2025
+    runs-on: blacksmith-2vcpu-ubuntu-2025
     needs: checks
     steps:
       - uses: actions/checkout@v4
