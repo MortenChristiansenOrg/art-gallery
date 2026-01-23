@@ -8,6 +8,7 @@ interface CollectionCardProps {
     description?: string;
     slug: string;
     coverImageUrl: string | null;
+    iconSvg?: string;
     artworkCount: number;
   };
   index: number;
@@ -80,7 +81,7 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
             </>
           ) : (
             /* No-image elegant fallback */
-            <NoImageFallback name={collection.name} />
+            <NoImageFallback name={collection.name} iconSvg={collection.iconSvg} />
           )}
 
           {/* Content overlay */}
@@ -144,7 +145,7 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
 }
 
 /* Elegant fallback for collections without cover images */
-function NoImageFallback({ name }: { name: string }) {
+function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) {
   // Generate a subtle, deterministic pattern based on collection name
   const seed = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const hue = seed % 30; // Subtle warm hue variation (0-30)
@@ -181,20 +182,35 @@ function NoImageFallback({ name }: { name: string }) {
         backgroundSize: patternIndex === 1 ? "30px 30px" : undefined,
       }}
     >
-      {/* Large decorative initial */}
-      <span
-        className="
-          font-[var(--font-serif)] text-[8rem] lg:text-[10rem]
-          font-light text-[var(--color-gallery-border)]
-          select-none
-          transition-all duration-700
-          group-hover:text-[var(--color-gallery-border-light)]
-          group-hover:scale-105
-        "
-        style={{ color: `hsl(${hue}, 5%, 90%)` }}
-      >
-        {name.charAt(0)}
-      </span>
+      {iconSvg ? (
+        <div
+          className="
+            w-[8rem] h-[8rem] lg:w-[10rem] lg:h-[10rem]
+            select-none
+            transition-all duration-700
+            group-hover:scale-105
+            [&_svg]:w-full [&_svg]:h-full
+            [&_svg>path:first-child]:fill-none
+            [&_svg>path:not(:first-child)]:fill-current
+          "
+          style={{ color: `hsl(${hue}, 5%, 90%)` }}
+          dangerouslySetInnerHTML={{ __html: iconSvg }}
+        />
+      ) : (
+        <span
+          className="
+            font-[var(--font-serif)] text-[8rem] lg:text-[10rem]
+            font-light text-[var(--color-gallery-border)]
+            select-none
+            transition-all duration-700
+            group-hover:text-[var(--color-gallery-border-light)]
+            group-hover:scale-105
+          "
+          style={{ color: `hsl(${hue}, 5%, 90%)` }}
+        >
+          {name.charAt(0)}
+        </span>
+      )}
     </div>
   );
 }

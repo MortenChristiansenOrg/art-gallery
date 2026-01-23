@@ -4,6 +4,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "../../lib/auth";
 import { ImageCropper } from "./ImageCropper";
+import { IconPicker } from "./IconPicker";
 
 interface CollectionFormProps {
   collection?: {
@@ -12,11 +13,12 @@ interface CollectionFormProps {
     description?: string;
     slug: string;
     coverImageUrl?: string | null;
+    iconSvg?: string;
   };
   onClose: () => void;
 }
 
-type CoverSource = "none" | "artwork" | "upload";
+type CoverSource = "none" | "artwork" | "upload" | "icon";
 
 export function CollectionForm({ collection, onClose }: CollectionFormProps) {
   const { token } = useAuth();
@@ -37,7 +39,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
   });
 
   const [coverSource, setCoverSource] = useState<CoverSource>(
-    collection?.coverImageUrl ? "artwork" : "none"
+    collection?.iconSvg ? "icon" : collection?.coverImageUrl ? "artwork" : "none"
   );
   const [selectedArtworkUrl, setSelectedArtworkUrl] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -45,7 +47,9 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [iconSvg, setIconSvg] = useState<string | null>(collection?.iconSvg ?? null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -72,6 +76,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
     if (artwork?.thumbnailUrl) {
       setCoverSource("artwork");
       setSelectedArtworkUrl(artwork.thumbnailUrl);
+      setIconSvg(null);
       setShowCropper(true);
     }
   };
@@ -83,6 +88,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
     const url = URL.createObjectURL(file);
     setCoverSource("upload");
     setUploadedImageUrl(url);
+    setIconSvg(null);
     setShowCropper(true);
     e.target.value = "";
   };
@@ -107,6 +113,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
       const url = URL.createObjectURL(file);
       setCoverSource("upload");
       setUploadedImageUrl(url);
+      setIconSvg(null);
       setShowCropper(true);
     }
   };
@@ -133,6 +140,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
     if (!form.name || !form.slug || !token) return;
 
     setLoading(true);
+    setError(null);
     try {
       let coverImageId: Id<"_storage"> | undefined;
 
@@ -156,6 +164,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
           description: form.description || undefined,
           slug: form.slug,
           ...(coverImageId && { coverImageId }),
+          ...(iconSvg && { iconSvg }),
         });
       } else {
         await createCollection({
@@ -164,11 +173,13 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
           description: form.description || undefined,
           slug: form.slug,
           ...(coverImageId && { coverImageId }),
+          ...(iconSvg && { iconSvg }),
         });
       }
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.message || "Save failed");
     } finally {
       setLoading(false);
     }
@@ -267,7 +278,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
               )}
 
               {/* Upload option */}
-              {!croppedPreview && (
+              {!croppedPreview && !iconSvg && (
                 <div>
                   <label className="block text-xs text-[var(--color-gallery-muted)] mb-1">
                     Or upload a custom image
@@ -295,7 +306,28 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
                   </div>
                 </div>
               )}
+
+              {/* Icon picker */}
+              {!croppedPreview && (
+                <IconPicker
+                  value={iconSvg}
+                  onChange={(svg) => {
+                    setIconSvg(svg);
+                    if (svg) {
+                      setCoverSource("icon");
+                      setCroppedBlob(null);
+                      setCroppedPreview(null);
+                    } else {
+                      setCoverSource("none");
+                    }
+                  }}
+                />
+              )}
             </div>
+
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
 
             <div className="flex gap-3 pt-4">
               <button

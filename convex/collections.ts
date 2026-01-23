@@ -84,16 +84,20 @@ export const create = mutation({
     description: v.optional(v.string()),
     slug: v.string(),
     coverImageId: v.optional(v.id("_storage")),
+    iconSvg: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     requireAuth(args.token);
-    const { token: _, ...data } = args;
+    const { token: _, coverImageId, iconSvg, ...rest } = args;
     const existing = await ctx.db.query("collections").collect();
     const maxOrder = existing.reduce((max, c) => Math.max(max, c.order), -1);
 
     return ctx.db.insert("collections", {
-      ...data,
+      ...rest,
       order: maxOrder + 1,
+      // Mutual exclusivity: only one of these can be set
+      ...(iconSvg && !coverImageId ? { iconSvg } : {}),
+      ...(coverImageId && !iconSvg ? { coverImageId } : {}),
     });
   },
 });
@@ -106,6 +110,7 @@ export const update = mutation({
     description: v.optional(v.string()),
     slug: v.optional(v.string()),
     coverImageId: v.optional(v.id("_storage")),
+    iconSvg: v.optional(v.string()),
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -114,6 +119,7 @@ export const update = mutation({
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
+    // Mutual exclusivity handled client-side; just apply the patch
     await ctx.db.patch(id, filtered);
   },
 });

@@ -56,6 +56,7 @@ export default defineSchema({
     slug: v.string(),
     order: v.number(),
     coverImageId: v.optional(v.id("_storage")),
+    iconSvg: v.optional(v.string()),
   })
     .index("by_slug", ["slug"])
     .index("by_order", ["order"]),
