@@ -195,9 +195,7 @@ test.describe('icon-picker', () => {
     await expect(page.getByText('No icons found')).not.toBeVisible()
 
     await searchInput.fill('ax')
-    // Wait for debounce (300ms)
-    await page.waitForTimeout(400)
-    // Now results should appear
+    // Results should appear after debounce
     await expect(page.locator('button[title="axe"]')).toBeVisible({ timeout: 3000 })
   })
 
@@ -206,12 +204,10 @@ test.describe('icon-picker', () => {
     const searchInput = page.getByPlaceholder('Search icons...')
 
     await searchInput.fill('a')
-    await page.waitForTimeout(400)
     // Grid should not be visible with 1 character
     await expect(page.locator('.grid-cols-8')).not.toBeVisible()
 
     await searchInput.fill('ax')
-    await page.waitForTimeout(400)
     // Grid should now be visible
     await expect(page.locator('.grid-cols-8')).toBeVisible()
   })

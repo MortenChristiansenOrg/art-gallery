@@ -93,8 +93,6 @@ test.describe('browse-artworks', () => {
 test.describe('collections-landing', () => {
   test('homepage shows collections grid', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     // Should show collections or empty state
     const content = page.locator('a[href^="/collection/"]').first()
       .or(page.getByText('No collections'))
@@ -103,8 +101,6 @@ test.describe('collections-landing', () => {
 
   test('collection cards have cover images or placeholders', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -117,8 +113,6 @@ test.describe('collections-landing', () => {
 
   test('collection cards show name and work count', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -132,8 +126,6 @@ test.describe('collections-landing', () => {
 
   test('clicking collection navigates to collection page', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -145,8 +137,6 @@ test.describe('collections-landing', () => {
 
   test('Cabinet of Curiosities card is shown when uncategorized artworks exist', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const cabinetCard = page.locator('a[href="/collection/cabinet-of-curiosities"]')
     const hasCabinet = await cabinetCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -158,8 +148,6 @@ test.describe('collections-landing', () => {
 
   test('collection cards have hover effects', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -173,8 +161,6 @@ test.describe('collections-landing', () => {
 test.describe('collection-view', () => {
   test('collection page shows title', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -189,8 +175,6 @@ test.describe('collection-view', () => {
 
   test('collection page shows back link', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -205,8 +189,6 @@ test.describe('collection-view', () => {
 
   test('back link returns to home', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -223,8 +205,6 @@ test.describe('collection-view', () => {
 
   test('collection page shows artworks or empty state', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -241,8 +221,6 @@ test.describe('collection-view', () => {
 
   test('collection page artworks link to detail page', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const collectionCard = page.locator('a[href^="/collection/"]').first()
     const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -262,8 +240,6 @@ test.describe('collection-view', () => {
 
   test('Cabinet of Curiosities page has italic title', async ({ page }) => {
     await page.goto('/collection/cabinet-of-curiosities')
-    await page.waitForLoadState('networkidle')
-
     // Wait for either the page to load or 404
     const title = page.locator('h1')
     const notFound = page.getByText('Collection not found')
@@ -279,15 +255,11 @@ test.describe('collection-view', () => {
 
   test('nonexistent collection shows 404', async ({ page }) => {
     await page.goto('/collection/this-collection-does-not-exist-12345')
-    await page.waitForLoadState('networkidle')
-
     await expect(page.getByText('Collection not found')).toBeVisible({ timeout: 10000 })
   })
 
   test('404 page has return link', async ({ page }) => {
     await page.goto('/collection/this-collection-does-not-exist-12345')
-    await page.waitForLoadState('networkidle')
-
     const returnLink = page.getByRole('link', { name: /return to collections/i })
     await expect(returnLink).toBeVisible({ timeout: 10000 })
   })
@@ -298,8 +270,6 @@ test.describe('filter-by-series', () => {
     await page.goto('/')
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle')
-
     // Filter nav or no filter (if no series)
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
     const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
@@ -311,8 +281,6 @@ test.describe('filter-by-series', () => {
 
   test('shows "All Works" link', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const allWorksLink = page.getByRole('link', { name: 'All Works' })
     const hasFilter = await allWorksLink.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -323,8 +291,6 @@ test.describe('filter-by-series', () => {
 
   test('clicking series filters gallery', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
     const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -343,8 +309,6 @@ test.describe('filter-by-series', () => {
 
   test('clicking "All Works" resets filter', async ({ page }) => {
     await page.goto('/?series=test')
-    await page.waitForLoadState('networkidle')
-
     const allWorksLink = page.getByRole('link', { name: 'All Works' })
     const hasFilter = await allWorksLink.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -357,8 +321,6 @@ test.describe('filter-by-series', () => {
 
   test('active filter has visual indicator', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
     const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -372,8 +334,6 @@ test.describe('filter-by-series', () => {
 
   test('filtered view shows appropriate content', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
-
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
     const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
 
@@ -383,7 +343,7 @@ test.describe('filter-by-series', () => {
 
       if (hasSeriesLink) {
         await seriesLink.click()
-        await page.waitForLoadState('networkidle')
+    
 
         // Should show either artworks or "No works to display"
         const content = page

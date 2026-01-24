@@ -106,12 +106,9 @@ test.describe('submit-form', () => {
     // Submit
     await page.getByRole('button', { name: 'Send Message' }).click()
 
-    // Wait for response
-    await page.waitForTimeout(2000)
-
     // Check for success state
     const successMessage = page.getByText('Thank you for your message')
-    const isSuccess = await successMessage.isVisible().catch(() => false)
+    const isSuccess = await successMessage.isVisible({ timeout: 5000 }).catch(() => false)
 
     if (isSuccess) {
       // Form should be replaced with success message

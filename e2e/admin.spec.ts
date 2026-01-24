@@ -573,7 +573,7 @@ test.describe('content-editing', () => {
     const textarea = page.locator('textarea')
 
     // Wait for content to load
-    await page.waitForTimeout(500)
+    await expect(textarea).not.toHaveValue('')
 
     // Get current value
     const currentValue = await textarea.inputValue()
