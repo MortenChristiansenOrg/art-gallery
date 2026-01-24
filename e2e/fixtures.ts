@@ -7,7 +7,7 @@ export const test = base.extend<{}, { adminToken: string }>({
     await page.goto('/admin')
     await page.fill('input[type="password"]', 'admin')
     await page.click('button[type="submit"]')
-    await page.getByRole('heading', { name: 'Admin' }).waitFor()
+    await page.getByRole('button', { name: 'Logout' }).waitFor()
     const token = await page.evaluate(() => sessionStorage.getItem('gallery_admin_token'))
     await context.close()
     await use(token!)

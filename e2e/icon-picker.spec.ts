@@ -123,8 +123,8 @@ test.describe('icon-picker', () => {
     await page.click('button:has-text("Add Collection")')
 
     // Fill required fields
-    await page.getByLabel(/Name/).fill('Test Icon Collection')
-    await expect(page.getByLabel(/Slug/)).toHaveValue('test-icon-collection')
+    await page.locator('label:has-text("Name") + input').fill('Test Icon Collection')
+    await expect(page.locator('label:has-text("Slug") + input')).toHaveValue('test-icon-collection')
 
     // Select an icon
     const searchInput = page.getByPlaceholder('Search icons...')
@@ -143,7 +143,7 @@ test.describe('icon-picker', () => {
   test('icon displays on landing page after save', async ({ page }) => {
     // First create a collection with an icon
     await page.click('button:has-text("Add Collection")')
-    await page.getByLabel(/Name/).fill('Icon Display Test')
+    await page.locator('label:has-text("Name") + input').fill('Icon Display Test')
     const searchInput = page.getByPlaceholder('Search icons...')
     await searchInput.fill('dragon')
     await expect(page.locator('button[title="dragon"]')).toBeVisible({ timeout: 4000 })
@@ -156,14 +156,14 @@ test.describe('icon-picker', () => {
     await page.goto('/')
 
     // The collection card should show SVG content instead of a letter
-    const svgElement = page.locator('svg path[d="M10 10h492v492H10z"]')
+    const svgElement = page.locator('svg path[d="M10 10h492v492H10z"]').first()
     await expect(svgElement).toBeVisible({ timeout: 4000 })
   })
 
   test('editing collection preserves icon', async ({ page }) => {
     // Create collection with icon first
     await page.click('button:has-text("Add Collection")')
-    await page.getByLabel(/Name/).fill('Preserve Icon Test')
+    await page.locator('label:has-text("Name") + input').fill('Preserve Icon Test')
     const searchInput = page.getByPlaceholder('Search icons...')
     await searchInput.fill('shield')
     await expect(page.locator('button[title="shield"]')).toBeVisible({ timeout: 4000 })

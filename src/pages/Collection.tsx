@@ -29,6 +29,27 @@ export function Collection() {
 
   const artworks = isCabinet ? uncategorizedArtworks : collectionArtworks;
 
+  // 404 state for regular collection (check before loading to avoid blocking on skipped artworks query)
+  if (!isCabinet && collection === null) {
+    return (
+      <div className="max-w-6xl mx-auto px-8 lg:px-12 py-32 text-center opacity-0 animate-fade-in">
+        <p className="text-[var(--color-gallery-muted)] text-lg font-light">
+          Collection not found
+        </p>
+        <Link
+          to="/"
+          className="
+            inline-block mt-6 text-[0.8rem] tracking-[0.1em] uppercase font-light
+            text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
+            transition-colors duration-300
+          "
+        >
+          Return to collections
+        </Link>
+      </div>
+    );
+  }
+
   // Loading state
   if (artworks === undefined || (!isCabinet && collection === undefined)) {
     return (
@@ -64,27 +85,6 @@ export function Collection() {
             ))}
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // 404 state for regular collection
-  if (!isCabinet && collection === null) {
-    return (
-      <div className="max-w-6xl mx-auto px-8 lg:px-12 py-32 text-center opacity-0 animate-fade-in">
-        <p className="text-[var(--color-gallery-muted)] text-lg font-light">
-          Collection not found
-        </p>
-        <Link
-          to="/"
-          className="
-            inline-block mt-6 text-[0.8rem] tracking-[0.1em] uppercase font-light
-            text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]
-            transition-colors duration-300
-          "
-        >
-          Return to collections
-        </Link>
       </div>
     );
   }

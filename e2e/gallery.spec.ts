@@ -5,9 +5,9 @@ test.describe('browse-artworks', () => {
     await page.goto('/')
     await expect(page).toHaveURL('/')
     const content = page
-      .locator('article')
+      .locator('a[href^="/collection/"]')
       .first()
-      .or(page.getByText('No works to display'))
+      .or(page.getByText('No collections'))
     await expect(content).toBeVisible({ timeout: 4000 })
   })
 

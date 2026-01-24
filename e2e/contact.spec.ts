@@ -19,9 +19,9 @@ test.describe('submit-form', () => {
   })
 
   test('form fields have proper labels', async ({ page }) => {
-    await expect(page.getByText('Name', { exact: false })).toBeVisible()
-    await expect(page.getByText('Email', { exact: false })).toBeVisible()
-    await expect(page.getByText('Message', { exact: false })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Name' })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Email' })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Message' })).toBeVisible()
   })
 
   test('form fields are required', async ({ page }) => {

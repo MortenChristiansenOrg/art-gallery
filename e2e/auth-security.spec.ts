@@ -6,7 +6,7 @@ async function loginAsAdmin(page: Page) {
   await page.goto("/admin");
   await page.fill('input[type="password"]', ADMIN_PASSWORD);
   await page.click('button[type="submit"]');
-  await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
 }
 
 test.describe("auth-security", () => {
@@ -117,7 +117,6 @@ test.describe("auth-security", () => {
     test("session persists on page refresh", async ({ page }) => {
       await loginAsAdmin(page);
       await page.reload();
-      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
     });
   });
