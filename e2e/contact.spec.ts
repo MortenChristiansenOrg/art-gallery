@@ -78,7 +78,7 @@ test.describe('submit-form', () => {
       .getByText('Sending...')
       .or(page.getByText('Thank you'))
       .or(page.getByText('Something went wrong'))
-    await expect(sendingOrResult).toBeVisible({ timeout: 5000 })
+    await expect(sendingOrResult).toBeVisible({ timeout: 4000 })
   })
 
   test('shows success message after submit', async ({ page }) => {
@@ -94,7 +94,7 @@ test.describe('submit-form', () => {
     const result = page
       .getByText('Thank you for your message')
       .or(page.getByText('Something went wrong'))
-    await expect(result).toBeVisible({ timeout: 10000 })
+    await expect(result).toBeVisible({ timeout: 4000 })
   })
 
   test('form clears after successful submit', async ({ page }) => {
@@ -108,7 +108,7 @@ test.describe('submit-form', () => {
 
     // Check for success state
     const successMessage = page.getByText('Thank you for your message')
-    const isSuccess = await successMessage.isVisible({ timeout: 5000 }).catch(() => false)
+    const isSuccess = await successMessage.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (isSuccess) {
       // Form should be replaced with success message

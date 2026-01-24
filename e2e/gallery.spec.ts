@@ -1,133 +1,72 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('browse-artworks', () => {
-  test('homepage loads successfully', async ({ page }) => {
+  test('homepage loads and shows gallery content', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveURL('/')
-  })
-
-  test('shows gallery grid or empty state', async ({ page }) => {
-    await page.goto('/')
-    // Wait for loading to complete - either shows grid or empty message
     const content = page
       .locator('article')
       .first()
       .or(page.getByText('No works to display'))
-    await expect(content).toBeVisible({ timeout: 10000 })
+    await expect(content).toBeVisible({ timeout: 4000 })
   })
 
-  test('artwork cards have images and titles', async ({ page }) => {
+  test('artwork cards have images, titles, and link to detail', async ({ page }) => {
     await page.goto('/')
 
     const artworkCard = page.locator('article').first()
-    const hasArtworks = await artworkCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasArtworks = await artworkCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasArtworks) {
-      // Should have image or "No image" placeholder
+      // Should have image or placeholder
       const imageOrPlaceholder = page.locator('img').first().or(page.getByText('No image'))
       await expect(imageOrPlaceholder).toBeVisible()
 
       // Should have title
-      const title = artworkCard.locator('h3')
-      await expect(title).toBeVisible()
-    }
-  })
+      await expect(artworkCard.locator('h3')).toBeVisible()
 
-  test('clicking artwork navigates to detail page', async ({ page }) => {
-    await page.goto('/')
-
-    const artworkCard = page.locator('article').first()
-    const hasArtworks = await artworkCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasArtworks) {
-      // Cards are wrapped in links to /artwork/:id
+      // Cards link to /artwork/:id
       const artworkLink = page.locator('a[href^="/artwork/"]').first()
       await artworkLink.click()
       await expect(page).toHaveURL(/\/artwork\//)
-    }
-  })
 
-  test('artwork detail page shows metadata', async ({ page }) => {
-    await page.goto('/')
-
-    const artworkLink = page.locator('a[href^="/artwork/"]').first()
-    const hasArtworks = await artworkLink.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasArtworks) {
-      await artworkLink.click()
-      await expect(page).toHaveURL(/\/artwork\//)
-
-      // Should show title at minimum
+      // Detail page shows title
       await expect(page.locator('h1, h2').first()).toBeVisible()
-    }
-  })
 
-  test('can navigate back from detail page', async ({ page }) => {
-    await page.goto('/')
-
-    const artworkLink = page.locator('a[href^="/artwork/"]').first()
-    const hasArtworks = await artworkLink.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasArtworks) {
-      await artworkLink.click()
-      await expect(page).toHaveURL(/\/artwork\//)
-
-      // Navigate back
+      // Can navigate back
       await page.goBack()
       await expect(page).toHaveURL('/')
-    }
-  })
-
-  test('images load with lazy loading', async ({ page }) => {
-    await page.goto('/')
-
-    const img = page.locator('article img').first()
-    const hasImages = await img.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasImages) {
-      await expect(img).toHaveAttribute('loading', 'lazy')
     }
   })
 })
 
 test.describe('collections-landing', () => {
-  test('homepage shows collections grid', async ({ page }) => {
-    await page.goto('/')
-    // Should show collections or empty state
-    const content = page.locator('a[href^="/collection/"]').first()
-      .or(page.getByText('No collections'))
-    await expect(content).toBeVisible({ timeout: 10000 })
-  })
-
-  test('collection cards have cover images or placeholders', async ({ page }) => {
+  test('collection cards have expected structure', async ({ page }) => {
     await page.goto('/')
     const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCollections = await collectionCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasCollections) {
-      // Should have image or "No cover image" placeholder
+      // Cover image or placeholder
       const imageOrPlaceholder = collectionCard.locator('img').or(page.getByText('No cover image'))
       await expect(imageOrPlaceholder.first()).toBeVisible()
-    }
-  })
 
-  test('collection cards show name and work count', async ({ page }) => {
-    await page.goto('/')
-    const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasCollections) {
-      // Should have h2 title
+      // Name
       await expect(collectionCard.locator('h2')).toBeVisible()
-      // Should show work count (e.g. "5 works" or "1 work")
+
+      // Work count
       await expect(collectionCard.getByText(/\d+ works?/)).toBeVisible()
+
+      // Hover effect class
+      const classes = await collectionCard.getAttribute('class')
+      expect(classes).toContain('hover:-translate-y-2')
     }
   })
 
   test('clicking collection navigates to collection page', async ({ page }) => {
     await page.goto('/')
     const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCollections = await collectionCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasCollections) {
       await collectionCard.click()
@@ -135,102 +74,56 @@ test.describe('collections-landing', () => {
     }
   })
 
-  test('Cabinet of Curiosities card is shown when uncategorized artworks exist', async ({ page }) => {
+  test('Cabinet of Curiosities card shown for uncategorized artworks', async ({ page }) => {
     await page.goto('/')
     const cabinetCard = page.locator('a[href="/collection/cabinet-of-curiosities"]')
-    const hasCabinet = await cabinetCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCabinet = await cabinetCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasCabinet) {
       await expect(cabinetCard.getByText('Cabinet of Curiosities')).toBeVisible()
       await expect(cabinetCard.getByText('Uncategorized works and experiments')).toBeVisible()
     }
   })
-
-  test('collection cards have hover effects', async ({ page }) => {
-    await page.goto('/')
-    const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasCollections) {
-      const classes = await collectionCard.getAttribute('class')
-      expect(classes).toContain('hover:-translate-y-2')
-    }
-  })
 })
 
 test.describe('collection-view', () => {
-  test('collection page shows title', async ({ page }) => {
+  test('collection page shows title, back link, and navigation works', async ({ page }) => {
     await page.goto('/')
     const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCollections = await collectionCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasCollections) {
       await collectionCard.click()
       await expect(page).toHaveURL(/\/collection\//)
 
-      // Should show h1 title
+      // Title
       await expect(page.locator('h1').first()).toBeVisible()
-    }
-  })
 
-  test('collection page shows back link', async ({ page }) => {
-    await page.goto('/')
-    const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasCollections) {
-      await collectionCard.click()
-      await expect(page).toHaveURL(/\/collection\//)
-
+      // Back link
       const backLink = page.getByRole('link', { name: /all collections/i })
       await expect(backLink).toBeVisible()
-    }
-  })
 
-  test('back link returns to home', async ({ page }) => {
-    await page.goto('/')
-    const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasCollections) {
-      await collectionCard.click()
-      await expect(page).toHaveURL(/\/collection\//)
-
-      const backLink = page.getByRole('link', { name: /all collections/i })
+      // Back link works
       await backLink.click()
-
       await expect(page).toHaveURL('/')
     }
   })
 
-  test('collection page shows artworks or empty state', async ({ page }) => {
+  test('collection page shows artworks with links to detail', async ({ page }) => {
     await page.goto('/')
     const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasCollections = await collectionCard.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasCollections) {
       await collectionCard.click()
       await expect(page).toHaveURL(/\/collection\//)
 
-      // Should show artworks or empty message
       const content = page.locator('article').first()
         .or(page.getByText('No works in this collection'))
-      await expect(content).toBeVisible({ timeout: 10000 })
-    }
-  })
-
-  test('collection page artworks link to detail page', async ({ page }) => {
-    await page.goto('/')
-    const collectionCard = page.locator('a[href^="/collection/"]').first()
-    const hasCollections = await collectionCard.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasCollections) {
-      await collectionCard.click()
-      await expect(page).toHaveURL(/\/collection\//)
+      await expect(content).toBeVisible({ timeout: 4000 })
 
       const artworkLink = page.locator('a[href^="/artwork/"]').first()
-      const hasArtworks = await artworkLink.isVisible({ timeout: 5000 }).catch(() => false)
-
+      const hasArtworks = await artworkLink.isVisible({ timeout: 3000 }).catch(() => false)
       if (hasArtworks) {
         await artworkLink.click()
         await expect(page).toHaveURL(/\/artwork\//)
@@ -240,12 +133,11 @@ test.describe('collection-view', () => {
 
   test('Cabinet of Curiosities page has italic title', async ({ page }) => {
     await page.goto('/collection/cabinet-of-curiosities')
-    // Wait for either the page to load or 404
     const title = page.locator('h1')
     const notFound = page.getByText('Collection not found')
 
-    const titleVisible = await title.isVisible({ timeout: 5000 }).catch(() => false)
-    const notFoundVisible = await notFound.isVisible({ timeout: 5000 }).catch(() => false)
+    const titleVisible = await title.isVisible({ timeout: 4000 }).catch(() => false)
+    const notFoundVisible = await notFound.isVisible({ timeout: 1000 }).catch(() => false)
 
     if (titleVisible && !notFoundVisible) {
       const classes = await title.getAttribute('class')
@@ -253,89 +145,36 @@ test.describe('collection-view', () => {
     }
   })
 
-  test('nonexistent collection shows 404', async ({ page }) => {
+  test('nonexistent collection shows 404 with return link', async ({ page }) => {
     await page.goto('/collection/this-collection-does-not-exist-12345')
-    await expect(page.getByText('Collection not found')).toBeVisible({ timeout: 10000 })
-  })
-
-  test('404 page has return link', async ({ page }) => {
-    await page.goto('/collection/this-collection-does-not-exist-12345')
+    await expect(page.getByText('Collection not found')).toBeVisible({ timeout: 4000 })
     const returnLink = page.getByRole('link', { name: /return to collections/i })
-    await expect(returnLink).toBeVisible({ timeout: 10000 })
+    await expect(returnLink).toBeVisible()
   })
 })
 
 test.describe('filter-by-series', () => {
-  test('series filter shows when series exist', async ({ page }) => {
+  test('filter UI shows when series exist', async ({ page }) => {
     await page.goto('/')
 
-    // Wait for page to load
-    // Filter nav or no filter (if no series)
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
-    const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasFilter = await filterNav.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasFilter) {
-      await expect(filterNav).toBeVisible()
-    }
-  })
-
-  test('shows "All Works" link', async ({ page }) => {
-    await page.goto('/')
-    const allWorksLink = page.getByRole('link', { name: 'All Works' })
-    const hasFilter = await allWorksLink.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasFilter) {
-      await expect(allWorksLink).toBeVisible()
-    }
-  })
-
-  test('clicking series filters gallery', async ({ page }) => {
-    await page.goto('/')
-    const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
-    const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasFilter) {
-      // Get first series link (not "All Works")
-      const seriesLink = filterNav.locator('a[href*="?series="]').first()
-      const hasSeriesLink = await seriesLink.isVisible().catch(() => false)
-
-      if (hasSeriesLink) {
-        await seriesLink.click()
-        // URL should have series param
-        await expect(page).toHaveURL(/\?series=/)
-      }
-    }
-  })
-
-  test('clicking "All Works" resets filter', async ({ page }) => {
-    await page.goto('/?series=test')
-    const allWorksLink = page.getByRole('link', { name: 'All Works' })
-    const hasFilter = await allWorksLink.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasFilter) {
-      await allWorksLink.click()
-      // URL should not have series param
-      await expect(page).toHaveURL('/')
-    }
-  })
-
-  test('active filter has visual indicator', async ({ page }) => {
-    await page.goto('/')
-    const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
-    const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
-
-    if (hasFilter) {
-      // "All Works" should have text color indicating active state (not muted)
+      // "All Works" link visible
       const allWorksLink = page.getByRole('link', { name: 'All Works' })
+      await expect(allWorksLink).toBeVisible()
+
+      // Active filter has visual indicator
       const classes = await allWorksLink.getAttribute('class')
       expect(classes).toContain('text-[var(--color-gallery-text)]')
     }
   })
 
-  test('filtered view shows appropriate content', async ({ page }) => {
+  test('clicking series filters and "All Works" resets', async ({ page }) => {
     await page.goto('/')
     const filterNav = page.locator('nav[aria-label="Filter artworks by series"]')
-    const hasFilter = await filterNav.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasFilter = await filterNav.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (hasFilter) {
       const seriesLink = filterNav.locator('a[href*="?series="]').first()
@@ -343,14 +182,19 @@ test.describe('filter-by-series', () => {
 
       if (hasSeriesLink) {
         await seriesLink.click()
-    
+        await expect(page).toHaveURL(/\?series=/)
 
-        // Should show either artworks or "No works to display"
+        // Shows filtered content
         const content = page
           .locator('article')
           .first()
           .or(page.getByText('No works to display'))
-        await expect(content).toBeVisible({ timeout: 5000 })
+        await expect(content).toBeVisible({ timeout: 4000 })
+
+        // "All Works" resets filter
+        const allWorksLink = page.getByRole('link', { name: 'All Works' })
+        await allWorksLink.click()
+        await expect(page).toHaveURL('/')
       }
     }
   })

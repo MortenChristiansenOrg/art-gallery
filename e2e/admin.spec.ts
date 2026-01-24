@@ -1,71 +1,11 @@
-import { test, expect, Page } from '@playwright/test'
-import path from 'path'
-
-const ADMIN_PASSWORD = 'admin'
-
-async function loginAsAdmin(page: Page) {
-  await page.goto('/admin')
-  await page.fill('input[type="password"]', ADMIN_PASSWORD)
-  await page.click('button[type="submit"]')
-  await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-}
-
-async function createTestImageFile(page: Page): Promise<string> {
-  // Create a simple test image using a data URL converted to file
-  const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png')
-  return testImagePath
-}
-
-test.describe('login', () => {
-  test('shows login form when not authenticated', async ({ page }) => {
-    await page.goto('/admin')
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible()
-  })
-
-  test('logs in with correct password', async ({ page }) => {
-    await page.goto('/admin')
-    await page.fill('input[type="password"]', ADMIN_PASSWORD)
-    await page.click('button[type="submit"]')
-    await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
-  })
-
-  test('shows error on wrong password', async ({ page }) => {
-    await page.goto('/admin')
-
-    // Set up dialog handler for alert
-    page.on('dialog', async dialog => {
-      expect(dialog.message()).toContain('Invalid password')
-      await dialog.accept()
-    })
-
-    await page.fill('input[type="password"]', 'wrong-password')
-    await page.click('button[type="submit"]')
-
-    // Should still show login form
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-  })
-
-  test('logs out successfully', async ({ page }) => {
-    await loginAsAdmin(page)
-    await page.click('button:has-text("Logout")')
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-  })
-
-  test('session persists on page refresh', async ({ page }) => {
-    await loginAsAdmin(page)
-    await page.reload()
-    // Should still be authenticated
-    await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
-  })
-})
+import { test, expect } from './fixtures'
 
 test.describe('artwork-crud', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
-    // Ensure we're on artworks tab
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
   })
 
@@ -148,8 +88,11 @@ test.describe('artwork-crud', () => {
 })
 
 test.describe('bulk-upload', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
     await page.click('button:has-text("Add Artwork")')
   })
@@ -185,7 +128,7 @@ test.describe('bulk-upload', () => {
     })
 
     // Wait for thumbnail to be generated
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
   })
 
   test('title defaults to filename without extension', async ({ page }) => {
@@ -197,7 +140,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     const titleInput = page.getByTestId('title-input-0')
     await expect(titleInput).toHaveValue('my-artwork-name')
   })
@@ -211,7 +154,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
 
     const titleInput = page.getByTestId('title-input-0')
     await titleInput.clear()
@@ -229,7 +172,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
 
     await page.getByTestId('remove-image-0').click()
 
@@ -245,7 +188,7 @@ test.describe('bulk-upload', () => {
       { name: 'art3.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('3') },
     ])
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('image-row-1')).toBeVisible()
     await expect(page.getByTestId('image-row-2')).toBeVisible()
   })
@@ -276,7 +219,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('submit-button')).not.toBeDisabled()
   })
 
@@ -288,7 +231,7 @@ test.describe('bulk-upload', () => {
       { name: 'art2.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('2') },
     ])
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('image-row-1')).toBeVisible()
 
     // Click save - this will likely fail due to no convex backend, but we can check progress appears
@@ -296,13 +239,16 @@ test.describe('bulk-upload', () => {
 
     // Either shows progress or errors (depends on convex connection)
     const progressOrError = page.getByTestId('upload-progress').or(page.getByTestId('upload-errors'))
-    await expect(progressOrError).toBeVisible({ timeout: 5000 })
+    await expect(progressOrError).toBeVisible({ timeout: 4000 })
   })
 })
 
 test.describe('collection-crud', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("collections")')
   })
 
@@ -386,8 +332,11 @@ test.describe('collection-crud', () => {
 })
 
 test.describe('artwork-reordering', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
   })
 
@@ -460,8 +409,11 @@ test.describe('artwork-reordering', () => {
 })
 
 test.describe('messages', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("messages")')
   })
 
@@ -474,7 +426,7 @@ test.describe('messages', () => {
   test('shows empty state when no messages', async ({ page }) => {
     // Either shows messages or empty state
     const content = page.getByText('No messages yet').or(page.locator('.font-medium'))
-    await expect(content).toBeVisible({ timeout: 5000 })
+    await expect(content).toBeVisible({ timeout: 4000 })
   })
 
   test('message row shows sender info', async ({ page }) => {
@@ -505,7 +457,7 @@ test.describe('messages', () => {
     if (hasUnread) {
       await markReadButton.click()
       // Button should disappear after marking read
-      await expect(markReadButton).not.toBeVisible({ timeout: 5000 })
+      await expect(markReadButton).not.toBeVisible({ timeout: 4000 })
     }
   })
 
@@ -525,8 +477,11 @@ test.describe('messages', () => {
 })
 
 test.describe('content-editing', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("content")')
   })
 

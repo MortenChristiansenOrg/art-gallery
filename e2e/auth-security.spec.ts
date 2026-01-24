@@ -47,7 +47,7 @@ test.describe("auth-security", () => {
       // Even with spoofed token in sessionStorage, server should reject
       // The UI might show logged in initially, but mutations should fail
       // Try to save content with spoofed token
-      const alertPromise = page.waitForEvent("dialog", { timeout: 5000 }).catch(() => null);
+      const alertPromise = page.waitForEvent("dialog", { timeout: 4000 }).catch(() => null);
 
       // Note: The client may show the admin UI due to spoofed sessionStorage
       // But actual operations requiring server validation should fail
@@ -68,11 +68,17 @@ test.describe("auth-security", () => {
 
       // With expired token, validateSession should return invalid
       // and the auth context should log out
-      await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 4000 });
     });
   });
 
   test.describe("token validation", () => {
+    test("shows login form when not authenticated", async ({ page }) => {
+      await page.goto("/admin");
+      await expect(page.locator('input[type="password"]')).toBeVisible();
+      await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
+    });
+
     test("valid login returns token and grants access", async ({ page }) => {
       await loginAsAdmin(page);
 
@@ -106,6 +112,13 @@ test.describe("auth-security", () => {
         return sessionStorage.getItem("gallery_admin_token");
       });
       expect(token).toBeNull();
+    });
+
+    test("session persists on page refresh", async ({ page }) => {
+      await loginAsAdmin(page);
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
     });
   });
 

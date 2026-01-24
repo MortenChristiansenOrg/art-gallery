@@ -23,6 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# E2E test results
+playwright-report
+test-results
+
 # AI
 .claude/settings.local.json
 .context
