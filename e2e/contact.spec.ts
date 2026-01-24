@@ -19,9 +19,9 @@ test.describe('submit-form', () => {
   })
 
   test('form fields have proper labels', async ({ page }) => {
-    await expect(page.getByText('Name', { exact: false })).toBeVisible()
-    await expect(page.getByText('Email', { exact: false })).toBeVisible()
-    await expect(page.getByText('Message', { exact: false })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Name' })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Email' })).toBeVisible()
+    await expect(page.locator('label', { hasText: 'Message' })).toBeVisible()
   })
 
   test('form fields are required', async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe('submit-form', () => {
       .getByText('Sending...')
       .or(page.getByText('Thank you'))
       .or(page.getByText('Something went wrong'))
-    await expect(sendingOrResult).toBeVisible({ timeout: 5000 })
+    await expect(sendingOrResult).toBeVisible({ timeout: 4000 })
   })
 
   test('shows success message after submit', async ({ page }) => {
@@ -94,7 +94,7 @@ test.describe('submit-form', () => {
     const result = page
       .getByText('Thank you for your message')
       .or(page.getByText('Something went wrong'))
-    await expect(result).toBeVisible({ timeout: 10000 })
+    await expect(result).toBeVisible({ timeout: 4000 })
   })
 
   test('form clears after successful submit', async ({ page }) => {
@@ -106,12 +106,9 @@ test.describe('submit-form', () => {
     // Submit
     await page.getByRole('button', { name: 'Send Message' }).click()
 
-    // Wait for response
-    await page.waitForTimeout(2000)
-
     // Check for success state
     const successMessage = page.getByText('Thank you for your message')
-    const isSuccess = await successMessage.isVisible().catch(() => false)
+    const isSuccess = await successMessage.isVisible({ timeout: 4000 }).catch(() => false)
 
     if (isSuccess) {
       // Form should be replaced with success message

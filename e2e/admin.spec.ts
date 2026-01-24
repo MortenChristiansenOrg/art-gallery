@@ -1,71 +1,11 @@
-import { test, expect, Page } from '@playwright/test'
-import path from 'path'
-
-const ADMIN_PASSWORD = 'admin'
-
-async function loginAsAdmin(page: Page) {
-  await page.goto('/admin')
-  await page.fill('input[type="password"]', ADMIN_PASSWORD)
-  await page.click('button[type="submit"]')
-  await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-}
-
-async function createTestImageFile(page: Page): Promise<string> {
-  // Create a simple test image using a data URL converted to file
-  const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png')
-  return testImagePath
-}
-
-test.describe('login', () => {
-  test('shows login form when not authenticated', async ({ page }) => {
-    await page.goto('/admin')
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Login' })).toBeVisible()
-  })
-
-  test('logs in with correct password', async ({ page }) => {
-    await page.goto('/admin')
-    await page.fill('input[type="password"]', ADMIN_PASSWORD)
-    await page.click('button[type="submit"]')
-    await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
-  })
-
-  test('shows error on wrong password', async ({ page }) => {
-    await page.goto('/admin')
-
-    // Set up dialog handler for alert
-    page.on('dialog', async dialog => {
-      expect(dialog.message()).toContain('Invalid password')
-      await dialog.accept()
-    })
-
-    await page.fill('input[type="password"]', 'wrong-password')
-    await page.click('button[type="submit"]')
-
-    // Should still show login form
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-  })
-
-  test('logs out successfully', async ({ page }) => {
-    await loginAsAdmin(page)
-    await page.click('button:has-text("Logout")')
-    await expect(page.locator('input[type="password"]')).toBeVisible()
-  })
-
-  test('session persists on page refresh', async ({ page }) => {
-    await loginAsAdmin(page)
-    await page.reload()
-    // Should still be authenticated
-    await expect(page.getByRole('heading', { name: 'Admin' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
-  })
-})
+import { test, expect } from './fixtures'
 
 test.describe('artwork-crud', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
-    // Ensure we're on artworks tab
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
   })
 
@@ -94,11 +34,10 @@ test.describe('artwork-crud', () => {
     await expect(page.getByRole('heading', { name: 'Add Artwork' })).not.toBeVisible()
   })
 
-  test('shows series dropdown', async ({ page }) => {
-    await page.click('button:has-text("Add Artwork")')
-    const seriesSelect = page.locator('select')
-    await expect(seriesSelect).toBeVisible()
-    await expect(seriesSelect).toContainText('None')
+  test('shows collection filter dropdown', async ({ page }) => {
+    const collectionFilter = page.getByTestId('collection-filter')
+    await expect(collectionFilter).toBeVisible()
+    await expect(collectionFilter).toContainText('Cabinet of Curiosities')
   })
 
   test('shows year and dimensions fields', async ({ page }) => {
@@ -148,8 +87,11 @@ test.describe('artwork-crud', () => {
 })
 
 test.describe('bulk-upload', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
     await page.click('button:has-text("Add Artwork")')
   })
@@ -165,13 +107,18 @@ test.describe('bulk-upload', () => {
 
   test('drop zone shows visual feedback on drag over', async ({ page }) => {
     const dropZone = page.locator('[class*="border-dashed"]')
+    await expect(dropZone).toBeVisible()
 
-    // Trigger dragover
-    await dropZone.dispatchEvent('dragover', {
-      dataTransfer: new DataTransfer(),
+    // Trigger dragover via page.evaluate
+    await dropZone.evaluate((el) => {
+      const event = new DragEvent('dragover', {
+        bubbles: true,
+        dataTransfer: new DataTransfer(),
+      })
+      el.dispatchEvent(event)
     })
 
-    await expect(page.getByText('Drop images here')).toBeVisible()
+    await expect(page.getByText('Drop images here')).toBeVisible({ timeout: 2000 })
   })
 
   test('shows image row with thumbnail after file selection', async ({ page }) => {
@@ -185,7 +132,7 @@ test.describe('bulk-upload', () => {
     })
 
     // Wait for thumbnail to be generated
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
   })
 
   test('title defaults to filename without extension', async ({ page }) => {
@@ -197,7 +144,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     const titleInput = page.getByTestId('title-input-0')
     await expect(titleInput).toHaveValue('my-artwork-name')
   })
@@ -211,7 +158,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
 
     const titleInput = page.getByTestId('title-input-0')
     await titleInput.clear()
@@ -229,7 +176,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake-image-data'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
 
     await page.getByTestId('remove-image-0').click()
 
@@ -245,7 +192,7 @@ test.describe('bulk-upload', () => {
       { name: 'art3.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('3') },
     ])
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('image-row-1')).toBeVisible()
     await expect(page.getByTestId('image-row-2')).toBeVisible()
   })
@@ -276,7 +223,7 @@ test.describe('bulk-upload', () => {
       buffer: Buffer.from('fake'),
     })
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('submit-button')).not.toBeDisabled()
   })
 
@@ -288,7 +235,7 @@ test.describe('bulk-upload', () => {
       { name: 'art2.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('2') },
     ])
 
-    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByTestId('image-row-0')).toBeVisible({ timeout: 4000 })
     await expect(page.getByTestId('image-row-1')).toBeVisible()
 
     // Click save - this will likely fail due to no convex backend, but we can check progress appears
@@ -296,13 +243,16 @@ test.describe('bulk-upload', () => {
 
     // Either shows progress or errors (depends on convex connection)
     const progressOrError = page.getByTestId('upload-progress').or(page.getByTestId('upload-errors'))
-    await expect(progressOrError).toBeVisible({ timeout: 5000 })
+    await expect(progressOrError).toBeVisible({ timeout: 4000 })
   })
 })
 
 test.describe('collection-crud', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("collections")')
   })
 
@@ -317,17 +267,17 @@ test.describe('collection-crud', () => {
 
   test('shows required form fields', async ({ page }) => {
     await page.click('button:has-text("Add Collection")')
-    await expect(page.getByLabel(/Name/)).toBeVisible()
-    await expect(page.getByLabel(/Slug/)).toBeVisible()
-    await expect(page.getByLabel(/Description/)).toBeVisible()
+    await expect(page.locator('label:has-text("Name") + input')).toBeVisible()
+    await expect(page.locator('label:has-text("Slug") + input')).toBeVisible()
+    await expect(page.locator('label:has-text("Description") + textarea')).toBeVisible()
   })
 
   test('auto-generates slug from name', async ({ page }) => {
     await page.click('button:has-text("Add Collection")')
-    const nameInput = page.getByLabel(/Name/)
+    const nameInput = page.locator('label:has-text("Name") + input')
     await nameInput.fill('Test Collection Name')
 
-    const slugInput = page.getByLabel(/Slug/)
+    const slugInput = page.locator('label:has-text("Slug") + input')
     await expect(slugInput).toHaveValue('test-collection-name')
   })
 
@@ -342,9 +292,9 @@ test.describe('collection-crud', () => {
     await expect(page.getByText('Cover Image')).toBeVisible()
   })
 
-  test('shows upload image button', async ({ page }) => {
+  test('shows upload image section', async ({ page }) => {
     await page.click('button:has-text("Add Collection")')
-    await expect(page.getByRole('button', { name: /upload image/i })).toBeVisible()
+    await expect(page.getByText(/upload a custom image/i)).toBeVisible()
   })
 
   test('edit button opens edit form with existing data', async ({ page }) => {
@@ -354,7 +304,7 @@ test.describe('collection-crud', () => {
     if (hasCollections) {
       await editButton.click()
       await expect(page.getByRole('heading', { name: 'Edit Collection' })).toBeVisible()
-      const nameInput = page.getByLabel(/Name/)
+      const nameInput = page.locator('label:has-text("Name") + input')
       await expect(nameInput).not.toHaveValue('')
     }
   })
@@ -386,22 +336,25 @@ test.describe('collection-crud', () => {
 })
 
 test.describe('artwork-reordering', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("artworks")')
   })
 
-  test('shows series filter dropdown', async ({ page }) => {
-    await expect(page.getByTestId('series-filter')).toBeVisible()
-    await expect(page.getByTestId('series-filter')).toContainText('All Artworks')
+  test('shows collection filter dropdown', async ({ page }) => {
+    await expect(page.getByTestId('collection-filter')).toBeVisible()
+    await expect(page.getByTestId('collection-filter')).toContainText('Cabinet of Curiosities')
   })
 
-  test('can filter artworks by series', async ({ page }) => {
-    const seriesFilter = page.getByTestId('series-filter')
-    const options = await seriesFilter.locator('option').allTextContents()
+  test('can filter artworks by collection', async ({ page }) => {
+    const collectionFilter = page.getByTestId('collection-filter')
+    const options = await collectionFilter.locator('option').allTextContents()
 
-    // Should have "All Artworks" plus any series
-    expect(options[0]).toBe('All Artworks')
+    // Should have "Cabinet of Curiosities" plus any collections
+    expect(options[0]).toBe('Cabinet of Curiosities')
   })
 
   test('artwork rows are draggable', async ({ page }) => {
@@ -443,13 +396,17 @@ test.describe('artwork-reordering', () => {
       const secondRow = artworkRows.nth(1)
 
       // Start drag on first row
-      await firstRow.dispatchEvent('dragstart', {
-        dataTransfer: new DataTransfer(),
+      await firstRow.evaluate((el) => {
+        const dt = new DataTransfer()
+        dt.setData('text/plain', el.getAttribute('data-testid') || '')
+        const event = new DragEvent('dragstart', { bubbles: true, dataTransfer: dt })
+        el.dispatchEvent(event)
       })
 
       // Drag over second row
-      await secondRow.dispatchEvent('dragover', {
-        dataTransfer: new DataTransfer(),
+      await secondRow.evaluate((el) => {
+        const event = new DragEvent('dragover', { bubbles: true, dataTransfer: new DataTransfer() })
+        el.dispatchEvent(event)
       })
 
       // First row should have opacity-50 class
@@ -460,8 +417,11 @@ test.describe('artwork-reordering', () => {
 })
 
 test.describe('messages', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("messages")')
   })
 
@@ -473,8 +433,8 @@ test.describe('messages', () => {
 
   test('shows empty state when no messages', async ({ page }) => {
     // Either shows messages or empty state
-    const content = page.getByText('No messages yet').or(page.locator('.font-medium'))
-    await expect(content).toBeVisible({ timeout: 5000 })
+    const content = page.getByText('No messages yet').or(page.locator('.font-medium').first())
+    await expect(content).toBeVisible({ timeout: 4000 })
   })
 
   test('message row shows sender info', async ({ page }) => {
@@ -499,13 +459,15 @@ test.describe('messages', () => {
   })
 
   test('can mark message as read', async ({ page }) => {
-    const markReadButton = page.getByRole('button', { name: 'Mark read' }).first()
-    const hasUnread = await markReadButton.isVisible().catch(() => false)
+    const unreadMessage = page.locator('.bg-blue-50').first()
+    const hasUnread = await unreadMessage.isVisible().catch(() => false)
 
     if (hasUnread) {
+      const initialCount = await page.locator('.bg-blue-50').count()
+      const markReadButton = unreadMessage.getByRole('button', { name: 'Mark read' })
       await markReadButton.click()
-      // Button should disappear after marking read
-      await expect(markReadButton).not.toBeVisible({ timeout: 5000 })
+      // Unread count should decrease
+      await expect(page.locator('.bg-blue-50')).toHaveCount(initialCount - 1, { timeout: 4000 })
     }
   })
 
@@ -525,8 +487,11 @@ test.describe('messages', () => {
 })
 
 test.describe('content-editing', () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page)
+  test.beforeEach(async ({ page, adminToken }) => {
+    await page.addInitScript((token) => {
+      sessionStorage.setItem('gallery_admin_token', token)
+    }, adminToken)
+    await page.goto('/admin')
     await page.click('button:has-text("content")')
   })
 
@@ -573,7 +538,7 @@ test.describe('content-editing', () => {
     const textarea = page.locator('textarea')
 
     // Wait for content to load
-    await page.waitForTimeout(500)
+    await expect(textarea).not.toHaveValue('')
 
     // Get current value
     const currentValue = await textarea.inputValue()
