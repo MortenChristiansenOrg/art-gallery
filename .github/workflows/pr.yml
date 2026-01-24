@@ -26,7 +26,7 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       - name: Start local Convex backend
         run: |
-          bunx convex dev --local &
+          bunx convex dev --configure new --dev-deployment local &
           timeout 60 bash -c 'until curl -s http://127.0.0.1:3210 > /dev/null 2>&1; do sleep 1; done'
           bunx convex env set ADMIN_PASSWORD admin
       - run: bun run e2e
