@@ -15,14 +15,20 @@ Process CodeRabbit review comments on a PR: read comments, triage by priority, a
 
 ## Prerequisites
 
-Requires `gh` CLI with a fine-grained PAT. Setup:
+Requires `gh` CLI authentication. Two options:
 
+**Option A: OAuth login (recommended - supports thread resolution)**
+```bash
+gh auth login
+```
+
+**Option B: Fine-grained PAT (read/comment only, cannot resolve threads)**
 1. Create token at https://github.com/settings/personal-access-tokens/new
 2. Select repository access (this repo or all)
 3. Permissions: **Pull requests → Read and write**
 4. Add to `.env.local`: `GH_TOKEN=ghp_xxx`
 
-The `GH_TOKEN` env var is automatically used by `gh`.
+Note: Fine-grained PATs cannot resolve review threads via GraphQL API. Use OAuth or resolve threads manually in GitHub UI.
 
 ## Workflow
 
@@ -90,15 +96,21 @@ Group fixes by logical area:
 
 ### 5. Push Changes
 
-Single `git push` after all commits.
+Ask user to run `git push` (the GH_TOKEN only has PR permissions, not repo write access).
 
-### 6. Resolve Threads
+### 6. Mark Comments with Reactions
 
-After push succeeds, resolve each addressed thread:
+After push succeeds, mark each comment with a reaction:
 
 ```bash
-.claude/skills/coderabbit-review/scripts/resolve-thread.sh <thread_id>
+# Fixed comments - rocket
+gh api repos/<owner>/<repo>/pulls/comments/<comment_id>/reactions -f content=rocket
+
+# Skipped/rejected comments - thumbs down
+gh api repos/<owner>/<repo>/pulls/comments/<comment_id>/reactions -f content=-1
 ```
+
+Note: Thread resolution via GraphQL requires OAuth (`gh auth login`). Reactions work with fine-grained PATs.
 
 ## Output Format
 
@@ -127,24 +139,27 @@ After push succeeds, resolve each addressed thread:
 
 - abc1234: Commit message
 
-## Threads Resolved
+## Next Steps
 
-- RT_xxx, RT_yyy, ...
+User to run `git push`, then comments will be marked with reactions.
+
+## Comments Marked
+
+- comment_id_1, comment_id_2, ... (rocket reaction added)
 ```
 
 ## Error Handling
 
 - If `gh` not authenticated: prompt user to run `gh auth login`
 - If PR not found: show error and exit
-- If push fails: do NOT resolve threads, report error
+- Only resolve threads after user confirms push succeeded
 - If thread resolution fails: continue with others, report failures
 
 ## Scripts Reference
 
-| Script                    | Purpose            | Args                                      |
-| ------------------------- | ------------------ | ----------------------------------------- |
-| `fetch-review-threads.sh` | Get all threads    | `<owner> <repo> <pr>`                     |
-| `resolve-thread.sh`       | Resolve one thread | `<thread_id>`                             |
-| `reply-to-comment.sh`     | Reply to comment   | `<owner> <repo> <pr> <comment_id> <body>` |
+| Script                    | Purpose          | Args                                      |
+| ------------------------- | ---------------- | ----------------------------------------- |
+| `fetch-review-threads.sh` | Get all threads  | `<owner> <repo> <pr>`                     |
+| `reply-to-comment.sh`     | Reply to comment | `<owner> <repo> <pr> <comment_id> <body>` |
 
 See `.claude/skills/coderabbit-review/resources/api-commands.md` for raw gh API commands.
