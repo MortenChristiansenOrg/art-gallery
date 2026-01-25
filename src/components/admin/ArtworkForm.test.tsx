@@ -41,11 +41,12 @@ describe("ArtworkForm", () => {
     );
 
     // Mock canvas
-    HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       drawImage: vi.fn(),
-    })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
-
-    HTMLCanvasElement.prototype.toDataURL = vi.fn(() => "data:image/jpeg;base64,test");
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+      "data:image/jpeg;base64,test"
+    );
 
     // Mock URL.createObjectURL
     vi.stubGlobal("URL", {
@@ -55,6 +56,7 @@ describe("ArtworkForm", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 

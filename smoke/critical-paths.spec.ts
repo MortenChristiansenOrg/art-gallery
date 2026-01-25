@@ -26,10 +26,9 @@ test.describe("Critical Paths", () => {
 
     // Find and click first collection
     const collection = page.locator('[data-testid="collection-card"]').first();
-    if (await collection.isVisible()) {
-      await collection.click();
-      await expect(page).toHaveURL(/\/collection\//);
-    }
+    await expect(collection).toBeVisible();
+    await collection.click();
+    await expect(page).toHaveURL(/\/collection\//);
   });
 
   test("3. Artwork detail displays", async ({ page }) => {
@@ -38,17 +37,15 @@ test.describe("Critical Paths", () => {
 
     // Navigate to collection
     const collection = page.locator('[data-testid="collection-card"]').first();
-    if (await collection.isVisible()) {
-      await collection.click();
-      await page.waitForLoadState("networkidle");
+    await expect(collection).toBeVisible();
+    await collection.click();
+    await page.waitForLoadState("networkidle");
 
-      // Click artwork
-      const artwork = page.locator('[data-testid="artwork-card"]').first();
-      if (await artwork.isVisible()) {
-        await artwork.click();
-        await expect(page).toHaveURL(/\/artwork\//);
-      }
-    }
+    // Click artwork
+    const artwork = page.locator('[data-testid="artwork-card"]').first();
+    await expect(artwork).toBeVisible();
+    await artwork.click();
+    await expect(page).toHaveURL(/\/artwork\//);
   });
 
   test("4. Image viewer opens/closes", async ({ page }) => {
@@ -57,32 +54,29 @@ test.describe("Critical Paths", () => {
 
     // Navigate to artwork
     const collection = page.locator('[data-testid="collection-card"]').first();
-    if (await collection.isVisible()) {
-      await collection.click();
-      await page.waitForLoadState("networkidle");
+    await expect(collection).toBeVisible();
+    await collection.click();
+    await page.waitForLoadState("networkidle");
 
-      const artwork = page.locator('[data-testid="artwork-card"]').first();
-      if (await artwork.isVisible()) {
-        await artwork.click();
-        await page.waitForLoadState("networkidle");
+    const artwork = page.locator('[data-testid="artwork-card"]').first();
+    await expect(artwork).toBeVisible();
+    await artwork.click();
+    await page.waitForLoadState("networkidle");
 
-        // Open viewer
-        const imageButton = page.getByRole("button", {
-          name: /view artwork|enlarge/i,
-        });
-        if (await imageButton.isVisible()) {
-          await imageButton.click();
+    // Open viewer
+    const imageButton = page.getByRole("button", {
+      name: /view artwork|enlarge/i,
+    });
+    await expect(imageButton).toBeVisible();
+    await imageButton.click();
 
-          // Check viewer is open
-          const viewer = page.locator('[data-testid="image-viewer"]');
-          await expect(viewer).toBeVisible();
+    // Check viewer is open
+    const viewer = page.locator('[data-testid="image-viewer"]');
+    await expect(viewer).toBeVisible();
 
-          // Close viewer
-          await page.keyboard.press("Escape");
-          await expect(viewer).not.toBeVisible();
-        }
-      }
-    }
+    // Close viewer
+    await page.keyboard.press("Escape");
+    await expect(viewer).not.toBeVisible();
   });
 
   test("5. About page content loads", async ({ page }) => {

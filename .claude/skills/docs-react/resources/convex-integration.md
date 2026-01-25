@@ -284,17 +284,19 @@ function ArtworkList() {
 
 // For manual refresh patterns (rare)
 function ManualRefresh() {
-  const artworks = useQuery(api.artworks.list);
   const [key, setKey] = useState(0);
-
-  // Force re-mount to refresh
   const refresh = () => setKey(k => k + 1);
 
   return (
-    <div key={key}>
+    <div>
       <button onClick={refresh}>Refresh</button>
-      <Grid items={artworks ?? []} />
+      <ArtworkGrid key={key} />
     </div>
   );
+}
+
+function ArtworkGrid() {
+  const artworks = useQuery(api.artworks.list);
+  return <Grid items={artworks ?? []} />;
 }
 ```

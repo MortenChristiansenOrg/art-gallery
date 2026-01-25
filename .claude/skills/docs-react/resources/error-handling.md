@@ -90,20 +90,20 @@ function App() {
 Isolate errors to specific pages:
 
 ```tsx
-function Routes() {
+function AppRoutes() {
   return (
-    <Switch>
-      <Route path="/artworks">
+    <Routes>
+      <Route path="/artworks" element={
         <ErrorBoundary fallback={<PageError />}>
           <ArtworksPage />
         </ErrorBoundary>
-      </Route>
-      <Route path="/settings">
+      } />
+      <Route path="/settings" element={
         <ErrorBoundary fallback={<PageError />}>
           <SettingsPage />
         </ErrorBoundary>
-      </Route>
-    </Switch>
+      } />
+    </Routes>
   );
 }
 ```

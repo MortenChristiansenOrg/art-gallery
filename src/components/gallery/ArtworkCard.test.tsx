@@ -101,7 +101,7 @@ describe("ArtworkCard", () => {
       expect(handleClick).toHaveBeenCalledOnce();
     });
 
-    it("does not trigger onClick on Space key", async () => {
+    it("triggers onClick on Space key", async () => {
       const user = userEvent.setup();
       const handleClick = vi.fn();
       render(<ArtworkCard {...defaultProps} onClick={handleClick} />);
@@ -110,8 +110,7 @@ describe("ArtworkCard", () => {
       button.focus();
       await user.keyboard(" ");
 
-      // The component specifically handles only Enter key, not Space
-      expect(handleClick).not.toHaveBeenCalled();
+      expect(handleClick).toHaveBeenCalledOnce();
     });
   });
 

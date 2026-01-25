@@ -88,7 +88,7 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
 
   if (onClick) {
     return (
-      <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
+      <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}>
         {content}
       </div>
     );

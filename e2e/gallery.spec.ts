@@ -59,15 +59,14 @@ test.describe("Gallery Navigation", () => {
       await homePage.waitForLoad();
 
       const firstCollection = homePage.collectionCards.first();
-      if (await firstCollection.isVisible()) {
-        await firstCollection.click();
+      await expect(firstCollection).toBeVisible();
+      await firstCollection.click();
 
-        const collectionPage = new CollectionPage(page);
-        await collectionPage.waitForLoad();
-        await collectionPage.goBack();
+      const collectionPage = new CollectionPage(page);
+      await collectionPage.waitForLoad();
+      await collectionPage.goBack();
 
-        await expect(page).toHaveURL("/");
-      }
+      await expect(page).toHaveURL("/");
     });
   });
 
@@ -79,22 +78,20 @@ test.describe("Gallery Navigation", () => {
       await homePage.waitForLoad();
 
       const firstCollection = homePage.collectionCards.first();
-      if (await firstCollection.isVisible()) {
-        await firstCollection.click();
+      await expect(firstCollection).toBeVisible();
+      await firstCollection.click();
 
-        const collectionPage = new CollectionPage(page);
-        await collectionPage.waitForLoad();
+      const collectionPage = new CollectionPage(page);
+      await collectionPage.waitForLoad();
 
-        const artworkCount = await collectionPage.getArtworkCount();
-        if (artworkCount > 0) {
-          await collectionPage.clickArtwork(0);
+      const artworkCount = await collectionPage.getArtworkCount();
+      expect(artworkCount).toBeGreaterThan(0);
+      await collectionPage.clickArtwork(0);
 
-          const artworkPage = new ArtworkPage(page);
-          await artworkPage.waitForLoad();
+      const artworkPage = new ArtworkPage(page);
+      await artworkPage.waitForLoad();
 
-          await expect(artworkPage.title).toBeVisible();
-        }
-      }
+      await expect(artworkPage.title).toBeVisible();
     });
 
     test("shows 404 for non-existent artwork", async ({ page }) => {
@@ -133,27 +130,25 @@ test.describe("Image Viewer", () => {
     await homePage.waitForLoad();
 
     const firstCollection = homePage.collectionCards.first();
-    if (await firstCollection.isVisible()) {
-      await firstCollection.click();
+    await expect(firstCollection).toBeVisible();
+    await firstCollection.click();
 
-      const collectionPage = new CollectionPage(page);
-      await collectionPage.waitForLoad();
+    const collectionPage = new CollectionPage(page);
+    await collectionPage.waitForLoad();
 
-      const artworkCount = await collectionPage.getArtworkCount();
-      if (artworkCount > 0) {
-        await collectionPage.clickArtwork(0);
+    const artworkCount = await collectionPage.getArtworkCount();
+    expect(artworkCount).toBeGreaterThan(0);
+    await collectionPage.clickArtwork(0);
 
-        const artworkPage = new ArtworkPage(page);
-        await artworkPage.waitForLoad();
+    const artworkPage = new ArtworkPage(page);
+    await artworkPage.waitForLoad();
 
-        // Open viewer
-        await artworkPage.openImageViewer();
-        await expect(artworkPage.imageViewer).toBeVisible();
+    // Open viewer
+    await artworkPage.openImageViewer();
+    await expect(artworkPage.imageViewer).toBeVisible();
 
-        // Close viewer
-        await artworkPage.closeImageViewer();
-        await expect(artworkPage.imageViewer).not.toBeVisible();
-      }
-    }
+    // Close viewer
+    await artworkPage.closeImageViewer();
+    await expect(artworkPage.imageViewer).not.toBeVisible();
   });
 });
