@@ -2,17 +2,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "../test/test-utils";
 import { Home } from "./Home";
 import { createMockCollectionList } from "../test/mocks";
-import { api } from "../../convex/_generated/api";
 
 // Mock module state
 let mockCollections: ReturnType<typeof createMockCollectionList> | undefined;
 let mockUncategorizedCount: number | undefined;
+let callCount = 0;
 
 vi.mock("convex/react", () => ({
-  useQuery: vi.fn((query: unknown) => {
-    if (query === api.collections.listWithCounts) return mockCollections;
-    if (query === api.collections.getUncategorizedCount) return mockUncategorizedCount;
-    return undefined;
+  useQuery: vi.fn(() => {
+    // Home calls useQuery twice: first listWithCounts, then getUncategorizedCount
+    callCount++;
+    if (callCount % 2 === 1) return mockCollections;
+    return mockUncategorizedCount;
   }),
 }));
 
@@ -20,6 +21,7 @@ describe("Home", () => {
   beforeEach(() => {
     mockCollections = undefined;
     mockUncategorizedCount = undefined;
+    callCount = 0;
   });
 
   describe("loading state", () => {

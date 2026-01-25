@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Collection } from "./Collection";
 import { createMockArtworkList, createMockCollection } from "../test/mocks";
-import { api } from "../../convex/_generated/api";
 
 // Mock module state
 let mockCollection: ReturnType<typeof createMockCollection> | null | undefined;
@@ -11,11 +10,13 @@ let mockArtworks: ReturnType<typeof createMockArtworkList> | undefined;
 let mockUncategorizedArtworks: ReturnType<typeof createMockArtworkList> | undefined;
 
 vi.mock("convex/react", () => ({
-  useQuery: vi.fn((query: unknown, args: unknown) => {
+  useQuery: vi.fn((_query: unknown, args: unknown) => {
     if (args === "skip") return undefined;
-    if (query === api.collections.getBySlug) return mockCollection;
-    if (query === api.artworks.list) return mockArtworks;
-    if (query === api.artworks.listUncategorized) return mockUncategorizedArtworks;
+    // Distinguish by args shape
+    const argsObj = args as Record<string, unknown> | undefined;
+    if (argsObj?.slug !== undefined) return mockCollection;
+    if (argsObj?.collectionId !== undefined) return mockArtworks;
+    if (argsObj?.publishedOnly !== undefined && argsObj?.collectionId === undefined) return mockUncategorizedArtworks;
     return undefined;
   }),
 }));

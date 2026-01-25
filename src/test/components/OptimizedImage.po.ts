@@ -1,8 +1,6 @@
-import { screen, within, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { within, fireEvent } from "@testing-library/react";
 
 export class OptimizedImagePO {
-  private user = userEvent.setup();
   private container: HTMLElement;
 
   constructor(container?: HTMLElement) {

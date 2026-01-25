@@ -366,8 +366,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           {/* Title field - only for edit mode */}
           {isEditMode && (
             <div>
-              <label className="block text-sm mb-1">Title *</label>
+              <label htmlFor="artwork-title" className="block text-sm mb-1">Title *</label>
               <input
+                id="artwork-title"
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
@@ -380,8 +381,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           {/* Shared metadata fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm mb-1">Year</label>
+              <label htmlFor="artwork-year" className="block text-sm mb-1">Year</label>
               <input
+                id="artwork-year"
                 type="number"
                 value={form.year}
                 onChange={(e) => setForm({ ...form, year: e.target.value })}
@@ -389,8 +391,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
               />
             </div>
             <div>
-              <label className="block text-sm mb-1">Dimensions</label>
+              <label htmlFor="artwork-dimensions" className="block text-sm mb-1">Dimensions</label>
               <input
+                id="artwork-dimensions"
                 type="text"
                 value={form.dimensions}
                 onChange={(e) => setForm({ ...form, dimensions: e.target.value })}
@@ -401,8 +404,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Medium</label>
+            <label htmlFor="artwork-medium" className="block text-sm mb-1">Medium</label>
             <input
+              id="artwork-medium"
               type="text"
               value={form.medium}
               onChange={(e) => setForm({ ...form, medium: e.target.value })}
@@ -412,8 +416,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           </div>
 
           <div>
-            <label className="block text-sm mb-1">Description</label>
+            <label htmlFor="artwork-description" className="block text-sm mb-1">Description</label>
             <textarea
+              id="artwork-description"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}

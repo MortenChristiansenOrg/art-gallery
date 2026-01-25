@@ -4,18 +4,19 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { Artwork } from "./Artwork";
 import { createMockArtwork, createMockCollectionList } from "../test/mocks";
-import { api } from "../../convex/_generated/api";
 
 // Mock module state
 let mockArtwork: ReturnType<typeof createMockArtwork> | null | undefined;
 let mockCollections: ReturnType<typeof createMockCollectionList> | undefined;
 
 vi.mock("convex/react", () => ({
-  useQuery: vi.fn((query: unknown, args: unknown) => {
+  useQuery: vi.fn((_query: unknown, args: unknown) => {
     if (args === "skip") return undefined;
-    if (query === api.artworks.get) return mockArtwork;
-    if (query === api.collections.list) return mockCollections;
-    return undefined;
+    // Distinguish by args shape - artworks.get has id, collections.list has no args
+    const argsObj = args as Record<string, unknown> | undefined;
+    if (argsObj?.id !== undefined) return mockArtwork;
+    // No args = collections.list
+    return mockCollections;
   }),
 }));
 

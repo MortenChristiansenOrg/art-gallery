@@ -1,4 +1,4 @@
-import { screen, within, fireEvent, act } from "@testing-library/react";
+import { within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 export class IconPickerPO {

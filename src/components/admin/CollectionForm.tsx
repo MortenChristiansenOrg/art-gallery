@@ -197,8 +197,9 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Name *</label>
+              <label htmlFor="collection-name" className="block text-sm mb-1">Name *</label>
               <input
+                id="collection-name"
                 type="text"
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
@@ -208,8 +209,9 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Slug *</label>
+              <label htmlFor="collection-slug" className="block text-sm mb-1">Slug *</label>
               <input
+                id="collection-slug"
                 type="text"
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
@@ -219,8 +221,9 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Description</label>
+              <label htmlFor="collection-description" className="block text-sm mb-1">Description</label>
               <textarea
+                id="collection-description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
