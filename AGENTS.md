@@ -34,7 +34,6 @@ Note: Run this after every change to Convex functions
 
 When implementing work, create tasks and delegate to sub agents where it makes sense.
 Always make sure the code compiles and tests pass.
-All planned work in specs related to the current work must be implemented, including test coverage.
 
 ## Testing
 
