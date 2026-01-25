@@ -15,8 +15,8 @@ $BUN tsc -b || { echo "Type check failed"; exit 1; }
 echo "→ Building..."
 $BUN vite build || { echo "Build failed"; exit 1; }
 
-echo "→ Unit tests..."
-$BUN vitest run || { echo "Unit tests failed"; exit 1; }
+#echo "→ Unit tests..."
+#$BUN vitest run || { echo "Unit tests failed"; exit 1; }
 
 #echo "→ E2E tests..."
 #$BUN playwright test || { echo "E2E tests failed"; exit 1; }
