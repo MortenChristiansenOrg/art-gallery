@@ -2,6 +2,7 @@
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
+import type { ActionCtx } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { Jimp } from "jimp";
@@ -146,8 +147,7 @@ export const regenerateAllVariants = action({
 });
 
 async function generateVariantsForArtwork(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ctx: any,
+  ctx: ActionCtx,
   storageId: Id<"_storage">,
   artworkId: Id<"artworks">
 ) {

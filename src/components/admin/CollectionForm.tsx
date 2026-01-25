@@ -177,9 +177,9 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
         });
       }
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err?.message || "Save failed");
+      setError(err instanceof Error ? err.message : "Save failed");
     } finally {
       setLoading(false);
     }

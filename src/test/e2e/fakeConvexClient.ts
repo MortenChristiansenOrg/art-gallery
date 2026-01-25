@@ -13,10 +13,9 @@ import {
   type ArtworkWithUrls,
 } from "./mockData";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type QueryHandler = (args: any) => any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MutationHandler = (args: any) => Promise<any>;
+// Using Record for loose typing in test harness - handlers cast internally as needed
+type QueryHandler = (args: Record<string, unknown>) => unknown;
+type MutationHandler = (args: Record<string, unknown>) => Promise<unknown>;
 
 // In-memory state for mutations
 let messagesState = [...messages];
@@ -50,13 +49,14 @@ const queryHandlers: Record<string, QueryHandler> = {
   },
 
   // collections.getBySlug
-  "collections:getBySlug": (args: { slug: string }) => {
-    const collection = collections.find((c) => c.slug === args.slug);
+  "collections:getBySlug": (args) => {
+    const slug = args.slug as string;
+    const collection = collections.find((c) => c.slug === slug);
     return collection ?? null;
   },
 
   // artworks.list
-  "artworks:list": (args: { collectionId?: Id<"collections">; publishedOnly?: boolean }) => {
+  "artworks:list": (args) => {
     let result = [...artworks];
     if (args.collectionId) {
       result = result.filter((a) => a.collectionId === args.collectionId);
@@ -68,7 +68,7 @@ const queryHandlers: Record<string, QueryHandler> = {
   },
 
   // artworks.listUncategorized
-  "artworks:listUncategorized": (args: { publishedOnly?: boolean }) => {
+  "artworks:listUncategorized": (args) => {
     let result = artworks.filter((a) => !a.collectionId);
     if (args.publishedOnly) {
       result = result.filter((a) => a.published && a.thumbnailId && a.dziStatus === "complete");
@@ -77,7 +77,7 @@ const queryHandlers: Record<string, QueryHandler> = {
   },
 
   // artworks.get
-  "artworks:get": (args: { id: Id<"artworks">; publishedOnly?: boolean }): ArtworkWithUrls | null => {
+  "artworks:get": (args): ArtworkWithUrls | null => {
     const artwork = artworks.find((a) => a._id === args.id);
     if (!artwork) return null;
     if (args.publishedOnly && (!artwork.published || !artwork.thumbnailId || artwork.dziStatus !== "complete")) {
@@ -97,14 +97,15 @@ const queryHandlers: Record<string, QueryHandler> = {
   },
 
   // siteContent.get
-  "siteContent:get": (args: { key: string }) => {
-    return siteContentState[args.key] ?? null;
+  "siteContent:get": (args) => {
+    const key = args.key as string;
+    return siteContentState[key] ?? null;
   },
 
   // auth.validateSession
-  "auth:validateSession": (args: { token: string }) => {
+  "auth:validateSession": (args) => {
     try {
-      const decoded = atob(args.token);
+      const decoded = atob(args.token as string);
       const [timestampStr] = decoded.split(":");
       const timestamp = parseInt(timestampStr, 10);
       if (isNaN(timestamp)) return { valid: false };
@@ -120,7 +121,7 @@ const queryHandlers: Record<string, QueryHandler> = {
 // Mutation handlers
 const mutationHandlers: Record<string, MutationHandler> = {
   // auth.login
-  "auth:login": async (args: { password: string }) => {
+  "auth:login": async (args) => {
     if (args.password === TEST_PASSWORD) {
       return { success: true, token: generateTestToken(), error: null };
     }
@@ -128,14 +129,14 @@ const mutationHandlers: Record<string, MutationHandler> = {
   },
 
   // messages.send
-  "messages:send": async (args: { name: string; email: string; message: string }) => {
+  "messages:send": async (args) => {
     const newId = `messages:msg${Date.now()}` as Id<"messages">;
     const newMessage = {
       _id: newId,
       _creationTime: Date.now(),
-      name: args.name,
-      email: args.email,
-      message: args.message,
+      name: args.name as string,
+      email: args.email as string,
+      message: args.message as string,
       read: false,
       createdAt: Date.now(),
     };
@@ -144,7 +145,7 @@ const mutationHandlers: Record<string, MutationHandler> = {
   },
 
   // messages.markRead
-  "messages:markRead": async (args: { token: string; id: Id<"messages"> }) => {
+  "messages:markRead": async (args) => {
     const msg = messagesState.find((m) => m._id === args.id);
     if (msg) {
       msg.read = true;
@@ -152,20 +153,21 @@ const mutationHandlers: Record<string, MutationHandler> = {
   },
 
   // messages.markAllRead
-  "messages:markAllRead": async (_args: { token: string }) => {
+  "messages:markAllRead": async () => {
     messagesState.forEach((m) => {
       m.read = true;
     });
   },
 
   // messages.remove
-  "messages:remove": async (args: { token: string; id: Id<"messages"> }) => {
+  "messages:remove": async (args) => {
     messagesState = messagesState.filter((m) => m._id !== args.id);
   },
 
   // siteContent.set
-  "siteContent:set": async (args: { token: string; key: string; value: string }) => {
-    siteContentState[args.key] = args.value;
+  "siteContent:set": async (args) => {
+    const key = args.key as string;
+    siteContentState[key] = args.value as string;
   },
 
   // artworks.create, update, remove, reorder - stub implementations
@@ -188,7 +190,7 @@ const mutationHandlers: Record<string, MutationHandler> = {
 type Subscriber = {
   callback: () => void;
   queryKey: string;
-  args: unknown;
+  args: Record<string, unknown>;
   cacheKey: string;
 };
 
@@ -201,8 +203,7 @@ export class FakeConvexClient {
   private queryCache: Map<string, unknown> = new Map();
 
   // Required by ConvexProvider - matches Watch<T> interface
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  watchQuery<Query extends FunctionReference<"query", any>>(
+  watchQuery<Query extends FunctionReference<"query", "public" | "internal">>(
     query: Query,
     ...argsAndOptions: [args?: FunctionArgs<Query> | "skip"]
   ): {
@@ -256,8 +257,7 @@ export class FakeConvexClient {
   }
 
   // Execute a mutation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async mutation<Mutation extends FunctionReference<"mutation", any>>(
+  async mutation<Mutation extends FunctionReference<"mutation", "public" | "internal">>(
     mutation: Mutation,
     ...argsAndOptions: [args?: FunctionArgs<Mutation>]
   ): Promise<FunctionReturnType<Mutation>> {
@@ -277,13 +277,11 @@ export class FakeConvexClient {
   }
 
   // Get function name from reference using Convex's getFunctionName utility
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private getQueryName(fn: FunctionReference<"query", any>): string {
+  private getQueryName(fn: FunctionReference<"query", "public" | "internal">): string {
     return getFunctionName(fn);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private getMutationName(fn: FunctionReference<"mutation", any>): string {
+  private getMutationName(fn: FunctionReference<"mutation", "public" | "internal">): string {
     return getFunctionName(fn);
   }
 
@@ -302,8 +300,7 @@ export class FakeConvexClient {
   // Required interface methods (stubs)
   setAuth(): void {}
   clearAuth(): void {}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  action(): Promise<any> {
+  action(): Promise<unknown> {
     return Promise.resolve(undefined);
   }
   connectionState() {
