@@ -5,8 +5,10 @@
 import type { Id, Doc } from "../../../convex/_generated/dataModel";
 
 // Helper to create typed Convex IDs
-function createId<T extends string>(table: T, id: string): Id<T> {
-  return `${table}:${id}` as Id<T>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createId<T extends string>(table: T, id: string): Id<T & any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return `${table}:${id}` as any;
 }
 
 // Storage IDs

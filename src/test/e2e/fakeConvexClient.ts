@@ -13,8 +13,10 @@ import {
   type ArtworkWithUrls,
 } from "./mockData";
 
-type QueryHandler<Args, Returns> = (args: Args) => Returns;
-type MutationHandler<Args, Returns> = (args: Args) => Promise<Returns>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type QueryHandler = (args: any) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MutationHandler = (args: any) => Promise<any>;
 
 // In-memory state for mutations
 let messagesState = [...messages];
@@ -27,7 +29,7 @@ function generateTestToken(): string {
 }
 
 // Query handlers
-const queryHandlers: Record<string, QueryHandler<unknown, unknown>> = {
+const queryHandlers: Record<string, QueryHandler> = {
   // collections.list
   "collections:list": () => {
     return collections.map((c) => ({
@@ -116,7 +118,7 @@ const queryHandlers: Record<string, QueryHandler<unknown, unknown>> = {
 };
 
 // Mutation handlers
-const mutationHandlers: Record<string, MutationHandler<unknown, unknown>> = {
+const mutationHandlers: Record<string, MutationHandler> = {
   // auth.login
   "auth:login": async (args: { password: string }) => {
     if (args.password === TEST_PASSWORD) {
