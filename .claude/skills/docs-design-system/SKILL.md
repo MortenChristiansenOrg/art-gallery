@@ -1,4 +1,11 @@
-# Design System
+---
+name: docs-design-system
+description: Reference for the art gallery design system. Use when implementing UI, styling, or need design tokens, typography, spacing, or component patterns.
+---
+
+# Design System Reference
+
+This skill provides the complete design system for the art gallery website.
 
 ## Design Philosophy
 
@@ -85,7 +92,7 @@ All tokens are defined as CSS custom properties in `src/index.css` under `@theme
 | Navigation | 0.8rem | 300 | 0.15em | Uppercase |
 | Labels | 0.7rem | 300 | 0.15-0.2em | Uppercase |
 | Metadata | 0.75rem | 300 | 0.08em | Year, dimensions |
-| Form inputs | 0.95rem | 300 | — | — |
+| Form inputs | 0.95rem | 300 | - | - |
 
 ---
 
@@ -124,18 +131,18 @@ gap-x-8 gap-y-12 lg:gap-x-10 lg:gap-y-16
 Mimics a framed, matted artwork:
 
 ```
-┌─────────────────────────┐  ← border: gallery-border
-│ ┌─────────────────────┐ │  ← padding: p-3/p-4 (white frame)
-│ │ ┌─────────────────┐ │ │  ← bg: gallery-hover (matting)
-│ │ │                 │ │ │
-│ │ │     Image       │ │ │
-│ │ │                 │ │ │
-│ │ └─────────────────┘ │ │
-│ └─────────────────────┘ │
-└─────────────────────────┘
++-------------------------+  <- border: gallery-border
+| +---------------------+ |  <- padding: p-3/p-4 (white frame)
+| | +-----------------+ | |  <- bg: gallery-hover (matting)
+| | |                 | | |
+| | |     Image       | | |
+| | |                 | | |
+| | +-----------------+ | |
+| +---------------------+ |
++-------------------------+
 
-Title                        ← Serif, below frame
-Year                         ← Muted, small
+Title                        <- Serif, below frame
+Year                         <- Muted, small
 ```
 
 **Shadows:**
@@ -178,9 +185,9 @@ Gradient shimmer animation for loading placeholders.
 
 | Name | Effect | Duration |
 |------|--------|----------|
-| `fadeIn` | Opacity 0→1, translateY 12px→0 | 0.6s |
-| `fadeInUp` | Opacity 0→1, translateY 24px→0 | 0.7s |
-| `revealLine` | scaleX 0→1 | — |
+| `fadeIn` | Opacity 0->1, translateY 12px->0 | 0.6s |
+| `fadeInUp` | Opacity 0->1, translateY 24px->0 | 0.7s |
+| `revealLine` | scaleX 0->1 | - |
 | `shimmer` | background-position shift | 1.5s loop |
 
 ### Stagger System
