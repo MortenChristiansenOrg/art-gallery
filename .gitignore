@@ -26,6 +26,7 @@ dist-ssr
 # E2E test results
 playwright-report
 test-results
+test-results.json
 
 # AI
 .claude/settings.local.json

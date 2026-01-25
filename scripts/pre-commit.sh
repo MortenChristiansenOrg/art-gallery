@@ -19,9 +19,9 @@ echo "→ Deploying Convex functions..."
 $BUNx convex deploy
 
 #echo "→ Unit tests..."
-#$BUN vitest run || { echo "Unit tests failed"; exit 1; }
+$BUN vitest run || { echo "Unit tests failed"; exit 1; }
 
 #echo "→ E2E tests..."
-#$BUN playwright test || { echo "E2E tests failed"; exit 1; }
+$BUN playwright test || { echo "E2E tests failed"; exit 1; }
 
 echo "All checks passed."
