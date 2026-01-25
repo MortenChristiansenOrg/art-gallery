@@ -15,6 +15,9 @@ $BUN tsc -b || { echo "Type check failed"; exit 1; }
 echo "→ Building..."
 $BUN vite build || { echo "Build failed"; exit 1; }
 
+echo "→ Deploying Convex functions..."
+$BUNx convex deploy
+
 #echo "→ Unit tests..."
 #$BUN vitest run || { echo "Unit tests failed"; exit 1; }
 

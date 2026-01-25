@@ -11,14 +11,12 @@ Canonical guide for all testing in this project. See sub-documents for detailed 
 
 ## Commands
 
-| Command             | Purpose                          | Pattern                  |
-| ------------------- | -------------------------------- | ------------------------ |
-| `bun test`          | Run unit/component tests (watch) | `src/**/*.test.{ts,tsx}` |
-| `bun test:run`      | Run unit/component tests (CI)    | `src/**/*.test.{ts,tsx}` |
-| `bun test:coverage` | Run with coverage report         | `src/**/*.test.{ts,tsx}` |
-| `bun e2e`           | Run E2E tests                    | `e2e/*.spec.ts`          |
-| `bun e2e:ui`        | Run E2E with Playwright UI       | `e2e/*.spec.ts`          |
-| `bun smoke`         | Run smoke tests                  | `smoke/*.spec.ts`        |
+| Command        | Purpose                    | Pattern                  |
+| -------------- | -------------------------- | ------------------------ |
+| `bun test:run` | Run unit/component tests   | `src/**/*.test.{ts,tsx}` |
+| `bun e2e`      | Run E2E tests              | `e2e/*.spec.ts`          |
+| `bun e2e:ui`   | Run E2E with Playwright UI | `e2e/*.spec.ts`          |
+| `bun smoke`    | Run smoke tests            | `smoke/*.spec.ts`        |
 
 ---
 
