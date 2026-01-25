@@ -35,6 +35,7 @@ Note: Run this after every change to Convex functions
 When implementing work, create tasks and delegate to sub agents where it makes sense.
 Always make sure the code compiles and tests pass.
 The production Convex instance has data in it, so always ensure that changes to the schema will not cause data loss or corruption.
+Always specify types and never use `any`.
 
 ## Testing
 
