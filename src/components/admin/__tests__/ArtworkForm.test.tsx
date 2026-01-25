@@ -203,10 +203,16 @@ describe('ArtworkForm', () => {
       await user.click(submitButton)
 
       await waitFor(() => {
-        expect(mockCreateArtwork).toHaveBeenCalledTimes(2)
         expect(mockCreateArtwork).toHaveBeenCalledWith(
           expect.objectContaining({
             collectionId: mockCollectionId,
+            title: 'art1',
+          })
+        )
+        expect(mockCreateArtwork).toHaveBeenCalledWith(
+          expect.objectContaining({
+            collectionId: mockCollectionId,
+            title: 'art2',
           })
         )
       })

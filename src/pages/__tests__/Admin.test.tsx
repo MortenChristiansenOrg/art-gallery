@@ -31,15 +31,15 @@ let queryCallIndex = 0
 
 vi.mock('convex/react', () => ({
   useQuery: vi.fn((_query, args) => {
-    // Queries are called in order: collections, artworks/listUncategorized, messages, unreadCount, siteContent
+    // Queries in order: collections, listUncategorized, list(skip), messages, unreadCount, siteContent
     const index = queryCallIndex++
     // Skip returns undefined
     if (args === "skip") return undefined
-    if (index % 5 === 0) return mockCollections // collections
-    if (index % 5 === 1) return mockArtworks    // artworks (list or listUncategorized)
-    if (index % 5 === 2) return mockMessages    // messages
-    if (index % 5 === 3) return mockUnreadCount // unreadCount
-    return mockAboutContent                     // siteContent
+    if (index % 6 === 0) return mockCollections // collections
+    if (index % 6 === 1) return mockArtworks    // artworks (listUncategorized or list)
+    if (index % 6 === 3) return mockMessages    // messages
+    if (index % 6 === 4) return mockUnreadCount // unreadCount
+    return mockAboutContent                     // siteContent (index % 6 === 5)
   }),
   useMutation: vi.fn((mutation) => {
     if (mutation?.name === 'messages:remove') return mockDeleteMessage
@@ -346,8 +346,8 @@ describe('Admin', () => {
 
       await user.click(screen.getByRole('button', { name: /messages/i }))
 
-      // Should show formatted date
-      expect(screen.getByText(/1\/15\/2024/)).toBeInTheDocument()
+      // Should show formatted date (locale-dependent format)
+      expect(screen.getByText(/2024/)).toBeInTheDocument()
     })
   })
 

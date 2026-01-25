@@ -50,10 +50,10 @@ describe('CollectionCard', () => {
     expect(img).toHaveAttribute('src', 'http://example.com/cover.jpg')
   })
 
-  it('shows placeholder when no cover image', () => {
+  it('shows first letter fallback when no cover image', () => {
     const noCover = { ...mockCollection, coverImageUrl: null }
     renderWithRouter(<CollectionCard collection={noCover} index={0} />)
-    expect(screen.getByText('No cover image')).toBeInTheDocument()
+    expect(screen.getByText('A')).toBeInTheDocument()
   })
 
   it('does not render description when missing', () => {
@@ -65,14 +65,14 @@ describe('CollectionCard', () => {
   it('applies animation delay based on index', () => {
     renderWithRouter(<CollectionCard collection={mockCollection} index={2} />)
     const link = screen.getByRole('link')
-    expect(link).toHaveStyle({ animationDelay: '200ms' })
+    expect(link).toHaveStyle({ animationDelay: '350ms' })
   })
 
-  it('has hover animation classes', () => {
+  it('has hover shadow on inner container', () => {
     renderWithRouter(<CollectionCard collection={mockCollection} index={0} />)
     const link = screen.getByRole('link')
-    expect(link.className).toContain('hover:-translate-y-2')
-    expect(link.className).toContain('hover:shadow-2xl')
+    const inner = link.firstElementChild as HTMLElement
+    expect(inner.className).toContain('group-hover:shadow-')
   })
 })
 
@@ -121,7 +121,7 @@ describe('CabinetCard', () => {
   it('applies animation delay based on index', () => {
     renderWithRouter(<CabinetCard count={5} index={3} />)
     const link = screen.getByRole('link')
-    expect(link).toHaveStyle({ animationDelay: '300ms' })
+    expect(link).toHaveStyle({ animationDelay: '450ms' })
   })
 
   it('renders SVG icon', () => {
@@ -130,10 +130,10 @@ describe('CabinetCard', () => {
     expect(svg).toBeInTheDocument()
   })
 
-  it('has hover animation classes', () => {
+  it('has hover shadow on inner container', () => {
     renderWithRouter(<CabinetCard count={5} index={0} />)
     const link = screen.getByRole('link')
-    expect(link.className).toContain('hover:-translate-y-2')
-    expect(link.className).toContain('hover:shadow-2xl')
+    const inner = link.firstElementChild as HTMLElement
+    expect(inner.className).toContain('group-hover:shadow-')
   })
 })
