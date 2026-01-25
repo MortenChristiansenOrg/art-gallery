@@ -1,6 +1,6 @@
 # Unit/Component Testing
 
-Vitest + Testing Library conventions for fast, isolated tests.
+Vitest + Testing Library + convex-test for fast, isolated tests.
 
 ---
 
@@ -27,25 +27,39 @@ getByTestId("artwork-grid");
 
 ---
 
-## Mocking Convex Hooks
+## Convex Function Tests (convex-test)
 
-Create mock factories for consistent test data:
+Test Convex queries/mutations in `convex/__tests__/`:
 
 ```ts
-// src/test/mocks/artworks.ts
-export function createMockArtwork(overrides?: Partial<Artwork>): Artwork {
-  return {
-    _id: "artwork_123" as Id<"artworks">,
-    title: "Test Artwork",
-    year: 2024,
-    ...overrides,
-  };
+// convex/__tests__/setup.ts
+import { convexTest } from "convex-test";
+import schema from "../schema";
+
+export function createTestContext() {
+  return convexTest(schema, modules);
 }
 
-// In test file
+// convex/__tests__/artworks.test.ts
+import { createTestContext } from "./setup";
+import { api } from "../_generated/api";
+
+it("creates artwork", async () => {
+  const t = createTestContext();
+  const id = await t.mutation(api.artworks.create, { ... });
+  const artwork = await t.query(api.artworks.get, { id });
+  expect(artwork?.title).toBe("Test Artwork");
+});
+```
+
+## React Component Tests (vi.mock)
+
+Mock Convex hooks in `src/**/*.test.tsx`. This is for isolated component tests, NOT E2E (E2E uses FakeConvexClient via separate entry point).
+
+```ts
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(),
-  useMutation: vi.fn(),
+  useMutation: vi.fn(() => vi.fn()),
 }));
 
 const mockUseQuery = vi.mocked(useQuery);

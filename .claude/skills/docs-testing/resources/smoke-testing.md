@@ -1,6 +1,6 @@
 # Smoke Testing
 
-Playwright against real PR preview environments. Limited scope.
+Playwright against real Convex backend via PR preview environments. Limited scope.
 
 ---
 
@@ -54,10 +54,11 @@ export default defineConfig({
 
 ## Key Differences from E2E
 
-| Aspect  | E2E (convex-test)     | Smoke (real backend)   |
-| ------- | --------------------- | ---------------------- |
-| Backend | Simulated             | Real PR preview        |
-| Data    | Deterministic/seeded  | Real production-like   |
-| Scope   | All flows + errors    | Critical happy paths   |
-| Speed   | Medium                | Slow                   |
-| When    | Every commit          | PR/deploy only         |
+| Aspect  | E2E (FakeConvexClient)       | Smoke (real backend)   |
+| ------- | ---------------------------- | ---------------------- |
+| Backend | FakeConvexClient (separate entry) | Real Convex backend    |
+| Build   | `vite build --config vite.config.e2e.ts` | Standard build         |
+| Data    | Deterministic mock data      | Real production-like   |
+| Scope   | All flows + errors           | Critical happy paths   |
+| Speed   | Medium                       | Slow                   |
+| When    | Every commit                 | PR/deploy only         |

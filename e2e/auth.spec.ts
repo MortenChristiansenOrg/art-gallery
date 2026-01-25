@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { AdminPage } from "./pages";
 
+// E2E tests use "test-password" for mock auth
+const TEST_PASSWORD = "test-password";
+
 test.describe("Authentication", () => {
   test.describe("login", () => {
     test("shows login form on admin page", async ({ page }) => {
@@ -12,12 +15,9 @@ test.describe("Authentication", () => {
     });
 
     test("logs in with valid password", async ({ page }) => {
-      const password = process.env.TEST_ADMIN_PASSWORD;
-      test.skip(!password, "TEST_ADMIN_PASSWORD not set");
-
       const adminPage = new AdminPage(page);
       await adminPage.goto();
-      await adminPage.login(password!);
+      await adminPage.login(TEST_PASSWORD);
 
       await expect(adminPage.dashboard).toBeVisible();
     });
@@ -36,12 +36,9 @@ test.describe("Authentication", () => {
 
   test.describe("logout", () => {
     test("logs out successfully", async ({ page }) => {
-      const password = process.env.TEST_ADMIN_PASSWORD;
-      test.skip(!password, "TEST_ADMIN_PASSWORD not set");
-
       const adminPage = new AdminPage(page);
       await adminPage.goto();
-      await adminPage.login(password!);
+      await adminPage.login(TEST_PASSWORD);
 
       await expect(adminPage.dashboard).toBeVisible();
 

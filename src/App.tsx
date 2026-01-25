@@ -4,11 +4,15 @@ import { Layout } from "./components/layout";
 import { Home, Collection, Artwork, About, Admin } from "./pages";
 import { AuthProvider } from "./lib/auth";
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+const defaultClient = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
-function App() {
+interface AppProps {
+  client?: ConvexReactClient;
+}
+
+function App({ client = defaultClient }: AppProps) {
   return (
-    <ConvexProvider client={convex}>
+    <ConvexProvider client={client}>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
