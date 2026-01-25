@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
+    "smoke": "playwright test --config=smoke/playwright.config.ts",
     "spec:validate": "bun scripts/validate-specs.ts",
     "spec:index": "bun scripts/generate-spec-index.ts"
   },
