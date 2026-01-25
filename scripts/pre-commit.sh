@@ -1,27 +1,23 @@
-#!/bin/sh
+#!/bin/zsh
 
-# Use .cmd extension on Windows (Git Bash shim swallows output)
-if [ -f "$(command -v bun).cmd" ] 2>/dev/null || [[ "$(uname -s)" == MINGW* ]] || [[ "$(uname -s)" == MSYS* ]]; then
-  BUN="bun.cmd"
-else
-  BUN="bun"
-fi
+# To install
+# cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 echo "Running pre-commit checks..."
 
 echo "→ Type checking..."
-$BUN tsc -b || { echo "Type check failed"; exit 1; }
+bunx tsc -b || { echo "Type check failed"; exit 1; }
 
 echo "→ Building..."
-$BUN vite build || { echo "Build failed"; exit 1; }
+bunx vite build || { echo "Build failed"; exit 1; }
 
 echo "→ Deploying Convex functions..."
-$BUNx convex deploy
+bunx convex deploy
 
 #echo "→ Unit tests..."
-$BUN vitest run || { echo "Unit tests failed"; exit 1; }
+bunx vitest run || { echo "Unit tests failed"; exit 1; }
 
 #echo "→ E2E tests..."
-$BUN playwright test || { echo "E2E tests failed"; exit 1; }
+bunx playwright test || { echo "E2E tests failed"; exit 1; }
 
 echo "All checks passed."

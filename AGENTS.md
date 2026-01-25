@@ -1,9 +1,9 @@
 # Environment
 
-The shell environment is Git Bash on Windows.
+The shell environment is zsh on WSL2 (Ubuntu).
 Available scripting environments:
 
-- Bash (Git Bash variant)
+- zsh
 - Node
 
 # Documentation
