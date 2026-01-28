@@ -253,9 +253,9 @@ export function Admin() {
                       <path d="M2 4h12v1H2zm0 3.5h12v1H2zm0 3.5h12v1H2z" />
                     </svg>
                   </div>
-                  {artwork.imageUrl && (
+                  {(artwork.thumbnailUrl || artwork.imageUrl) && (
                     <img
-                      src={artwork.imageUrl}
+                      src={artwork.thumbnailUrl || artwork.imageUrl!}
                       alt={artwork.title}
                       className="w-16 h-16 object-cover"
                     />
