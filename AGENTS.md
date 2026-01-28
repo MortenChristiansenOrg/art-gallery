@@ -8,7 +8,7 @@ Available scripting environments:
 
 # Documentation
 
-Use `doc-*` skills to get information about the system and its conventions.
+See this file (AGENTS.md) and README.md for system conventions. Skills in `.claude/skills/` provide domain-specific guidance.
 
 # Commands
 
@@ -17,7 +17,7 @@ Use bun commands instead of npm commands.
 Install dependencies: `bun install`
 
 Run unit/component tests: `bun test:run`
-Run E2E tests: `bun e2e`
+Run E2E tests: `bun run e2e`
 Run E2E with Playwright UI : `bun e2e:ui`
 Run smoke tests: `bun smoke`
 

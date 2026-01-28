@@ -21,6 +21,12 @@ type MutationHandler = (args: Record<string, unknown>) => Promise<unknown>;
 let messagesState = [...messages];
 let siteContentState = { ...siteContent };
 
+/** Reset state to initial values - call in test teardown to prevent cross-test leakage */
+export function resetFakeConvexState(): void {
+  messagesState = [...messages];
+  siteContentState = { ...siteContent };
+}
+
 // Generate a valid token for test auth
 function generateTestToken(): string {
   const timestamp = Date.now();
