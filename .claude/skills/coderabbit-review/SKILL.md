@@ -23,7 +23,7 @@ gh auth login
 ```
 
 **Option B: Fine-grained PAT (read/comment only, cannot resolve threads)**
-1. Create token at https://github.com/settings/personal-access-tokens/new
+1. Create token at <https://github.com/settings/personal-access-tokens/new>
 2. Select repository access (this repo or all)
 3. Permissions: **Pull requests → Read and write**
 4. Add to `.env.local`: `GH_TOKEN=ghp_xxx`
@@ -31,6 +31,16 @@ gh auth login
 Note: Fine-grained PATs cannot resolve review threads via GraphQL API. Use OAuth or resolve threads manually in GitHub UI.
 
 ## Workflow
+
+### 0. Load Environment
+
+Export `GH_TOKEN` from `.env.local` for `gh` CLI:
+
+```bash
+[[ -f .env.local ]] && export $(grep '^GH_TOKEN=' .env.local)
+```
+
+Run this before any `gh` commands.
 
 ### 1. Identify PR
 
@@ -92,7 +102,7 @@ Group fixes by logical area:
 - One commit per major fix
 - Group similar small changes into single commit
 - Use descriptive commit messages referencing the fix
-- Generate tasks for the different fixes and implement them using sub agents
+- Generate tasks for the different fixes and implement them using sub-agents
 
 ### 5. Push Changes
 
