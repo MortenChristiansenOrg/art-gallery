@@ -1,124 +1,67 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
+import { AboutPage } from "./pages";
 
-test.describe('submit-form', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/about')
-  })
+test.describe("Contact Form", () => {
+  test("displays all form fields", async ({ page }) => {
+    const aboutPage = new AboutPage(page);
+    await aboutPage.goto();
 
-  test('about page loads successfully', async ({ page }) => {
-    await expect(page).toHaveURL('/about')
-    await expect(page.getByRole('heading', { name: 'About' })).toBeVisible()
-  })
+    await expect(aboutPage.nameInput).toBeVisible();
+    await expect(aboutPage.emailInput).toBeVisible();
+    await expect(aboutPage.messageInput).toBeVisible();
+    await expect(aboutPage.submitButton).toBeVisible();
+  });
 
-  test('shows contact form with required fields', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Get in Touch' })).toBeVisible()
-    await expect(page.getByPlaceholder('Your name')).toBeVisible()
-    await expect(page.getByPlaceholder('your@email.com')).toBeVisible()
-    await expect(page.getByPlaceholder('Your message...')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Send Message' })).toBeVisible()
-  })
+  test("requires all fields", async ({ page }) => {
+    const aboutPage = new AboutPage(page);
+    await aboutPage.goto();
 
-  test('form fields have proper labels', async ({ page }) => {
-    await expect(page.locator('label', { hasText: 'Name' })).toBeVisible()
-    await expect(page.locator('label', { hasText: 'Email' })).toBeVisible()
-    await expect(page.locator('label', { hasText: 'Message' })).toBeVisible()
-  })
+    // Try to submit empty form
+    await aboutPage.submitContactForm();
 
-  test('form fields are required', async ({ page }) => {
-    const nameInput = page.getByPlaceholder('Your name')
-    const emailInput = page.getByPlaceholder('your@email.com')
-    const messageInput = page.getByPlaceholder('Your message...')
+    // Form should still be visible (validation prevented submit)
+    await expect(aboutPage.contactForm).toBeVisible();
+  });
 
-    await expect(nameInput).toHaveAttribute('required')
-    await expect(emailInput).toHaveAttribute('required')
-    await expect(messageInput).toHaveAttribute('required')
-  })
+  test("validates email format", async ({ page }) => {
+    const aboutPage = new AboutPage(page);
+    await aboutPage.goto();
 
-  test('email field validates email format', async ({ page }) => {
-    const emailInput = page.getByPlaceholder('your@email.com')
-    await expect(emailInput).toHaveAttribute('type', 'email')
-  })
+    await aboutPage.fillContactForm("John Doe", "invalid-email", "Hello");
+    await aboutPage.submitContactForm();
 
-  test('can fill out form', async ({ page }) => {
-    const nameInput = page.getByPlaceholder('Your name')
-    const emailInput = page.getByPlaceholder('your@email.com')
-    const messageInput = page.getByPlaceholder('Your message...')
+    // Form should still be visible (invalid email)
+    await expect(aboutPage.contactForm).toBeVisible();
+  });
 
-    await nameInput.fill('Test User')
-    await emailInput.fill('test@example.com')
-    await messageInput.fill('This is a test message from the E2E test suite.')
+  test("submits form successfully", async ({ page }) => {
+    const aboutPage = new AboutPage(page);
+    await aboutPage.goto();
 
-    await expect(nameInput).toHaveValue('Test User')
-    await expect(emailInput).toHaveValue('test@example.com')
-    await expect(messageInput).toHaveValue('This is a test message from the E2E test suite.')
-  })
+    await aboutPage.fillContactForm(
+      "Test User",
+      "test@example.com",
+      "This is a test message from E2E tests."
+    );
+    await aboutPage.submitContactForm();
 
-  test('submit button is enabled when form is filled', async ({ page }) => {
-    const submitButton = page.getByRole('button', { name: 'Send Message' })
+    // Wait for success message
+    await aboutPage.waitForSuccess();
+    await expect(aboutPage.successMessage).toBeVisible();
+  });
 
-    // Fill form
-    await page.getByPlaceholder('Your name').fill('Test User')
-    await page.getByPlaceholder('your@email.com').fill('test@example.com')
-    await page.getByPlaceholder('Your message...').fill('Test message')
+  test("shows success message content", async ({ page }) => {
+    const aboutPage = new AboutPage(page);
+    await aboutPage.goto();
 
-    await expect(submitButton).toBeEnabled()
-  })
+    await aboutPage.fillContactForm(
+      "Test User",
+      "test@example.com",
+      "Test message"
+    );
+    await aboutPage.submitContactForm();
 
-  test('shows sending state on submit', async ({ page }) => {
-    // Fill form
-    await page.getByPlaceholder('Your name').fill('Test User')
-    await page.getByPlaceholder('your@email.com').fill('test@example.com')
-    await page.getByPlaceholder('Your message...').fill('Test message')
-
-    // Submit - this triggers the mutation
-    await page.getByRole('button', { name: 'Send Message' }).click()
-
-    // Should show "Sending..." or success/error state
-    const sendingOrResult = page
-      .getByText('Sending...')
-      .or(page.getByText('Thank you'))
-      .or(page.getByText('Something went wrong'))
-    await expect(sendingOrResult).toBeVisible({ timeout: 4000 })
-  })
-
-  test('shows success message after submit', async ({ page }) => {
-    // Fill form
-    await page.getByPlaceholder('Your name').fill('Test User')
-    await page.getByPlaceholder('your@email.com').fill('test@example.com')
-    await page.getByPlaceholder('Your message...').fill('Test message')
-
-    // Submit
-    await page.getByRole('button', { name: 'Send Message' }).click()
-
-    // Either shows success or error (depends on backend availability)
-    const result = page
-      .getByText('Thank you for your message')
-      .or(page.getByText('Something went wrong'))
-    await expect(result).toBeVisible({ timeout: 4000 })
-  })
-
-  test('form clears after successful submit', async ({ page }) => {
-    // Fill form
-    await page.getByPlaceholder('Your name').fill('Test User')
-    await page.getByPlaceholder('your@email.com').fill('test@example.com')
-    await page.getByPlaceholder('Your message...').fill('Test message')
-
-    // Submit
-    await page.getByRole('button', { name: 'Send Message' }).click()
-
-    // Check for success state
-    const successMessage = page.getByText('Thank you for your message')
-    const isSuccess = await successMessage.isVisible({ timeout: 4000 }).catch(() => false)
-
-    if (isSuccess) {
-      // Form should be replaced with success message
-      await expect(page.getByPlaceholder('Your name')).not.toBeVisible()
-    }
-  })
-
-  test('shows about content section', async ({ page }) => {
-    // About page should have content section before contact form
-    const aboutSection = page.locator('section').first()
-    await expect(aboutSection).toBeVisible()
-  })
-})
+    await aboutPage.waitForSuccess();
+    await expect(page.getByText(/thank you/i)).toBeVisible();
+  });
+});

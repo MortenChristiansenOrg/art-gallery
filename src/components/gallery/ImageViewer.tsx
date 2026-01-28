@@ -147,6 +147,7 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       role="dialog"
       aria-modal="true"
       aria-label={`Viewing ${title}`}
+      data-testid="image-viewer"
     >
       {/* Loading indicator */}
       {isLoading && (

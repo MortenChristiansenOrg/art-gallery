@@ -42,3 +42,12 @@ npx convex env set ADMIN_PASSWORD your-password
 3. Add `VITE_CONVEX_URL` from Convex dashboard
 4. Set `ADMIN_PASSWORD` in Convex dashboard (Settings → Environment Variables)
 5. Deploy
+
+## Git Hooks
+
+To enable the pre-commit hook (runs type checks, build, unit tests, and e2e tests):
+
+```sh
+cp scripts/pre-commit.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```

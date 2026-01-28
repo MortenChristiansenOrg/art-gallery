@@ -88,14 +88,25 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
 
   if (onClick) {
     return (
-      <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onClick()}>
+      <div
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        data-testid="artwork-card"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
         {content}
       </div>
     );
   }
 
   return (
-    <Link to={`/artwork/${id}`} state={{ fromCollection: collectionSlug }}>
+    <Link to={`/artwork/${id}`} state={{ fromCollection: collectionSlug }} data-testid="artwork-card">
       {content}
     </Link>
   );

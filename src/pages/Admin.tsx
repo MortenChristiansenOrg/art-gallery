@@ -119,6 +119,7 @@ export function Admin() {
       <div className="max-w-sm mx-auto px-6 py-20">
         <h1 className="font-[var(--font-serif)] text-2xl mb-6 text-center">Admin</h1>
         <form
+          data-testid="login-form"
           onSubmit={async (e) => {
             e.preventDefault();
             setLoginError("");
@@ -162,18 +163,21 @@ export function Admin() {
   const editCollectionItem = collections?.find((c) => c._id === editingCollection);
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-6 py-12" data-testid="admin-dashboard">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-[var(--font-serif)] text-2xl">Admin</h1>
-        <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]">
+        <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]" data-testid="logout-button">
           Logout
         </button>
       </div>
 
-      <div className="flex gap-4 border-b border-[var(--color-gallery-border)] mb-8">
+      <div className="flex gap-4 border-b border-[var(--color-gallery-border)] mb-8" role="tablist">
         {(["artworks", "collections", "messages", "content"] as Tab[]).map((t) => (
           <button
             key={t}
+            role="tab"
+            aria-selected={tab === t}
+            data-testid={`tab-${t}`}
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm capitalize border-b-2 -mb-px transition-colors ${
               tab === t
@@ -215,7 +219,7 @@ export function Admin() {
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 min-h-[1px]" data-testid="artworks-list">
             {artworks?.map((artwork) => {
               const isDragging = draggedId === artwork._id;
               const isDropTarget = dropTargetId === artwork._id;
@@ -309,11 +313,12 @@ export function Admin() {
           <button
             onClick={() => setShowCollectionForm(true)}
             className="mb-6 px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
+            data-testid="add-collection-button"
           >
             Add Collection
           </button>
 
-          <div className="space-y-4">
+          <div className="space-y-4 min-h-[1px]" data-testid="collections-list">
             {collections?.map((c) => (
               <div
                 key={c._id}
@@ -348,7 +353,7 @@ export function Admin() {
       )}
 
       {tab === "messages" && (
-        <div className="space-y-4">
+        <div className="space-y-4 min-h-[1px]" data-testid="messages-list">
           {messages?.length === 0 && (
             <p className="text-[var(--color-gallery-muted)]">No messages yet</p>
           )}

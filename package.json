@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:e2e": "vite build --config vite.config.e2e.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
@@ -13,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
+    "smoke": "playwright test --config=smoke/playwright.config.ts",
     "spec:validate": "bun scripts/validate-specs.ts",
     "spec:index": "bun scripts/generate-spec-index.ts"
   },
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.6.0",
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/vite": "^4.1.18",

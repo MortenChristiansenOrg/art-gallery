@@ -17,7 +17,7 @@ interface CollectionsGridProps {
 
 export function CollectionsGrid({ collections, uncategorizedCount }: CollectionsGridProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div data-testid="collections-grid" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {collections.map((collection, index) => (
         <CollectionCard
           key={collection._id}

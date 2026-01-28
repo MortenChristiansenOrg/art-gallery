@@ -39,7 +39,7 @@ export function About() {
       </header>
 
       {/* About content */}
-      <section className="mb-20">
+      <section data-testid="about-content" className="mb-20">
         {aboutText ? (
           <div className="space-y-6">
             {aboutText.split("\n").filter(p => p.trim()).map((p, i) => (
@@ -89,6 +89,7 @@ export function About() {
 
         {status === "sent" ? (
           <div
+            data-testid="success-message"
             className="
               py-12 px-8
               bg-[var(--color-gallery-surface)]
@@ -115,10 +116,11 @@ export function About() {
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-8 max-w-lg">
+          <form onSubmit={handleSubmit} data-testid="contact-form" className="space-y-8 max-w-lg">
             {/* Name field */}
             <div>
               <label
+                htmlFor="contact-name"
                 className="
                   block text-[0.7rem] tracking-[0.15em] uppercase
                   text-[var(--color-gallery-subtle)]
@@ -128,6 +130,7 @@ export function About() {
                 Name
               </label>
               <input
+                id="contact-name"
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -148,6 +151,7 @@ export function About() {
             {/* Email field */}
             <div>
               <label
+                htmlFor="contact-email"
                 className="
                   block text-[0.7rem] tracking-[0.15em] uppercase
                   text-[var(--color-gallery-subtle)]
@@ -157,6 +161,7 @@ export function About() {
                 Email
               </label>
               <input
+                id="contact-email"
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -177,6 +182,7 @@ export function About() {
             {/* Message field */}
             <div>
               <label
+                htmlFor="contact-message"
                 className="
                   block text-[0.7rem] tracking-[0.15em] uppercase
                   text-[var(--color-gallery-subtle)]
@@ -186,6 +192,7 @@ export function About() {
                 Message
               </label>
               <textarea
+                id="contact-message"
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
                 required
@@ -238,6 +245,7 @@ export function About() {
             {/* Error message */}
             {status === "error" && (
               <p
+                data-testid="error-message"
                 className="
                   text-[0.85rem] font-light
                   text-red-600

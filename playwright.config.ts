@@ -20,8 +20,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "bun run build && bun run preview",
+    command: "npx vite build --config vite.config.e2e.ts && npx vite preview",
     url: "http://localhost:4173",
     reuseExistingServer: !process.env.CI,
+    timeout: 120000,
   },
 });

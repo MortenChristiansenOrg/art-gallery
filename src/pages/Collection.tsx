@@ -100,6 +100,7 @@ export function Collection() {
       <nav className="mb-10">
         <Link
           to="/"
+          data-testid="back-button"
           className="
             group inline-flex items-center gap-3
             text-[0.8rem] tracking-[0.1em] uppercase font-light

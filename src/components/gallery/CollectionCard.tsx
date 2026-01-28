@@ -20,6 +20,7 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
   return (
     <Link
       to={`/collection/${collection.slug}`}
+      data-testid="collection-card"
       className="
         group block relative
         opacity-0 animate-fade-in
@@ -225,6 +226,7 @@ export function CabinetCard({ count, index }: CabinetCardProps) {
   return (
     <Link
       to="/collection/cabinet-of-curiosities"
+      data-testid="collection-card"
       className="
         group block relative
         opacity-0 animate-fade-in

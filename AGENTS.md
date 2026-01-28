@@ -1,72 +1,43 @@
-# Agents
+# Environment
 
-The .context folder is ignored by git. Use it to store any temporary files you use yo keep track of your work.
+The shell environment is zsh on WSL2 (Ubuntu).
+Available scripting environments:
 
-**Commands:**
+- zsh
+- Node
 
-- `bun run test` - unit tests (watch)
-- `bun run test:run` - unit tests (single run)
-- `bun run e2e` - Playwright E2E tests
+# Documentation
 
-## Specifications
+See this file (AGENTS.md) and README.md for system conventions. Skills in `.claude/skills/` provide domain-specific guidance.
 
-The `specs/` folder is the source of truth for feature requirements. Each spec defines:
+# Commands
 
-- Implementation file references
-- User flows
-- Interactions
-- Test status
+Use bun commands instead of npm commands.
 
-**Structure:**
+Install dependencies: `bun install`
 
-```
-specs/
-├── _index.yaml       # Auto-generated index
-├── _dictionary.yaml  # Core terms
-├── gallery/          # Public gallery features
-├── admin/            # Admin panel features
-└── contact/          # Contact form features
-```
+Run unit/component tests: `bun run test:run`
+Run E2E tests: `bun run e2e`
+Run E2E with Playwright UI: `bun run e2e:ui`
+Run smoke tests: `bun run smoke`
 
-**Commands:**
+Initialize Convex: `bunx convex dev`
+Note: Never run this command unless asked directly (is user managed)
 
-- `bun run spec:validate` - validate all specs
-- `bun run spec:index` - regenerate index
+Run dev server: `bun run dev`
+Note: Never run this command unless asked directly (is user managed)
 
-**Skills:**
+Update Convex functions: `bunx convex deploy`
+Note: Run this after every change to Convex functions
 
-- `/spec-validate` - validate spec format
-- `/spec-create` - create new spec interactively
-- `/spec-index` - regenerate index
-- `/spec-query tag:X` - find specs by tag, status, or file ref
+## Work
 
-**Feature Development Workflow:**
-
-⚠️ **SPEC FIRST** - Never start implementing without a spec.
-
-1. Create/update spec BEFORE writing any code (`/spec-create` or edit existing)
-2. Define flows, interactions, implementation refs in spec
-3. Get spec approved if working with others
-4. Implement according to spec
-5. Update spec status and test refs as you go
-6. Run `/spec-index` after changes
-
-## Plans
-
-All plans must include instructions to add or update specs to reflect the changes.
-
-## Implementation
-
-When implementing plans and features, delegate to sub agents where it makes sense to speed up the work.
-Make sure the changes to Convex are built to the system is ready to test.
-All planned work in specs related to the current work must be implemented, including test coverage.
+When implementing work, create tasks and delegate to sub agents where it makes sense.
+Always make sure the code compiles and tests pass.
+The production Convex instance has data in it, so always ensure that changes to the schema will not cause data loss or corruption.
+Always specify types and never use `any`.
 
 ## Testing
 
-All functionality must be verified with tests. See `docs/testing.md` for full strategy.
+All functionality must be verified with tests.
 After adding or changing functionality, make sure the changes are covered by passing tests.
-
-## Environment
-
-Always use bun commands over npm commands.
-When running the chrome browse use the Windows path (you are in WSL).

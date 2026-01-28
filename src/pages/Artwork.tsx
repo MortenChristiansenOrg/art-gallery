@@ -93,6 +93,7 @@ export function Artwork() {
       <nav className="mb-10">
         <Link
           to={backLink}
+          data-testid="back-button"
           className="
             group inline-flex items-center gap-3
             text-[0.8rem] tracking-[0.1em] uppercase font-light
@@ -134,6 +135,7 @@ export function Artwork() {
             <img
               src={artwork.viewerImageUrl || artwork.imageUrl!}
               alt={artwork.title}
+              data-testid="artwork-image"
               className="
                 w-full h-auto
                 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]
@@ -188,6 +190,7 @@ export function Artwork() {
           {/* Title */}
           <header>
             <h1
+              data-testid="artwork-title"
               className="
                 font-[var(--font-serif)] text-[2rem] lg:text-[2.25rem]
                 font-light leading-tight tracking-[0.01em]
