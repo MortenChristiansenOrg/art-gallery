@@ -18,7 +18,23 @@ jobs:
       - run: bun run tsc -b
       - run: bunx vite build
 
-  e2e:
+  unit-tests:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test:run
+
+  convex-tests:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun test:run convex/__tests__
+
+  e2e-tests:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
       VITE_CONVEX_URL: http://127.0.0.1:3210
