@@ -48,9 +48,9 @@ test.describe("Admin CRUD Operations", () => {
       const adminPage = new AdminPage(authenticatedPage);
       await adminPage.switchToContent();
 
-      // Content tab should show content editor
+      // Content tab should show About Page heading
       await expect(
-        authenticatedPage.getByText(/about|content/i)
+        authenticatedPage.getByRole("heading", { name: "About Page" })
       ).toBeVisible();
     });
   });

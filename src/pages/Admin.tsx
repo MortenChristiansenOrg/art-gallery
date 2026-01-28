@@ -219,7 +219,7 @@ export function Admin() {
             )}
           </div>
 
-          <div className="space-y-1" data-testid="artworks-list">
+          <div className="space-y-1 min-h-[1px]" data-testid="artworks-list">
             {artworks?.map((artwork) => {
               const isDragging = draggedId === artwork._id;
               const isDropTarget = dropTargetId === artwork._id;
@@ -318,7 +318,7 @@ export function Admin() {
             Add Collection
           </button>
 
-          <div className="space-y-4" data-testid="collections-list">
+          <div className="space-y-4 min-h-[1px]" data-testid="collections-list">
             {collections?.map((c) => (
               <div
                 key={c._id}
@@ -353,7 +353,7 @@ export function Admin() {
       )}
 
       {tab === "messages" && (
-        <div className="space-y-4" data-testid="messages-list">
+        <div className="space-y-4 min-h-[1px]" data-testid="messages-list">
           {messages?.length === 0 && (
             <p className="text-[var(--color-gallery-muted)]">No messages yet</p>
           )}

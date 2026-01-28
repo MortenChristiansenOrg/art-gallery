@@ -92,6 +92,7 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
         onClick={onClick}
         role="button"
         tabIndex={0}
+        data-testid="artwork-card"
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -105,7 +106,7 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
   }
 
   return (
-    <Link to={`/artwork/${id}`} state={{ fromCollection: collectionSlug }}>
+    <Link to={`/artwork/${id}`} state={{ fromCollection: collectionSlug }} data-testid="artwork-card">
       {content}
     </Link>
   );

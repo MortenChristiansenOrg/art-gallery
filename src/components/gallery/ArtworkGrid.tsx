@@ -17,6 +17,7 @@ interface ArtworkGridProps {
 export function ArtworkGrid({ artworks, collectionSlug }: ArtworkGridProps) {
   return (
     <div
+      data-testid="artwork-grid"
       className="
         grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
         gap-x-8 gap-y-12 lg:gap-x-10 lg:gap-y-16
