@@ -22,6 +22,7 @@ Requires `gh` CLI with a token that has PR read access.
 2. Select repository access
 3. Permissions: **Pull requests → Read**, **Actions → Read**
 4. Add to `.env.local`: `GH_TOKEN=ghp_xxx`
+5. Verify `.env.local` is in `.gitignore` to prevent token exposure
 
 ## Workflow
 
@@ -30,7 +31,7 @@ Requires `gh` CLI with a token that has PR read access.
 Export `GH_TOKEN` from `.env.local` for `gh` CLI:
 
 ```bash
-[[ -f .env.local ]] && export $(grep '^GH_TOKEN=' .env.local)
+[[ -f .env.local ]] && set -a && source <(grep '^GH_TOKEN=' .env.local) && set +a
 ```
 
 Run this before any `gh` commands.

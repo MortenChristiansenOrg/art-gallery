@@ -7,6 +7,7 @@ invocation: user
 # Goal
 
 Process CodeRabbit review comments on a PR: read comments, triage by priority, apply fixes, commit changes, and resolve addressed threads.
+This might not be the first pass over the PR, so identiy the relevant comments.
 
 ## Invocation
 
@@ -18,11 +19,13 @@ Process CodeRabbit review comments on a PR: read comments, triage by priority, a
 Requires `gh` CLI authentication. Two options:
 
 **Option A: OAuth login (recommended - supports thread resolution)**
+
 ```bash
 gh auth login
 ```
 
 **Option B: Fine-grained PAT (read/comment only, cannot resolve threads)**
+
 1. Create token at <https://github.com/settings/personal-access-tokens/new>
 2. Select repository access (this repo or all)
 3. Permissions: **Pull requests → Read and write**
@@ -37,7 +40,7 @@ Note: Fine-grained PATs cannot resolve review threads via GraphQL API. Use OAuth
 Export `GH_TOKEN` from `.env.local` for `gh` CLI:
 
 ```bash
-[[ -f .env.local ]] && export $(grep '^GH_TOKEN=' .env.local)
+[[ -f .env.local ]] && set -a && source <(grep '^GH_TOKEN=' .env.local) && set +a
 ```
 
 Run this before any `gh` commands.

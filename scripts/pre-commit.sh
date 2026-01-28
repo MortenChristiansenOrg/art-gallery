@@ -12,7 +12,11 @@ echo "→ Building..."
 bunx vite build || { echo "Build failed"; exit 1; }
 
 echo "→ Deploying Convex functions..."
-bunx convex deploy || echo "Convex deploy skipped (no deployment configured)"
+if [ -z "${CONVEX_DEPLOYMENT:-}" ]; then
+  echo "Convex deploy skipped (no deployment configured)"
+else
+  bunx convex deploy || { echo "Convex deploy failed"; exit 1; }
+fi
 
 #echo "→ Unit tests..."
 #bunx vitest run || { echo "Unit tests failed"; exit 1; }

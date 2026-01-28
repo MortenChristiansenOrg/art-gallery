@@ -16,15 +16,15 @@ Use bun commands instead of npm commands.
 
 Install dependencies: `bun install`
 
-Run unit/component tests: `bun test:run`
+Run unit/component tests: `bun run test:run`
 Run E2E tests: `bun run e2e`
-Run E2E with Playwright UI : `bun e2e:ui`
-Run smoke tests: `bun smoke`
+Run E2E with Playwright UI: `bun run e2e:ui`
+Run smoke tests: `bun run smoke`
 
 Initialize Convex: `bunx convex dev`
 Note: Never run this command unless asked directly (is user managed)
 
-Run dev server: `bun dev`
+Run dev server: `bun run dev`
 Note: Never run this command unless asked directly (is user managed)
 
 Update Convex functions: `bunx convex deploy`
