@@ -14,6 +14,7 @@ bunx vite build || { echo "Build failed"; exit 1; }
 echo "→ Deploying Convex functions..."
 if [ -z "${CONVEX_DEPLOYMENT:-}" ]; then
   echo "Convex deploy skipped (no deployment configured)"
+  bunx convex deploy --dry-run --typecheck enable -y
 else
   bunx convex deploy || { echo "Convex deploy failed"; exit 1; }
 fi
