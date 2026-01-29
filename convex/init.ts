@@ -2,8 +2,11 @@ import { mutation } from "./_generated/server";
 
 export const ensureDefaultCollection = mutation({
   handler: async (ctx) => {
-    const existing = await ctx.db.query("collections").first();
-    if (existing) return; // already migrated
+    const defaultCollection = await ctx.db
+      .query("collections")
+      .filter((q) => q.eq(q.field("slug"), "cabinet-of-curiosities"))
+      .first();
+    if (defaultCollection) return; // already migrated
 
     // Create default collection at order 0
     const defaultId = await ctx.db.insert("collections", {
@@ -17,7 +20,7 @@ export const ensureDefaultCollection = mutation({
     const allCollections = await ctx.db.query("collections").collect();
     for (const c of allCollections) {
       if (c._id !== defaultId) {
-        await ctx.db.patch(c._id, { order: c.order + 1 });
+        await ctx.db.patch(c._id, { order: (c.order ?? 0) + 1 });
       }
     }
 
