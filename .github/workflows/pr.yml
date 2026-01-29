@@ -49,6 +49,7 @@ jobs:
         run: |
           bunx convex dev &
           timeout 60 bash -c 'until curl -s http://127.0.0.1:3210 > /dev/null 2>&1; do sleep 1; done'
+          timeout 60 bash -c 'until grep -q CONVEX_DEPLOYMENT .env.local 2>/dev/null; do sleep 1; done'
           bunx convex env set ADMIN_PASSWORD admin
       - run: bun run e2e
       - uses: actions/upload-artifact@v4
