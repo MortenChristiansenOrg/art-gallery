@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "../../test/test-utils";
-import { CollectionCard, CabinetCard } from "./CollectionCard";
+import { CollectionCard } from "./CollectionCard";
 import { createMockCollection } from "../../test/mocks";
 
 describe("CollectionCard", () => {
@@ -82,50 +82,6 @@ describe("CollectionCard", () => {
       );
       const link = container.querySelector("a");
       expect(link).toHaveStyle({ animationDelay: "450ms" }); // 150 + 3*100
-    });
-  });
-});
-
-describe("CabinetCard", () => {
-  describe("content", () => {
-    it("renders Cabinet of Curiosities title", () => {
-      render(<CabinetCard count={5} index={0} />);
-      expect(screen.getByText("Cabinet of Curiosities")).toBeInTheDocument();
-    });
-
-    it("renders description text", () => {
-      render(<CabinetCard count={5} index={0} />);
-      expect(
-        screen.getByText("Uncategorized works and experiments")
-      ).toBeInTheDocument();
-    });
-
-    it("renders artwork count", () => {
-      render(<CabinetCard count={7} index={0} />);
-      expect(screen.getByText("7 works")).toBeInTheDocument();
-    });
-
-    it("uses singular 'work' for count of 1", () => {
-      render(<CabinetCard count={1} index={0} />);
-      expect(screen.getByText("1 work")).toBeInTheDocument();
-    });
-  });
-
-  describe("navigation", () => {
-    it("links to cabinet of curiosities page", () => {
-      render(<CabinetCard count={5} index={0} />);
-      expect(screen.getByRole("link")).toHaveAttribute(
-        "href",
-        "/collection/cabinet-of-curiosities"
-      );
-    });
-  });
-
-  describe("animation", () => {
-    it("applies animation delay based on index", () => {
-      const { container } = render(<CabinetCard count={5} index={2} />);
-      const link = container.querySelector("a");
-      expect(link).toHaveStyle({ animationDelay: "350ms" }); // 150 + 2*100
     });
   });
 });

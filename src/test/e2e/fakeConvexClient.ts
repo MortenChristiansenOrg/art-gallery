@@ -49,11 +49,6 @@ const queryHandlers: Record<string, QueryHandler> = {
     return collections;
   },
 
-  // collections.getUncategorizedCount
-  "collections:getUncategorizedCount": () => {
-    return artworks.filter((a) => !a.collectionId && a.published).length;
-  },
-
   // collections.getBySlug
   "collections:getBySlug": (args) => {
     const slug = args.slug as string;
@@ -67,15 +62,6 @@ const queryHandlers: Record<string, QueryHandler> = {
     if (args.collectionId) {
       result = result.filter((a) => a.collectionId === args.collectionId);
     }
-    if (args.publishedOnly) {
-      result = result.filter((a) => a.published && a.thumbnailId && a.dziStatus === "complete");
-    }
-    return result.sort((a, b) => a.order - b.order);
-  },
-
-  // artworks.listUncategorized
-  "artworks:listUncategorized": (args) => {
-    let result = artworks.filter((a) => !a.collectionId);
     if (args.publishedOnly) {
       result = result.filter((a) => a.published && a.thumbnailId && a.dziStatus === "complete");
     }
@@ -175,6 +161,9 @@ const mutationHandlers: Record<string, MutationHandler> = {
     const key = args.key as string;
     siteContentState[key] = args.value as string;
   },
+
+  // init.ensureDefaultCollection - stub (no-op in tests, data is pre-populated)
+  "init:ensureDefaultCollection": async () => undefined,
 
   // artworks.create, update, remove, reorder - stub implementations
   "artworks:create": async () => "artworks:new" as Id<"artworks">,

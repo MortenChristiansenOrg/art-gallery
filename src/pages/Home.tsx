@@ -1,12 +1,21 @@
-import { useQuery } from "convex/react";
+import { useEffect, useRef } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { CollectionsGrid } from "../components/gallery";
 
 export function Home() {
   const collections = useQuery(api.collections.listWithCounts);
-  const uncategorizedCount = useQuery(api.collections.getUncategorizedCount);
+  const ensureDefault = useMutation(api.init.ensureDefaultCollection);
+  const initCalled = useRef(false);
 
-  if (collections === undefined || uncategorizedCount === undefined) {
+  useEffect(() => {
+    if (collections && collections.length === 0 && !initCalled.current) {
+      initCalled.current = true;
+      ensureDefault();
+    }
+  }, [collections, ensureDefault]);
+
+  if (collections === undefined) {
     return (
       <div className="min-h-[80vh]">
         {/* Hero skeleton */}
@@ -30,7 +39,7 @@ export function Home() {
     );
   }
 
-  const hasContent = collections.length > 0 || uncategorizedCount > 0;
+  const hasContent = collections.length > 0;
 
   return (
     <div className="min-h-[80vh]">
@@ -96,10 +105,7 @@ export function Home() {
         </div>
 
         {hasContent ? (
-          <CollectionsGrid
-            collections={collections}
-            uncategorizedCount={uncategorizedCount}
-          />
+          <CollectionsGrid collections={collections} />
         ) : (
           <div
             className="

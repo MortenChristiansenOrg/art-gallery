@@ -45,19 +45,6 @@ export const listWithCounts = query({
   },
 });
 
-export const getUncategorizedCount = query({
-  handler: async (ctx) => {
-    const artworks = await ctx.db.query("artworks").collect();
-    return artworks.filter(
-      (a) =>
-        !a.collectionId &&
-        a.published &&
-        a.thumbnailId &&
-        a.dziStatus === "complete"
-    ).length;
-  },
-});
-
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {

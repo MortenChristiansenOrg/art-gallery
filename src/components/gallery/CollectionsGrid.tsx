@@ -1,5 +1,5 @@
 import type { Id } from "../../../convex/_generated/dataModel";
-import { CollectionCard, CabinetCard } from "./CollectionCard";
+import { CollectionCard } from "./CollectionCard";
 
 interface Collection {
   _id: Id<"collections">;
@@ -12,10 +12,9 @@ interface Collection {
 
 interface CollectionsGridProps {
   collections: Collection[];
-  uncategorizedCount: number;
 }
 
-export function CollectionsGrid({ collections, uncategorizedCount }: CollectionsGridProps) {
+export function CollectionsGrid({ collections }: CollectionsGridProps) {
   return (
     <div data-testid="collections-grid" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {collections.map((collection, index) => (
@@ -25,9 +24,6 @@ export function CollectionsGrid({ collections, uncategorizedCount }: Collections
           index={index}
         />
       ))}
-      {uncategorizedCount > 0 && (
-        <CabinetCard count={uncategorizedCount} index={collections.length} />
-      )}
     </div>
   );
 }

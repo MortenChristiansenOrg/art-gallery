@@ -51,39 +51,6 @@ export const list = query({
   },
 });
 
-export const listUncategorized = query({
-  args: {
-    publishedOnly: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const artworks = await ctx.db.query("artworks").collect();
-
-    let filtered = artworks.filter((a) => !a.collectionId);
-
-    if (args.publishedOnly) {
-      filtered = filtered.filter(
-        (a) => a.published && a.thumbnailId && a.dziStatus === "complete"
-      );
-    }
-
-    filtered.sort((a, b) => a.order - b.order);
-
-    return Promise.all(
-      filtered.map(async (artwork) => ({
-        ...artwork,
-        imageUrl: await ctx.storage.getUrl(artwork.imageId),
-        thumbnailUrl: artwork.thumbnailId
-          ? await ctx.storage.getUrl(artwork.thumbnailId)
-          : null,
-        viewerImageUrl: artwork.viewerImageId
-          ? await ctx.storage.getUrl(artwork.viewerImageId)
-          : null,
-        dziUrl: getDziUrl(artwork._id, artwork.dziStatus),
-      }))
-    );
-  },
-});
-
 export const get = query({
   args: {
     id: v.id("artworks"),

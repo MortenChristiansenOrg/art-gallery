@@ -1,6 +1,6 @@
 export { ArtworkCardPO } from "./ArtworkCard.po";
 export { ArtworkGridPO } from "./ArtworkGrid.po";
-export { CollectionCardPO, CabinetCardPO } from "./CollectionCard.po";
+export { CollectionCardPO } from "./CollectionCard.po";
 export { CollectionsGridPO } from "./CollectionsGrid.po";
 export { OptimizedImagePO } from "./OptimizedImage.po";
 export { IconPickerPO } from "./IconPicker.po";
