@@ -19,9 +19,9 @@ else
 fi
 
 #echo "→ Unit tests..."
-#bunx vitest run || { echo "Unit tests failed"; exit 1; }
+bunx vitest run || { echo "Unit tests failed"; exit 1; }
 
 #echo "→ E2E tests..."
-#bunx playwright test || { echo "E2E tests failed"; exit 1; }
+bunx playwright test || { echo "E2E tests failed"; exit 1; }
 
 echo "All checks passed."
