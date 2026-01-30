@@ -21,14 +21,6 @@ export class CollectionPage {
     return screen.queryByText("No works in this collection");
   }
 
-  get cabinetTitle() {
-    return screen.queryByRole("heading", { name: "Cabinet of Curiosities" });
-  }
-
-  get cabinetDescription() {
-    return screen.queryByText("Uncategorized works and experiments");
-  }
-
   get skeletons() {
     return document.querySelectorAll(".skeleton-shimmer");
   }
@@ -61,10 +53,6 @@ export class CollectionPage {
 
   isEmpty(): boolean {
     return this.emptyMessage !== null;
-  }
-
-  isCabinet(): boolean {
-    return this.cabinetTitle !== null;
   }
 
   // Actions

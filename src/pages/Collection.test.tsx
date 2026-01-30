@@ -7,16 +7,13 @@ import { createMockArtworkList, createMockCollection } from "../test/mocks";
 // Mock module state
 let mockCollection: ReturnType<typeof createMockCollection> | null | undefined;
 let mockArtworks: ReturnType<typeof createMockArtworkList> | undefined;
-let mockUncategorizedArtworks: ReturnType<typeof createMockArtworkList> | undefined;
 
 vi.mock("convex/react", () => ({
   useQuery: vi.fn((_query: unknown, args: unknown) => {
     if (args === "skip") return undefined;
-    // Distinguish by args shape
     const argsObj = args as Record<string, unknown> | undefined;
     if (argsObj?.slug !== undefined) return mockCollection;
     if (argsObj?.collectionId !== undefined) return mockArtworks;
-    if (argsObj?.publishedOnly !== undefined && argsObj?.collectionId === undefined) return mockUncategorizedArtworks;
     return undefined;
   }),
 }));
@@ -35,7 +32,6 @@ describe("Collection", () => {
   beforeEach(() => {
     mockCollection = undefined;
     mockArtworks = undefined;
-    mockUncategorizedArtworks = undefined;
   });
 
   describe("loading state", () => {
@@ -44,7 +40,6 @@ describe("Collection", () => {
       mockArtworks = undefined;
 
       renderCollection("paintings");
-      // Content should not be visible yet
       expect(screen.queryByRole("heading")).not.toBeInTheDocument();
       expect(screen.queryByText("Collection not found")).not.toBeInTheDocument();
     });
@@ -123,35 +118,6 @@ describe("Collection", () => {
       expect(
         screen.getByText("No works in this collection")
       ).toBeInTheDocument();
-    });
-  });
-
-  describe("cabinet of curiosities", () => {
-    it("renders cabinet title", () => {
-      mockUncategorizedArtworks = createMockArtworkList(2);
-
-      renderCollection("cabinet-of-curiosities");
-      expect(
-        screen.getByRole("heading", { name: "Cabinet of Curiosities" })
-      ).toBeInTheDocument();
-    });
-
-    it("renders cabinet description", () => {
-      mockUncategorizedArtworks = createMockArtworkList(2);
-
-      renderCollection("cabinet-of-curiosities");
-      expect(
-        screen.getByText("Uncategorized works and experiments")
-      ).toBeInTheDocument();
-    });
-
-    it("renders uncategorized artworks", () => {
-      mockUncategorizedArtworks = createMockArtworkList(3);
-
-      renderCollection("cabinet-of-curiosities");
-      mockUncategorizedArtworks.forEach((artwork) => {
-        expect(screen.getByText(artwork.title)).toBeInTheDocument();
-      });
     });
   });
 });

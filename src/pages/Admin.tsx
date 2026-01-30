@@ -17,22 +17,20 @@ export function Admin() {
   const [showCollectionForm, setShowCollectionForm] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Id<"artworks"> | null>(null);
   const [editingCollection, setEditingCollection] = useState<Id<"collections"> | null>(null);
-  const [collectionFilter, setCollectionFilter] = useState<Id<"collections"> | "cabinet">("cabinet");
+  const [collectionFilter, setCollectionFilter] = useState<Id<"collections"> | null>(null);
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
 
   const collections = useQuery(api.collections.list);
 
-  const uncategorizedArtworks = useQuery(
-    api.artworks.listUncategorized,
-    collectionFilter === "cabinet" ? { publishedOnly: false } : "skip"
-  );
-  const collectionArtworks = useQuery(
+  // Default to first collection if no filter set
+  const activeFilter = collectionFilter ?? collections?.[0]?._id ?? null;
+
+  const artworks = useQuery(
     api.artworks.list,
-    collectionFilter !== "cabinet" ? { publishedOnly: false, collectionId: collectionFilter } : "skip"
+    activeFilter ? { publishedOnly: false, collectionId: activeFilter } : "skip"
   );
-  const artworks = uncategorizedArtworks ?? collectionArtworks;
   const messages = useQuery(api.messages.list);
   const unreadCount = useQuery(api.messages.unreadCount);
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
@@ -202,12 +200,11 @@ export function Admin() {
               Add Artwork
             </button>
             <select
-              value={collectionFilter}
-              onChange={(e) => setCollectionFilter(e.target.value as Id<"collections"> | "cabinet")}
+              value={activeFilter ?? ""}
+              onChange={(e) => setCollectionFilter(e.target.value as Id<"collections">)}
               className="px-3 py-2 border border-[var(--color-gallery-border)] bg-transparent text-sm"
               data-testid="collection-filter"
             >
-              <option value="cabinet">Cabinet of Curiosities</option>
               {collections?.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -431,7 +428,7 @@ export function Admin() {
       {(showArtworkForm || editingArtwork) && (
         <ArtworkForm
           artwork={editArtwork}
-          collectionId={collectionFilter === "cabinet" ? undefined : collectionFilter}
+          collectionId={activeFilter ?? undefined}
           onClose={() => {
             setShowArtworkForm(false);
             setEditingArtwork(null);

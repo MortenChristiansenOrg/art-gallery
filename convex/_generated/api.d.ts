@@ -15,6 +15,7 @@ import type * as dzi from "../dzi.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as images from "../images.js";
+import type * as init from "../init.js";
 import type * as messages from "../messages.js";
 import type * as siteContent from "../siteContent.js";
 import type * as tiles from "../tiles.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
   images: typeof images;
+  init: typeof init;
   messages: typeof messages;
   siteContent: typeof siteContent;
   tiles: typeof tiles;

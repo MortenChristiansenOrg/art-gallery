@@ -76,15 +76,10 @@ export function Artwork() {
 
   if (fromCollection) {
     backLink = `/collection/${fromCollection}`;
-    backLabel = fromCollection === "cabinet-of-curiosities"
-      ? "Cabinet of Curiosities"
-      : artworkCollection?.name || "Collection";
+    backLabel = artworkCollection?.name || "Collection";
   } else if (artworkCollection) {
     backLink = `/collection/${artworkCollection.slug}`;
     backLabel = artworkCollection.name;
-  } else if (artwork.collectionId === undefined) {
-    backLink = "/collection/cabinet-of-curiosities";
-    backLabel = "Cabinet of Curiosities";
   }
 
   return (

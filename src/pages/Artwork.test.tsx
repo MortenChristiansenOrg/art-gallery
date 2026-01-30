@@ -138,13 +138,13 @@ describe("Artwork", () => {
   });
 
   describe("back navigation", () => {
-    it("shows cabinet of curiosities link for uncategorized artwork", () => {
+    it("shows all collections link when no collection found", () => {
       mockArtwork = createMockArtwork();
       mockCollections = [];
 
       renderArtwork("artwork_1");
       expect(
-        screen.getByRole("link", { name: /cabinet of curiosities/i })
+        screen.getByRole("link", { name: /all collections/i })
       ).toBeInTheDocument();
     });
 

@@ -3,34 +3,21 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { ArtworkGrid } from "../components/gallery";
 
-const CABINET_SLUG = "cabinet-of-curiosities";
-
 export function Collection() {
   const { slug } = useParams<{ slug: string }>();
-  const isCabinet = slug === CABINET_SLUG;
 
-  // Regular collection lookup
   const collection = useQuery(
     api.collections.getBySlug,
-    !isCabinet && slug ? { slug } : "skip"
+    slug ? { slug } : "skip"
   );
 
-  // Artworks for regular collection
-  const collectionArtworks = useQuery(
+  const artworks = useQuery(
     api.artworks.list,
     collection?._id ? { collectionId: collection._id, publishedOnly: true } : "skip"
   );
 
-  // Uncategorized artworks for Cabinet
-  const uncategorizedArtworks = useQuery(
-    api.artworks.listUncategorized,
-    isCabinet ? { publishedOnly: true } : "skip"
-  );
-
-  const artworks = isCabinet ? uncategorizedArtworks : collectionArtworks;
-
-  // 404 state for regular collection (check before loading to avoid blocking on skipped artworks query)
-  if (!isCabinet && collection === null) {
+  // 404 state
+  if (collection === null) {
     return (
       <div className="max-w-6xl mx-auto px-8 lg:px-12 py-32 text-center opacity-0 animate-fade-in">
         <p className="text-[var(--color-gallery-muted)] text-lg font-light">
@@ -51,7 +38,7 @@ export function Collection() {
   }
 
   // Loading state
-  if (artworks === undefined || (!isCabinet && collection === undefined)) {
+  if (artworks === undefined || collection === undefined) {
     return (
       <div className="max-w-7xl mx-auto px-8 lg:px-12 py-16">
         <div className="space-y-16">
@@ -89,11 +76,6 @@ export function Collection() {
     );
   }
 
-  const title = isCabinet ? "Cabinet of Curiosities" : collection?.name;
-  const description = isCabinet
-    ? "Uncategorized works and experiments"
-    : collection?.description;
-
   return (
     <section className="max-w-7xl mx-auto px-8 lg:px-12 py-16 opacity-0 animate-fade-in">
       {/* Back navigation */}
@@ -123,17 +105,17 @@ export function Collection() {
       {/* Collection header */}
       <header className="mb-12 max-w-2xl">
         <h1
-          className={`
+          className="
             text-3xl lg:text-4xl font-light tracking-wide
             text-[var(--color-gallery-text)]
-            ${isCabinet ? "font-[var(--font-serif)] italic" : "font-[var(--font-serif)]"}
-          `}
+            font-[var(--font-serif)]
+          "
         >
-          {title}
+          {collection.name}
         </h1>
-        {description && (
+        {collection.description && (
           <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--color-gallery-subtle)] font-light">
-            {description}
+            {collection.description}
           </p>
         )}
       </header>

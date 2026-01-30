@@ -25,10 +25,6 @@ export class HomePage {
     return screen.queryByText("No collections to display");
   }
 
-  get cabinetCard() {
-    return screen.queryByText("Cabinet of Curiosities");
-  }
-
   get skeletons() {
     return document.querySelectorAll(".skeleton-shimmer");
   }
@@ -49,10 +45,6 @@ export class HomePage {
 
   hasContent(): boolean {
     return this.emptyMessage === null;
-  }
-
-  hasCabinet(): boolean {
-    return this.cabinetCard !== null;
   }
 
   // Actions
