@@ -66,7 +66,7 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
     year: artwork?.year?.toString() ?? "",
     medium: artwork?.medium ?? "",
     dimensions: artwork?.dimensions ?? "",
-    published: artwork?.published ?? false,
+    published: artwork?.published ?? true,
   });
 
   // Edit mode: single title
