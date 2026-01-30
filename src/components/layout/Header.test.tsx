@@ -1,7 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Header } from "./Header";
+
+// Mock auth
+vi.mock("../../lib/auth", () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    token: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
 
 function renderHeader(initialRoute = "/") {
   return render(
