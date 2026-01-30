@@ -147,9 +147,15 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
 
 /* Elegant fallback for collections without cover images */
 function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) {
+  // Game-icons SVGs have path 1 (bounding box) + path 2+ (actual icon).
+  // If only 1 path exists, it's just the empty frame — treat as no icon.
+  const hasRealIcon = iconSvg
+    ? (iconSvg.match(/<path[\s/]/g)?.length ?? 0) > 1
+    : false;
+
   // Generate a subtle, deterministic pattern based on collection name
   const seed = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const hue = seed % 30; // Subtle warm hue variation (0-30)
+  const hue = (seed % 40) + 15; // Warm hue range (15-55: gold to amber)
   const patterns = [
     // Diagonal lines
     `repeating-linear-gradient(
@@ -175,7 +181,7 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
         w-full h-full
         bg-gradient-to-br from-[var(--color-gallery-hover)] to-[var(--color-gallery-bg)]
         flex items-center justify-center
-        pb-[48%]
+        pb-[20%]
         transition-all duration-700
         group-hover:from-[var(--color-gallery-bg)] group-hover:to-[var(--color-gallery-hover)]
       "
@@ -184,31 +190,31 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
         backgroundSize: patternIndex === 1 ? "30px 30px" : undefined,
       }}
     >
-      {iconSvg ? (
+      {hasRealIcon ? (
         <div
           className="
-            w-[5rem] h-[5rem] lg:w-[6rem] lg:h-[6rem]
+            w-[6rem] h-[6rem] lg:w-[7rem] lg:h-[7rem]
             select-none
             transition-all duration-700
+            opacity-40 group-hover:opacity-55
             group-hover:scale-105
             [&_svg]:w-full [&_svg]:h-full
             [&_svg>path:first-child]:fill-none
             [&_svg>path:not(:first-child)]:fill-current
           "
-          style={{ color: `hsl(${hue}, 5%, 85%)` }}
-          dangerouslySetInnerHTML={{ __html: iconSvg }}
+          style={{ color: `hsl(${hue}, 12%, 45%)` }}
+          dangerouslySetInnerHTML={{ __html: iconSvg! }}
         />
       ) : (
         <span
           className="
             font-[var(--font-serif)] text-[5rem] lg:text-[6rem]
-            font-light text-[var(--color-gallery-border)]
+            font-light
             select-none
             transition-all duration-700
-            group-hover:text-[var(--color-gallery-border-light)]
             group-hover:scale-105
           "
-          style={{ color: `hsl(${hue}, 5%, 85%)` }}
+          style={{ color: `hsl(${hue}, 10%, 72%)` }}
         >
           {name.charAt(0)}
         </span>

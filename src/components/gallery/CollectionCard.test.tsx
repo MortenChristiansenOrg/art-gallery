@@ -67,7 +67,7 @@ describe("CollectionCard", () => {
     it("renders icon SVG when provided and no cover image", () => {
       const iconCollection = createMockCollection({
         coverImageUrl: null,
-        iconSvg: '<svg><path d="M0 0"/></svg>',
+        iconSvg: '<svg><path d="M10 10h492v492H10z"/><path d="M100 100h50v50H100z"/></svg>',
       });
       render(<CollectionCard collection={iconCollection} index={0} />);
       // Icon should be rendered, not the letter
