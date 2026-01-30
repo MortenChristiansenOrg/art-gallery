@@ -72,10 +72,11 @@ export const create = mutation({
     slug: v.string(),
     coverImageId: v.optional(v.id("_storage")),
     iconSvg: v.optional(v.string()),
+    nativeAspectRatio: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     requireAuth(args.token);
-    const { token: _, coverImageId, iconSvg, ...rest } = args;
+    const { token: _, coverImageId, iconSvg, nativeAspectRatio, ...rest } = args;
     const existing = await ctx.db.query("collections").collect();
     const maxOrder = existing.reduce((max, c) => Math.max(max, c.order), -1);
 
@@ -85,6 +86,7 @@ export const create = mutation({
       // Mutual exclusivity: only one of these can be set
       ...(iconSvg && !coverImageId ? { iconSvg } : {}),
       ...(coverImageId && !iconSvg ? { coverImageId } : {}),
+      ...(nativeAspectRatio !== undefined ? { nativeAspectRatio } : {}),
     });
   },
 });
@@ -98,6 +100,7 @@ export const update = mutation({
     slug: v.optional(v.string()),
     coverImageId: v.optional(v.id("_storage")),
     iconSvg: v.optional(v.string()),
+    nativeAspectRatio: v.optional(v.boolean()),
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {

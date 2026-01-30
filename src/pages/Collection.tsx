@@ -122,7 +122,7 @@ export function Collection() {
 
       {/* Artwork grid */}
       {artworks && artworks.length > 0 ? (
-        <ArtworkGrid artworks={artworks} collectionSlug={slug} />
+        <ArtworkGrid artworks={artworks} collectionSlug={slug} nativeAspectRatio={collection.nativeAspectRatio} />
       ) : (
         <div className="flex flex-col items-center justify-center py-32">
           <p

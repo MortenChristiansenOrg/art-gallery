@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as __tests___setup from "../__tests__/setup.js";
 import type * as artworks from "../artworks.js";
 import type * as auth from "../auth.js";
 import type * as collections from "../collections.js";
@@ -27,6 +28,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "__tests__/setup": typeof __tests___setup;
   artworks: typeof artworks;
   auth: typeof auth;
   collections: typeof collections;

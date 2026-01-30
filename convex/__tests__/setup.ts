@@ -1,6 +1,6 @@
 import { convexTest } from "convex-test";
 import schema from "../schema";
-import { Id } from "../_generated/dataModel";
+import type { Id } from "../_generated/dataModel";
 
 export type { Id };
 
