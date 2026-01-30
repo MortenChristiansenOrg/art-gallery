@@ -12,6 +12,8 @@ export class AdminPage {
   readonly messagesTab: Locator;
   readonly contentTab: Locator;
   readonly addButton: Locator;
+  readonly addNewArtworkButton: Locator;
+  readonly addExistingArtworkButton: Locator;
   readonly artworksList: Locator;
   readonly collectionsList: Locator;
   readonly messagesList: Locator;
@@ -27,7 +29,9 @@ export class AdminPage {
     this.collectionsTab = page.getByRole("tab", { name: /collections/i });
     this.messagesTab = page.getByRole("tab", { name: /messages/i });
     this.contentTab = page.getByRole("tab", { name: /content/i });
-    this.addButton = page.getByRole("button", { name: /add|create|new/i });
+    this.addButton = page.getByRole("button", { name: /add|create|new/i }).first();
+    this.addNewArtworkButton = page.locator('[data-testid="add-artwork-button"]');
+    this.addExistingArtworkButton = page.locator('[data-testid="add-existing-artwork-button"]');
     this.artworksList = page.locator('[data-testid="artworks-list"]');
     this.collectionsList = page.locator('[data-testid="collections-list"]');
     this.messagesList = page.locator('[data-testid="messages-list"]');

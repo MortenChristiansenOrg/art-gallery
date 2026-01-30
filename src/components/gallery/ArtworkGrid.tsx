@@ -7,21 +7,24 @@ interface Artwork {
   imageUrl: string | null;
   thumbnailUrl?: string | null;
   year?: number;
+  dziMetadata?: { width: number; height: number };
 }
 
 interface ArtworkGridProps {
   artworks: Artwork[];
   collectionSlug?: string;
+  nativeAspectRatio?: boolean;
 }
 
-export function ArtworkGrid({ artworks, collectionSlug }: ArtworkGridProps) {
+export function ArtworkGrid({ artworks, collectionSlug, nativeAspectRatio }: ArtworkGridProps) {
   return (
     <div
       data-testid="artwork-grid"
-      className="
+      className={`
         grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
         gap-x-8 gap-y-12 lg:gap-x-10 lg:gap-y-16
-      "
+        ${nativeAspectRatio ? "items-start" : ""}
+      `}
     >
       {artworks.map((artwork, index) => (
         <ArtworkCard
@@ -33,6 +36,8 @@ export function ArtworkGrid({ artworks, collectionSlug }: ArtworkGridProps) {
           year={artwork.year}
           index={index}
           collectionSlug={collectionSlug}
+          nativeAspectRatio={nativeAspectRatio}
+          dziMetadata={artwork.dziMetadata}
         />
       ))}
     </div>

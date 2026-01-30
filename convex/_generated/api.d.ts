@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as __tests___setup from "../__tests__/setup.js";
 import type * as artworks from "../artworks.js";
 import type * as auth from "../auth.js";
 import type * as collections from "../collections.js";
@@ -17,6 +18,7 @@ import type * as http from "../http.js";
 import type * as images from "../images.js";
 import type * as init from "../init.js";
 import type * as messages from "../messages.js";
+import type * as migrateToJunction from "../migrateToJunction.js";
 import type * as siteContent from "../siteContent.js";
 import type * as tiles from "../tiles.js";
 
@@ -27,6 +29,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "__tests__/setup": typeof __tests___setup;
   artworks: typeof artworks;
   auth: typeof auth;
   collections: typeof collections;
@@ -36,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   images: typeof images;
   init: typeof init;
   messages: typeof messages;
+  migrateToJunction: typeof migrateToJunction;
   siteContent: typeof siteContent;
   tiles: typeof tiles;
 }>;

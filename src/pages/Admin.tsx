@@ -1,8 +1,9 @@
 import { useState, useCallback, useTransition } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
-import { ArtworkForm, CollectionForm } from "../components/admin";
+import { ArtworkForm, CollectionForm, AddExistingArtworkDialog } from "../components/admin";
 import type { Id } from "../../convex/_generated/dataModel";
 
 type Tab = "artworks" | "collections" | "messages" | "content";
@@ -21,6 +22,7 @@ export function Admin() {
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
+  const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
 
   const collections = useQuery(api.collections.list);
 
@@ -36,6 +38,7 @@ export function Admin() {
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
 
   const deleteArtwork = useMutation(api.artworks.remove);
+  const removeFromCollection = useMutation(api.artworks.removeFromCollection);
   const deleteCollection = useMutation(api.collections.remove);
   const deleteMessage = useMutation(api.messages.remove);
   const markMessageRead = useMutation(api.messages.markRead);
@@ -164,9 +167,14 @@ export function Admin() {
     <div className="max-w-5xl mx-auto px-6 py-12" data-testid="admin-dashboard">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-[var(--font-serif)] text-2xl">Admin</h1>
-        <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]" data-testid="logout-button">
-          Logout
-        </button>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-sm text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)] transition-colors duration-300">
+            ← Gallery
+          </Link>
+          <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]" data-testid="logout-button">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4 border-b border-[var(--color-gallery-border)] mb-8" role="tablist">
@@ -197,7 +205,15 @@ export function Admin() {
               className="px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
               data-testid="add-artwork-button"
             >
-              Add Artwork
+              Add New Artwork
+            </button>
+            <button
+              onClick={() => setShowAddExistingDialog(true)}
+              disabled={!activeFilter}
+              className={`px-4 py-2 border border-[var(--color-gallery-border)] text-sm ${!activeFilter ? "opacity-50 cursor-not-allowed" : ""}`}
+              data-testid="add-existing-artwork-button"
+            >
+              Add Existing Artwork
             </button>
             <select
               value={activeFilter ?? ""}
@@ -293,16 +309,38 @@ export function Admin() {
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Delete this artwork?") && token) {
-                          deleteArtwork({ token, id: artwork._id });
-                        }
-                      }}
-                      className="text-sm text-red-600"
-                    >
-                      Delete
-                    </button>
+                    {activeFilter ? (
+                      <button
+                        onClick={() => {
+                          const isOnly = artwork.collectionCount <= 1;
+                          const msg = isOnly
+                            ? "This artwork is only in this collection. Delete it entirely?"
+                            : "Remove this artwork from collection?";
+                          if (confirm(msg) && token) {
+                            if (isOnly) {
+                              deleteArtwork({ token, id: artwork._id });
+                            } else {
+                              removeFromCollection({ token, artworkId: artwork._id, collectionId: activeFilter });
+                            }
+                          }
+                        }}
+                        className="text-sm text-red-600"
+                        data-testid="remove-from-collection-button"
+                      >
+                        {artwork.collectionCount <= 1 ? "Delete" : "Remove"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (confirm("Delete this artwork?") && token) {
+                            deleteArtwork({ token, id: artwork._id });
+                          }
+                        }}
+                        className="text-sm text-red-600"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -443,6 +481,13 @@ export function Admin() {
             setShowCollectionForm(false);
             setEditingCollection(null);
           }}
+        />
+      )}
+
+      {showAddExistingDialog && activeFilter && (
+        <AddExistingArtworkDialog
+          collectionId={activeFilter}
+          onClose={() => setShowAddExistingDialog(false)}
         />
       )}
     </div>

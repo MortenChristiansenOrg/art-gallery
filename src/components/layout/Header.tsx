@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../lib/auth";
 
 const navItems = [
   { path: "/", label: "Works" },
@@ -7,6 +8,7 @@ const navItems = [
 
 export function Header() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-gallery-bg)]/90 backdrop-blur-md">
@@ -60,6 +62,16 @@ export function Header() {
                 </li>
               );
             })}
+            {isAuthenticated && (
+              <li>
+                <Link
+                  to="/admin"
+                  className="relative text-[0.8rem] tracking-[0.15em] uppercase font-light transition-colors duration-300 text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]"
+                >
+                  Admin
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </nav>

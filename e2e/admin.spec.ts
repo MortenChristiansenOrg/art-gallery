@@ -10,11 +10,30 @@ test.describe("Admin CRUD Operations", () => {
       await expect(adminPage.artworksList).toBeVisible();
     });
 
-    test("shows add artwork button", async ({ authenticatedPage }) => {
+    test("shows add new artwork button", async ({ authenticatedPage }) => {
       const adminPage = new AdminPage(authenticatedPage);
       await adminPage.switchToArtworks();
 
-      await expect(adminPage.addButton).toBeVisible();
+      await expect(adminPage.addNewArtworkButton).toBeVisible();
+      await expect(adminPage.addNewArtworkButton).toHaveText("Add New Artwork");
+    });
+
+    test("shows add existing artwork button", async ({ authenticatedPage }) => {
+      const adminPage = new AdminPage(authenticatedPage);
+      await adminPage.switchToArtworks();
+
+      await expect(adminPage.addExistingArtworkButton).toBeVisible();
+      await expect(adminPage.addExistingArtworkButton).toHaveText("Add Existing Artwork");
+    });
+
+    test("add existing artwork button opens dialog", async ({ authenticatedPage }) => {
+      const adminPage = new AdminPage(authenticatedPage);
+      await adminPage.switchToArtworks();
+
+      await adminPage.addExistingArtworkButton.click();
+      await expect(
+        authenticatedPage.locator('[data-testid="search-existing-input"]')
+      ).toBeVisible();
     });
   });
 
