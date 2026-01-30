@@ -312,14 +312,22 @@ export function Admin() {
                     {activeFilter ? (
                       <button
                         onClick={() => {
-                          if (confirm("Remove this artwork from collection?") && token) {
-                            removeFromCollection({ token, artworkId: artwork._id, collectionId: activeFilter });
+                          const isOnly = artwork.collectionCount <= 1;
+                          const msg = isOnly
+                            ? "This artwork is only in this collection. Delete it entirely?"
+                            : "Remove this artwork from collection?";
+                          if (confirm(msg) && token) {
+                            if (isOnly) {
+                              deleteArtwork({ token, id: artwork._id });
+                            } else {
+                              removeFromCollection({ token, artworkId: artwork._id, collectionId: activeFilter });
+                            }
                           }
                         }}
                         className="text-sm text-red-600"
                         data-testid="remove-from-collection-button"
                       >
-                        Remove
+                        {artwork.collectionCount <= 1 ? "Delete" : "Remove"}
                       </button>
                     ) : (
                       <button
