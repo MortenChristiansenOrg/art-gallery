@@ -43,7 +43,7 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
           <OptimizedImage
             src={displayUrl}
             alt={title}
-            aspectRatio={nativeAspectRatio && dziMetadata ? `${dziMetadata.width}/${dziMetadata.height}` : "4/5"}
+            aspectRatio={nativeAspectRatio && dziMetadata && dziMetadata.width > 0 && dziMetadata.height > 0 ? `${dziMetadata.width}/${dziMetadata.height}` : "4/5"}
             loading="lazy"
             className="transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
           />

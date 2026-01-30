@@ -209,7 +209,8 @@ export function Admin() {
             </button>
             <button
               onClick={() => setShowAddExistingDialog(true)}
-              className="px-4 py-2 border border-[var(--color-gallery-border)] text-sm"
+              disabled={!activeFilter}
+              className={`px-4 py-2 border border-[var(--color-gallery-border)] text-sm ${!activeFilter ? "opacity-50 cursor-not-allowed" : ""}`}
               data-testid="add-existing-artwork-button"
             >
               Add Existing Artwork
@@ -308,7 +309,7 @@ export function Admin() {
                     >
                       Edit
                     </button>
-                    {artwork.collectionCount > 1 && activeFilter ? (
+                    {activeFilter ? (
                       <button
                         onClick={() => {
                           if (confirm("Remove this artwork from collection?") && token) {

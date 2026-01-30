@@ -16,6 +16,7 @@ export function AddExistingArtworkDialog({
   const { token } = useAuth();
   const [searchText, setSearchText] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const addToCollection = useMutation(api.artworks.addToCollection);
 
@@ -39,14 +40,24 @@ export function AddExistingArtworkDialog({
 
   const handleAdd = async (artworkId: Id<"artworks">) => {
     if (!token) return;
-    await addToCollection({ token, artworkId, collectionId });
-    onClose();
+    try {
+      setError(null);
+      await addToCollection({ token, artworkId, collectionId });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add artwork");
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-existing-artwork-title"
+    >
       <div className="bg-[var(--color-gallery-bg)] p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="font-[var(--font-serif)] text-xl mb-4">
+        <h2 id="add-existing-artwork-title" className="font-[var(--font-serif)] text-xl mb-4">
           Add Existing Artwork
         </h2>
 
@@ -101,6 +112,10 @@ export function AddExistingArtworkDialog({
             </button>
           ))}
         </div>
+
+        {error && (
+          <p className="text-sm text-red-600 mb-2">{error}</p>
+        )}
 
         <div className="pt-4">
           <button
