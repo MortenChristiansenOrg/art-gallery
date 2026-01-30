@@ -175,6 +175,7 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
         w-full h-full
         bg-gradient-to-br from-[var(--color-gallery-hover)] to-[var(--color-gallery-bg)]
         flex items-center justify-center
+        pb-[48%]
         transition-all duration-700
         group-hover:from-[var(--color-gallery-bg)] group-hover:to-[var(--color-gallery-hover)]
       "
@@ -186,7 +187,7 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
       {iconSvg ? (
         <div
           className="
-            w-[8rem] h-[8rem] lg:w-[10rem] lg:h-[10rem]
+            w-[5rem] h-[5rem] lg:w-[6rem] lg:h-[6rem]
             select-none
             transition-all duration-700
             group-hover:scale-105
@@ -194,20 +195,20 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
             [&_svg>path:first-child]:fill-none
             [&_svg>path:not(:first-child)]:fill-current
           "
-          style={{ color: `hsl(${hue}, 5%, 90%)` }}
+          style={{ color: `hsl(${hue}, 5%, 85%)` }}
           dangerouslySetInnerHTML={{ __html: iconSvg }}
         />
       ) : (
         <span
           className="
-            font-[var(--font-serif)] text-[8rem] lg:text-[10rem]
+            font-[var(--font-serif)] text-[5rem] lg:text-[6rem]
             font-light text-[var(--color-gallery-border)]
             select-none
             transition-all duration-700
             group-hover:text-[var(--color-gallery-border-light)]
             group-hover:scale-105
           "
-          style={{ color: `hsl(${hue}, 5%, 90%)` }}
+          style={{ color: `hsl(${hue}, 5%, 85%)` }}
         >
           {name.charAt(0)}
         </span>
