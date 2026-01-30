@@ -1,17 +1,23 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Header } from "./Header";
 
-// Mock auth
+const mockAuth = {
+  isAuthenticated: false,
+  token: null as string | null,
+  login: vi.fn(),
+  logout: vi.fn(),
+};
+
 vi.mock("../../lib/auth", () => ({
-  useAuth: () => ({
-    isAuthenticated: false,
-    token: null,
-    login: vi.fn(),
-    logout: vi.fn(),
-  }),
+  useAuth: () => mockAuth,
 }));
+
+beforeEach(() => {
+  mockAuth.isAuthenticated = false;
+  mockAuth.token = null;
+});
 
 function renderHeader(initialRoute = "/") {
   return render(
@@ -104,6 +110,39 @@ describe("Header", () => {
     it("renders two nav items", () => {
       renderHeader();
       expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    });
+  });
+
+  describe("authenticated state", () => {
+    beforeEach(() => {
+      mockAuth.isAuthenticated = true;
+      mockAuth.token = "test-token";
+    });
+
+    it("renders Admin link when authenticated", () => {
+      renderHeader();
+      expect(screen.getByRole("link", { name: /admin/i })).toBeInTheDocument();
+    });
+
+    it("Admin link points to /admin", () => {
+      renderHeader();
+      expect(screen.getByRole("link", { name: /admin/i })).toHaveAttribute(
+        "href",
+        "/admin"
+      );
+    });
+
+    it("renders three nav items when authenticated", () => {
+      renderHeader();
+      expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    });
+
+    it("does not render Admin link when not authenticated", () => {
+      mockAuth.isAuthenticated = false;
+      renderHeader();
+      expect(
+        screen.queryByRole("link", { name: /admin/i })
+      ).not.toBeInTheDocument();
     });
   });
 });
