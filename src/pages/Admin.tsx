@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
-import { ArtworkForm, CollectionForm } from "../components/admin";
+import { ArtworkForm, CollectionForm, AddExistingArtworkDialog } from "../components/admin";
 import type { Id } from "../../convex/_generated/dataModel";
 
 type Tab = "artworks" | "collections" | "messages" | "content";
@@ -22,6 +22,7 @@ export function Admin() {
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
+  const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
 
   const collections = useQuery(api.collections.list);
 
@@ -37,6 +38,7 @@ export function Admin() {
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
 
   const deleteArtwork = useMutation(api.artworks.remove);
+  const removeFromCollection = useMutation(api.artworks.removeFromCollection);
   const deleteCollection = useMutation(api.collections.remove);
   const deleteMessage = useMutation(api.messages.remove);
   const markMessageRead = useMutation(api.messages.markRead);
@@ -203,7 +205,14 @@ export function Admin() {
               className="px-4 py-2 bg-[var(--color-gallery-text)] text-[var(--color-gallery-bg)] text-sm"
               data-testid="add-artwork-button"
             >
-              Add Artwork
+              Add New Artwork
+            </button>
+            <button
+              onClick={() => setShowAddExistingDialog(true)}
+              className="px-4 py-2 border border-[var(--color-gallery-border)] text-sm"
+              data-testid="add-existing-artwork-button"
+            >
+              Add Existing Artwork
             </button>
             <select
               value={activeFilter ?? ""}
@@ -299,16 +308,30 @@ export function Admin() {
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Delete this artwork?") && token) {
-                          deleteArtwork({ token, id: artwork._id });
-                        }
-                      }}
-                      className="text-sm text-red-600"
-                    >
-                      Delete
-                    </button>
+                    {artwork.collectionCount > 1 && activeFilter ? (
+                      <button
+                        onClick={() => {
+                          if (confirm("Remove this artwork from collection?") && token) {
+                            removeFromCollection({ token, artworkId: artwork._id, collectionId: activeFilter });
+                          }
+                        }}
+                        className="text-sm text-red-600"
+                        data-testid="remove-from-collection-button"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (confirm("Delete this artwork?") && token) {
+                            deleteArtwork({ token, id: artwork._id });
+                          }
+                        }}
+                        className="text-sm text-red-600"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -449,6 +472,13 @@ export function Admin() {
             setShowCollectionForm(false);
             setEditingCollection(null);
           }}
+        />
+      )}
+
+      {showAddExistingDialog && activeFilter && (
+        <AddExistingArtworkDialog
+          collectionId={activeFilter}
+          onClose={() => setShowAddExistingDialog(false)}
         />
       )}
     </div>

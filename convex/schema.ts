@@ -62,6 +62,15 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_order", ["order"]),
 
+  artworkCollections: defineTable({
+    artworkId: v.id("artworks"),
+    collectionId: v.id("collections"),
+    order: v.number(),
+  })
+    .index("by_artwork", ["artworkId"])
+    .index("by_collection", ["collectionId"])
+    .index("by_collection_order", ["collectionId", "order"]),
+
   messages: defineTable({
     name: v.string(),
     email: v.string(),

@@ -18,6 +18,7 @@ import type * as http from "../http.js";
 import type * as images from "../images.js";
 import type * as init from "../init.js";
 import type * as messages from "../messages.js";
+import type * as migrateToJunction from "../migrateToJunction.js";
 import type * as siteContent from "../siteContent.js";
 import type * as tiles from "../tiles.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   images: typeof images;
   init: typeof init;
   messages: typeof messages;
+  migrateToJunction: typeof migrateToJunction;
   siteContent: typeof siteContent;
   tiles: typeof tiles;
 }>;

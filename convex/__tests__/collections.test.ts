@@ -40,7 +40,7 @@ describe("collections", () => {
   });
 
   describe("listWithCounts", () => {
-    it("includes artwork counts", async () => {
+    it("includes artwork counts via junction table", async () => {
       const t = createTestContext();
 
       await t.run(async (ctx) => {
@@ -50,25 +50,33 @@ describe("collections", () => {
           order: 0,
         });
         const storageId = await ctx.storage.store(createTestBlob());
-        await ctx.db.insert("artworks", {
+        const art1 = await ctx.db.insert("artworks", {
           title: "Art 1",
           imageId: storageId,
           thumbnailId: storageId,
-          collectionId,
           order: 0,
           published: true,
           dziStatus: "complete",
           createdAt: Date.now(),
         });
-        await ctx.db.insert("artworks", {
+        const art2 = await ctx.db.insert("artworks", {
           title: "Art 2",
           imageId: storageId,
           thumbnailId: storageId,
-          collectionId,
           order: 1,
           published: true,
           dziStatus: "complete",
           createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: art1,
+          collectionId,
+          order: 0,
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: art2,
+          collectionId,
+          order: 1,
         });
       });
 
@@ -87,35 +95,48 @@ describe("collections", () => {
         });
         const storageId = await ctx.storage.store(createTestBlob());
         // Published with thumbnail and complete DZI
-        await ctx.db.insert("artworks", {
+        const published = await ctx.db.insert("artworks", {
           title: "Published",
           imageId: storageId,
           thumbnailId: storageId,
-          collectionId,
           order: 0,
           published: true,
           dziStatus: "complete",
           createdAt: Date.now(),
         });
         // Unpublished
-        await ctx.db.insert("artworks", {
+        const unpublished = await ctx.db.insert("artworks", {
           title: "Unpublished",
           imageId: storageId,
           thumbnailId: storageId,
-          collectionId,
           order: 1,
           published: false,
           dziStatus: "complete",
           createdAt: Date.now(),
         });
         // No thumbnail
-        await ctx.db.insert("artworks", {
+        const noThumb = await ctx.db.insert("artworks", {
           title: "No Thumbnail",
           imageId: storageId,
-          collectionId,
           order: 2,
           published: true,
           createdAt: Date.now(),
+        });
+        // All in junction table
+        await ctx.db.insert("artworkCollections", {
+          artworkId: published,
+          collectionId,
+          order: 0,
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: unpublished,
+          collectionId,
+          order: 1,
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: noThumb,
+          collectionId,
+          order: 2,
         });
       });
 
@@ -234,7 +255,7 @@ describe("collections", () => {
   });
 
   describe("remove", () => {
-    it("deletes collection and unlinks artworks", async () => {
+    it("deletes collection and junction entries", async () => {
       const t = createTestContext();
 
       let collectionId: Id<"collections"> | undefined;
@@ -249,10 +270,14 @@ describe("collections", () => {
         artworkId = await ctx.db.insert("artworks", {
           title: "Linked",
           imageId: storageId,
-          collectionId,
           order: 0,
           published: true,
           createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: artworkId!,
+          collectionId: collectionId!,
+          order: 0,
         });
       });
 
@@ -267,9 +292,13 @@ describe("collections", () => {
       });
       expect(collection).toBeNull();
 
-      // Artwork should be unlinked
+      // Artwork should still exist
       const artwork = await t.query(api.artworks.get, { id: artworkId! });
-      expect(artwork?.collectionId).toBeUndefined();
+      expect(artwork).not.toBeNull();
+
+      // But not in any collection (junction entry deleted)
+      const listed = await t.query(api.artworks.list, {});
+      expect(listed.find((a) => a._id === artworkId!)?.collectionCount).toBe(0);
     });
   });
 

@@ -15,6 +15,7 @@ const modules = {
   "../dzi.ts": () => import("../dzi"),
   "../tiles.ts": () => import("../tiles"),
   "../siteContent.ts": () => import("../siteContent"),
+  "../migrateToJunction.ts": () => import("../migrateToJunction"),
   "../schema.ts": () => import("../schema"),
   "../_generated/api.js": () => import("../_generated/api"),
   "../_generated/server.js": () => import("../_generated/server"),

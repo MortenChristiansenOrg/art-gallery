@@ -30,6 +30,7 @@ export interface MockArtworkWithUrls extends MockArtwork {
   imageUrl: string | null;
   thumbnailUrl: string | null;
   viewerImageUrl: string | null;
+  collectionCount: number;
 }
 
 let artworkIdCounter = 1;
@@ -51,6 +52,7 @@ export function createMockArtwork(
     imageUrl: `https://example.com/image_${id}.jpg`,
     thumbnailUrl: `https://example.com/thumb_${id}.jpg`,
     viewerImageUrl: `https://example.com/viewer_${id}.jpg`,
+    collectionCount: 1,
     ...overrides,
   };
 }
