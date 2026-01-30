@@ -1,4 +1,5 @@
 import { useState, useCallback, useTransition } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
@@ -164,9 +165,14 @@ export function Admin() {
     <div className="max-w-5xl mx-auto px-6 py-12" data-testid="admin-dashboard">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-[var(--font-serif)] text-2xl">Admin</h1>
-        <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]" data-testid="logout-button">
-          Logout
-        </button>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-sm text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)] transition-colors duration-300">
+            ← Gallery
+          </Link>
+          <button onClick={logout} className="text-sm text-[var(--color-gallery-muted)]" data-testid="logout-button">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4 border-b border-[var(--color-gallery-border)] mb-8" role="tablist">
