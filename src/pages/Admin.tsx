@@ -98,7 +98,7 @@ export function Admin() {
 
     startTransition(async () => {
       try {
-        await reorderArtworks({ token, ids });
+        await reorderArtworks({ token, ids, collectionId: activeFilter ?? undefined });
       } catch (err) {
         console.error("Reorder failed:", err);
       }

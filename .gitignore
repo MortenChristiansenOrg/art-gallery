@@ -31,3 +31,7 @@ test-results.json
 # AI
 .claude/settings.local.json
 .context
+
+# Local Convex
+convex_local_storage
+convex_local_backend.sqlite3
