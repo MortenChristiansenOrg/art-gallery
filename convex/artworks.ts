@@ -305,11 +305,28 @@ export const reorder = mutation({
   args: {
     token: v.string(),
     ids: v.array(v.id("artworks")),
+    collectionId: v.optional(v.id("collections")),
   },
   handler: async (ctx, args) => {
     requireAuth(args.token);
-    for (let i = 0; i < args.ids.length; i++) {
-      await ctx.db.patch(args.ids[i], { order: i });
+    if (args.collectionId) {
+      const entries = await ctx.db
+        .query("artworkCollections")
+        .withIndex("by_collection", (q) =>
+          q.eq("collectionId", args.collectionId!)
+        )
+        .collect();
+      const entryByArtwork = new Map(entries.map((e) => [e.artworkId, e._id]));
+      for (let i = 0; i < args.ids.length; i++) {
+        const entryId = entryByArtwork.get(args.ids[i]);
+        if (entryId) {
+          await ctx.db.patch(entryId, { order: i });
+        }
+      }
+    } else {
+      for (let i = 0; i < args.ids.length; i++) {
+        await ctx.db.patch(args.ids[i], { order: i });
+      }
     }
   },
 });

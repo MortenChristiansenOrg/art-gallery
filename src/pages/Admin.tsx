@@ -98,7 +98,7 @@ export function Admin() {
 
     startTransition(async () => {
       try {
-        await reorderArtworks({ token, ids });
+        await reorderArtworks({ token, ids, collectionId: activeFilter ?? undefined });
       } catch (err) {
         console.error("Reorder failed:", err);
       }
@@ -107,7 +107,7 @@ export function Admin() {
     setDraggedId(null);
     setDropTargetId(null);
     setDropPosition(null);
-  }, [draggedId, dropTargetId, dropPosition, artworks, token, reorderArtworks]);
+  }, [draggedId, dropTargetId, dropPosition, artworks, token, reorderArtworks, activeFilter]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedId(null);

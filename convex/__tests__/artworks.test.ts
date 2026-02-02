@@ -648,5 +648,70 @@ describe("artworks", () => {
       expect(art1?.order).toBe(1);
       expect(art2?.order).toBe(0);
     });
+
+    it("reorders artworks within a collection", async () => {
+      const t = createTestContext();
+
+      let id1: Id<"artworks"> | undefined;
+      let id2: Id<"artworks"> | undefined;
+      let id3: Id<"artworks"> | undefined;
+      let collectionId: Id<"collections"> | undefined;
+      await t.run(async (ctx) => {
+        const storageId = await ctx.storage.store(createTestBlob());
+        collectionId = await ctx.db.insert("collections", {
+          name: "Test",
+          slug: "test",
+          order: 0,
+        });
+        id1 = await ctx.db.insert("artworks", {
+          title: "First",
+          imageId: storageId,
+          order: 0,
+          published: true,
+          createdAt: Date.now(),
+        });
+        id2 = await ctx.db.insert("artworks", {
+          title: "Second",
+          imageId: storageId,
+          order: 1,
+          published: true,
+          createdAt: Date.now(),
+        });
+        id3 = await ctx.db.insert("artworks", {
+          title: "Third",
+          imageId: storageId,
+          order: 2,
+          published: true,
+          createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: id1,
+          collectionId: collectionId,
+          order: 0,
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: id2,
+          collectionId: collectionId,
+          order: 1,
+        });
+        await ctx.db.insert("artworkCollections", {
+          artworkId: id3,
+          collectionId: collectionId,
+          order: 2,
+        });
+      });
+
+      // Reorder: Third, First, Second
+      await t.mutation(api.artworks.reorder, {
+        token: validToken,
+        ids: [id3!, id1!, id2!],
+        collectionId: collectionId!,
+      });
+
+      const listed = await t.query(api.artworks.list, {
+        collectionId: collectionId!,
+      });
+      expect(listed.map((a) => a.title)).toEqual(["Third", "First", "Second"]);
+    });
   });
 });
