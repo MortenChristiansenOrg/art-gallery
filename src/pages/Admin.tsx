@@ -107,7 +107,7 @@ export function Admin() {
     setDraggedId(null);
     setDropTargetId(null);
     setDropPosition(null);
-  }, [draggedId, dropTargetId, dropPosition, artworks, token, reorderArtworks]);
+  }, [draggedId, dropTargetId, dropPosition, artworks, token, reorderArtworks, activeFilter]);
 
   const handleDragEnd = useCallback(() => {
     setDraggedId(null);
