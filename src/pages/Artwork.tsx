@@ -130,7 +130,7 @@ export function Artwork() {
             <img
               src={imageSrc}
               alt={artwork.title}
-              data-testid="artwork-image"
+              data-testid="artwork-image-mobile"
               className="w-full h-auto"
             />
           ) : (
@@ -168,7 +168,7 @@ export function Artwork() {
           {/* Title */}
           <header>
             <h1
-              data-testid="artwork-title"
+              data-testid="artwork-title-mobile"
               className="
                 font-[var(--font-serif)] text-[1.75rem]
                 font-light leading-tight tracking-[0.01em]
