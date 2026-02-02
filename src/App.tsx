@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/layout";
 import { Home, Collection, Artwork, About, Admin } from "./pages";
 import { AuthProvider } from "./lib/auth";
@@ -25,6 +27,8 @@ function App({ client = defaultClient }: AppProps) {
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </BrowserRouter>
+        <Analytics />
+        <SpeedInsights />
       </AuthProvider>
     </ConvexProvider>
   );

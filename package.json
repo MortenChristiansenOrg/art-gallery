@@ -19,6 +19,8 @@
     "spec:index": "bun scripts/generate-spec-index.ts"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
+    "@vercel/speed-insights": "^1.3.1",
     "convex": "^1.31.5",
     "jimp": "^1.6.0",
     "openseadragon": "^5.0.1",
