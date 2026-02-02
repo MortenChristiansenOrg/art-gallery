@@ -1,6 +1,6 @@
 import { useState, useCallback, useTransition } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
 import { ArtworkForm, CollectionForm, AddExistingArtworkDialog } from "../components/admin";
@@ -44,6 +44,7 @@ export function Admin() {
   const markMessageRead = useMutation(api.messages.markRead);
   const setContent = useMutation(api.siteContent.set);
   const reorderArtworks = useMutation(api.artworks.reorder);
+  const retryTileGeneration = useAction(api.images.generateVariants);
 
   const [aboutText, setAboutText] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -286,19 +287,35 @@ export function Admin() {
                         {artwork.published ? "Published" : "Draft"}
                       </span>
                       {(!artwork.thumbnailId || artwork.dziStatus !== "complete") && (
-                        <span
-                          className={`px-2 py-0.5 rounded text-xs ${
-                            artwork.dziStatus === "failed"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {artwork.dziStatus === "failed"
-                            ? "Processing failed"
-                            : artwork.dziStatus === "generating"
-                              ? "Generating tiles..."
-                              : "Processing..."}
-                        </span>
+                        <>
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              artwork.dziStatus === "failed"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {artwork.dziStatus === "failed"
+                              ? "Processing failed"
+                              : artwork.dziStatus === "generating"
+                                ? "Generating tiles..."
+                                : "Processing..."}
+                          </span>
+                          {artwork.dziStatus === "failed" && (
+                            <button
+                              className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                retryTileGeneration({
+                                  storageId: artwork.imageId,
+                                  artworkId: artwork._id,
+                                }).catch(console.error);
+                              }}
+                            >
+                              Retry
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

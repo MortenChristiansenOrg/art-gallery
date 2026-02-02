@@ -82,50 +82,58 @@ export const startGeneration = action({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    // Get image dimensions
-    const imageUrl = await ctx.storage.getUrl(args.storageId);
-    if (!imageUrl) throw new Error("Image not found");
+    try {
+      // Get image dimensions
+      const imageUrl = await ctx.storage.getUrl(args.storageId);
+      if (!imageUrl) throw new Error("Image not found");
 
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Failed to download image");
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Failed to download image");
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
 
-    const image = await Jimp.read(imageBuffer);
-    const width = image.width;
-    const height = image.height;
-    const maxLevel = calculateMaxLevel(width, height);
+      const image = await Jimp.read(imageBuffer);
+      const width = image.width;
+      const height = image.height;
+      const maxLevel = calculateMaxLevel(width, height);
 
-    // Set metadata and status
-    await ctx.runMutation(internal.tiles.setDziMetadata, {
-      artworkId: args.artworkId,
-      metadata: {
+      // Set metadata and status
+      await ctx.runMutation(internal.tiles.setDziMetadata, {
+        artworkId: args.artworkId,
+        metadata: {
+          width,
+          height,
+          tileSize: TILE_SIZE,
+          overlap: TILE_OVERLAP,
+          format: "jpg",
+          maxLevel,
+        },
+      });
+
+      await ctx.runMutation(internal.tiles.setDziStatus, {
+        artworkId: args.artworkId,
+        status: "generating",
+      });
+
+      // Calculate all tiles
+      const allTiles = getAllTileSpecs(width, height);
+
+      // Start first batch
+      await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
+        artworkId: args.artworkId,
+        storageId: args.storageId,
+        tiles: allTiles.slice(0, BATCH_SIZE),
+        remainingTiles: allTiles.slice(BATCH_SIZE),
         width,
         height,
-        tileSize: TILE_SIZE,
-        overlap: TILE_OVERLAP,
-        format: "jpg",
         maxLevel,
-      },
-    });
-
-    await ctx.runMutation(internal.tiles.setDziStatus, {
-      artworkId: args.artworkId,
-      status: "generating",
-    });
-
-    // Calculate all tiles
-    const allTiles = getAllTileSpecs(width, height);
-
-    // Start first batch
-    await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
-      artworkId: args.artworkId,
-      storageId: args.storageId,
-      tiles: allTiles.slice(0, BATCH_SIZE),
-      remainingTiles: allTiles.slice(BATCH_SIZE),
-      width,
-      height,
-      maxLevel,
-    });
+      });
+    } catch (err) {
+      console.error(`DZI generation failed for ${args.artworkId}:`, err);
+      await ctx.runMutation(internal.tiles.setDziStatus, {
+        artworkId: args.artworkId,
+        status: "failed",
+      });
+    }
   },
 });
 
@@ -153,64 +161,78 @@ export const generateBatch = internalAction({
     maxLevel: v.number(),
   },
   handler: async (ctx, args) => {
-    // Download original image
-    const imageUrl = await ctx.storage.getUrl(args.storageId);
-    if (!imageUrl) throw new Error("Image not found");
-
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Failed to download image");
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-    // Process each tile in this batch
-    for (const tileSpec of args.tiles) {
-      try {
-        const tileBuffer = await generateTile(
-          imageBuffer,
-          args.width,
-          args.height,
-          args.maxLevel,
-          tileSpec.level,
-          tileSpec.col,
-          tileSpec.row
-        );
-
-        // Store tile
-        const tileBlob = new Blob([new Uint8Array(tileBuffer)], { type: "image/jpeg" });
-        const tileStorageId = await ctx.storage.store(tileBlob);
-
-        // Record tile in DB
-        await ctx.runMutation(internal.tiles.createTile, {
-          artworkId: args.artworkId,
-          level: tileSpec.level,
-          col: tileSpec.col,
-          row: tileSpec.row,
-          storageId: tileStorageId,
-        });
-      } catch (err) {
-        console.error(
-          `Failed to generate tile ${tileSpec.level}/${tileSpec.col}_${tileSpec.row}:`,
-          err
-        );
-        // Continue with other tiles
-      }
-    }
-
-    // Schedule next batch or mark complete
-    if (args.remainingTiles.length > 0) {
-      await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
+    try {
+      // Verify artwork still uses this image (guard against race with image replacement)
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
         artworkId: args.artworkId,
-        storageId: args.storageId,
-        tiles: args.remainingTiles.slice(0, BATCH_SIZE),
-        remainingTiles: args.remainingTiles.slice(BATCH_SIZE),
-        width: args.width,
-        height: args.height,
-        maxLevel: args.maxLevel,
       });
-    } else {
-      // Mark complete
+      if (!artwork || artwork.imageId !== args.storageId) return;
+
+      // Download original image
+      const imageUrl = await ctx.storage.getUrl(args.storageId);
+      if (!imageUrl) throw new Error("Image not found");
+
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Failed to download image");
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
+
+      // Process each tile in this batch
+      for (const tileSpec of args.tiles) {
+        try {
+          const tileBuffer = await generateTile(
+            imageBuffer,
+            args.width,
+            args.height,
+            args.maxLevel,
+            tileSpec.level,
+            tileSpec.col,
+            tileSpec.row
+          );
+
+          // Store tile
+          const tileBlob = new Blob([new Uint8Array(tileBuffer)], { type: "image/jpeg" });
+          const tileStorageId = await ctx.storage.store(tileBlob);
+
+          // Record tile in DB
+          await ctx.runMutation(internal.tiles.createTile, {
+            artworkId: args.artworkId,
+            level: tileSpec.level,
+            col: tileSpec.col,
+            row: tileSpec.row,
+            storageId: tileStorageId,
+          });
+        } catch (err) {
+          console.error(
+            `Failed to generate tile ${tileSpec.level}/${tileSpec.col}_${tileSpec.row}:`,
+            err
+          );
+          // Continue with other tiles
+        }
+      }
+
+      // Schedule next batch or mark complete
+      if (args.remainingTiles.length > 0) {
+        await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
+          artworkId: args.artworkId,
+          storageId: args.storageId,
+          tiles: args.remainingTiles.slice(0, BATCH_SIZE),
+          remainingTiles: args.remainingTiles.slice(BATCH_SIZE),
+          width: args.width,
+          height: args.height,
+          maxLevel: args.maxLevel,
+        });
+      } else {
+        // Mark complete
+        await ctx.runMutation(internal.tiles.setDziStatus, {
+          artworkId: args.artworkId,
+          status: "complete",
+        });
+      }
+    } catch (err) {
+      console.error(`Tile batch failed for ${args.artworkId}:`, err);
       await ctx.runMutation(internal.tiles.setDziStatus, {
         artworkId: args.artworkId,
-        status: "complete",
+        status: "failed",
       });
     }
   },
@@ -260,6 +282,7 @@ async function generateTile(
 export const cleanupTiles = internalAction({
   args: {
     artworkId: v.id("artworks"),
+    expectedImageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     // Get all tiles
@@ -273,7 +296,15 @@ export const cleanupTiles = internalAction({
       await ctx.runMutation(internal.tiles.deleteTile, { tileId: tile._id });
     }
 
-    // Reset DZI status
+    // Only reset status if the artwork still has the image we're cleaning up for,
+    // or if no expectedImageId was provided (deletion case)
+    if (args.expectedImageId) {
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+        artworkId: args.artworkId,
+      });
+      if (artwork && artwork.imageId !== args.expectedImageId) return;
+    }
+
     await ctx.runMutation(internal.tiles.setDziStatus, {
       artworkId: args.artworkId,
       status: undefined,
@@ -319,49 +350,63 @@ export const startGenerationInternal = internalAction({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    // Get image dimensions
-    const imageUrl = await ctx.storage.getUrl(args.storageId);
-    if (!imageUrl) throw new Error("Image not found");
+    try {
+      // Verify artwork still uses this image (guard against race with image replacement)
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+        artworkId: args.artworkId,
+      });
+      if (!artwork || artwork.imageId !== args.storageId) return;
 
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Failed to download image");
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
+      // Get image dimensions
+      const imageUrl = await ctx.storage.getUrl(args.storageId);
+      if (!imageUrl) throw new Error("Image not found");
 
-    const image = await Jimp.read(imageBuffer);
-    const width = image.width;
-    const height = image.height;
-    const maxLevel = calculateMaxLevel(width, height);
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Failed to download image");
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
 
-    // Set metadata and status
-    await ctx.runMutation(internal.tiles.setDziMetadata, {
-      artworkId: args.artworkId,
-      metadata: {
+      const image = await Jimp.read(imageBuffer);
+      const width = image.width;
+      const height = image.height;
+      const maxLevel = calculateMaxLevel(width, height);
+
+      // Set metadata and status
+      await ctx.runMutation(internal.tiles.setDziMetadata, {
+        artworkId: args.artworkId,
+        metadata: {
+          width,
+          height,
+          tileSize: TILE_SIZE,
+          overlap: TILE_OVERLAP,
+          format: "jpg",
+          maxLevel,
+        },
+      });
+
+      await ctx.runMutation(internal.tiles.setDziStatus, {
+        artworkId: args.artworkId,
+        status: "generating",
+      });
+
+      // Calculate all tiles
+      const allTiles = getAllTileSpecs(width, height);
+
+      // Start first batch
+      await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
+        artworkId: args.artworkId,
+        storageId: args.storageId,
+        tiles: allTiles.slice(0, BATCH_SIZE),
+        remainingTiles: allTiles.slice(BATCH_SIZE),
         width,
         height,
-        tileSize: TILE_SIZE,
-        overlap: TILE_OVERLAP,
-        format: "jpg",
         maxLevel,
-      },
-    });
-
-    await ctx.runMutation(internal.tiles.setDziStatus, {
-      artworkId: args.artworkId,
-      status: "generating",
-    });
-
-    // Calculate all tiles
-    const allTiles = getAllTileSpecs(width, height);
-
-    // Start first batch
-    await ctx.scheduler.runAfter(0, internal.dzi.generateBatch, {
-      artworkId: args.artworkId,
-      storageId: args.storageId,
-      tiles: allTiles.slice(0, BATCH_SIZE),
-      remainingTiles: allTiles.slice(BATCH_SIZE),
-      width,
-      height,
-      maxLevel,
-    });
+      });
+    } catch (err) {
+      console.error(`DZI generation failed for ${args.artworkId}:`, err);
+      await ctx.runMutation(internal.tiles.setDziStatus, {
+        artworkId: args.artworkId,
+        status: "failed",
+      });
+    }
   },
 });
