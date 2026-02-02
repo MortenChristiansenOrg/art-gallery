@@ -84,9 +84,9 @@ describe("Artwork", () => {
       mockCollections = [];
 
       renderArtwork("artwork_1");
-      expect(
-        screen.getByRole("heading", { name: "Beautiful Sunset" })
-      ).toBeInTheDocument();
+      // Both mobile and desktop layouts render the title
+      const headings = screen.getAllByRole("heading", { name: "Beautiful Sunset" });
+      expect(headings.length).toBeGreaterThan(0);
     });
 
     it("renders year when provided", () => {
@@ -94,7 +94,7 @@ describe("Artwork", () => {
       mockCollections = [];
 
       renderArtwork("artwork_1");
-      expect(screen.getByText("2023")).toBeInTheDocument();
+      expect(screen.getAllByText("2023").length).toBeGreaterThan(0);
     });
 
     it("renders medium when provided", () => {
@@ -102,7 +102,7 @@ describe("Artwork", () => {
       mockCollections = [];
 
       renderArtwork("artwork_1");
-      expect(screen.getByText("Oil on canvas")).toBeInTheDocument();
+      expect(screen.getAllByText("Oil on canvas").length).toBeGreaterThan(0);
     });
 
     it("renders dimensions when provided", () => {
@@ -110,7 +110,7 @@ describe("Artwork", () => {
       mockCollections = [];
 
       renderArtwork("artwork_1");
-      expect(screen.getByText("24 x 36 in")).toBeInTheDocument();
+      expect(screen.getAllByText("24 x 36 in").length).toBeGreaterThan(0);
     });
 
     it("renders description when provided", () => {
@@ -121,8 +121,8 @@ describe("Artwork", () => {
 
       renderArtwork("artwork_1");
       expect(
-        screen.getByText("A beautiful painting of a sunset")
-      ).toBeInTheDocument();
+        screen.getAllByText("A beautiful painting of a sunset").length
+      ).toBeGreaterThan(0);
     });
 
     it("renders artwork image", () => {
@@ -133,7 +133,7 @@ describe("Artwork", () => {
       mockCollections = [];
 
       renderArtwork("artwork_1");
-      expect(screen.getByAltText("Test Art")).toBeInTheDocument();
+      expect(screen.getAllByAltText("Test Art").length).toBeGreaterThan(0);
     });
   });
 
@@ -171,10 +171,11 @@ describe("Artwork", () => {
 
       renderArtwork("artwork_1");
 
-      const imageButton = screen.getByRole("button", {
+      // Both mobile and desktop layouts have the button; click the first one
+      const imageButtons = screen.getAllByRole("button", {
         name: /view artwork in fullscreen/i,
       });
-      await user.click(imageButton);
+      await user.click(imageButtons[0]);
 
       expect(screen.getByTestId("image-viewer")).toBeInTheDocument();
     });
@@ -189,10 +190,10 @@ describe("Artwork", () => {
 
       renderArtwork("artwork_1");
 
-      const imageButton = screen.getByRole("button", {
+      const imageButtons = screen.getAllByRole("button", {
         name: /view artwork in fullscreen/i,
       });
-      imageButton.focus();
+      imageButtons[0].focus();
       await user.keyboard("{Enter}");
 
       expect(screen.getByTestId("image-viewer")).toBeInTheDocument();
@@ -208,9 +209,10 @@ describe("Artwork", () => {
 
       renderArtwork("artwork_1");
 
-      await user.click(
-        screen.getByRole("button", { name: /view artwork in fullscreen/i })
-      );
+      const imageButtons = screen.getAllByRole("button", {
+        name: /view artwork in fullscreen/i,
+      });
+      await user.click(imageButtons[0]);
       await user.click(screen.getByRole("button", { name: /close/i }));
 
       expect(screen.queryByTestId("image-viewer")).not.toBeInTheDocument();

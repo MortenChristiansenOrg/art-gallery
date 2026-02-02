@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { ImageViewer } from "../components/gallery";
+import { rewriteStorageUrl } from "../lib/rewriteStorageUrl";
 
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
@@ -22,29 +23,35 @@ export function Artwork() {
 
   if (artwork === undefined) {
     return (
-      <div className="max-w-6xl mx-auto px-8 lg:px-12 py-16">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-          {/* Image skeleton */}
-          <div
-            className="
-              bg-[var(--color-gallery-surface)]
-              border border-[var(--color-gallery-border-light)]
-              p-6
-              lg:flex-1 lg:min-w-0
-            "
-          >
-            <div className="aspect-[3/4] skeleton-shimmer" />
-          </div>
-          {/* Info skeleton */}
-          <div className="lg:w-80 lg:flex-shrink-0 space-y-6">
-            <div className="h-8 w-3/4 skeleton-shimmer rounded" />
-            <div className="space-y-4 pt-4">
-              <div className="h-3 w-16 skeleton-shimmer rounded" />
+      <>
+        {/* Mobile skeleton */}
+        <div className="lg:hidden">
+          <div className="relative">
+            <div className="w-full aspect-[3/4] skeleton-shimmer" />
+            <div className="relative -mt-20 mx-4 bg-[var(--color-gallery-surface)] border border-[var(--color-gallery-border-light)] p-6 space-y-4">
+              <div className="h-7 w-3/4 skeleton-shimmer rounded" />
+              <div className="h-4 w-16 skeleton-shimmer rounded" />
+              <div className="h-[1px] w-12 bg-[var(--color-gallery-border-light)]" />
               <div className="h-3 w-24 skeleton-shimmer rounded" />
             </div>
           </div>
         </div>
-      </div>
+        {/* Desktop skeleton */}
+        <div className="hidden lg:block max-w-6xl mx-auto px-12 py-16">
+          <div className="flex flex-row gap-16">
+            <div className="bg-[var(--color-gallery-surface)] border border-[var(--color-gallery-border-light)] p-6 flex-1 min-w-0">
+              <div className="aspect-[3/4] skeleton-shimmer" />
+            </div>
+            <div className="w-80 flex-shrink-0 space-y-6">
+              <div className="h-8 w-3/4 skeleton-shimmer rounded" />
+              <div className="space-y-4 pt-4">
+                <div className="h-3 w-16 skeleton-shimmer rounded" />
+                <div className="h-3 w-24 skeleton-shimmer rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -82,60 +89,49 @@ export function Artwork() {
     backLabel = artworkCollection.name;
   }
 
-  return (
-    <article className="max-w-6xl mx-auto px-8 lg:px-12 py-12 lg:py-16 opacity-0 animate-fade-in">
-      {/* Back navigation */}
-      <nav className="mb-10">
-        <Link
-          to={backLink}
-          data-testid="back-button"
-          className="
-            group inline-flex items-center gap-3
-            text-[0.8rem] tracking-[0.1em] uppercase font-light
-            text-[var(--color-gallery-muted)]
-            hover:text-[var(--color-gallery-text)]
-            transition-colors duration-300
-          "
-        >
-          <span
-            className="
-              inline-block w-6 h-[1px] bg-current
-              transition-transform duration-300
-              group-hover:-translate-x-1
-            "
-          />
-          {backLabel}
-        </Link>
-      </nav>
+  const hasImage = artwork.viewerImageUrl || artwork.imageUrl;
+  const imageSrc = rewriteStorageUrl(artwork.viewerImageUrl || artwork.imageUrl!) ?? artwork.imageUrl!;
 
-      {/* Main content layout */}
-      <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
-        {/* Artwork image with frame */}
+  return (
+    <>
+      {/* ===== MOBILE LAYOUT ===== */}
+      <article className="lg:hidden opacity-0 animate-fade-in">
+        {/* Full-bleed hero image */}
         <div
-          className="
-            relative cursor-zoom-in group
-            bg-[var(--color-gallery-surface)]
-            border border-[var(--color-gallery-border)]
-            p-4 sm:p-6
-            gallery-frame
-            lg:flex-1 lg:min-w-0 lg:self-start
-          "
+          className="relative cursor-zoom-in"
           onClick={() => setViewerOpen(true)}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && setViewerOpen(true)}
           aria-label="View artwork in fullscreen"
         >
-          {(artwork.viewerImageUrl || artwork.imageUrl) ? (
-            <img
-              src={artwork.viewerImageUrl || artwork.imageUrl!}
-              alt={artwork.title}
-              data-testid="artwork-image"
+          {/* Back button overlaid on image */}
+          <nav className="absolute top-4 left-4 z-10">
+            <Link
+              to={backLink}
+              data-testid="back-button-mobile"
               className="
-                w-full h-auto
-                transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]
-                group-hover:scale-[1.01]
+                inline-flex items-center justify-center
+                w-10 h-10
+                bg-[var(--color-gallery-surface)]/85 backdrop-blur-sm
+                border border-[var(--color-gallery-border-light)]
+                text-[var(--color-gallery-muted)]
+                transition-colors duration-300
               "
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+          </nav>
+
+          {hasImage ? (
+            <img
+              src={imageSrc}
+              alt={artwork.title}
+              data-testid="artwork-image-mobile"
+              className="w-full h-auto"
             />
           ) : (
             <div className="aspect-[3/4] flex items-center justify-center bg-[var(--color-gallery-hover)]">
@@ -145,159 +141,325 @@ export function Artwork() {
             </div>
           )}
 
-          {/* Zoom hint */}
-          <div
-            className="
-              absolute bottom-8 right-8
-              opacity-0 group-hover:opacity-100
-              transition-opacity duration-300
-              pointer-events-none
-            "
-          >
-            <span
-              className="
-                inline-flex items-center gap-2 px-3 py-1.5
-                bg-[var(--color-gallery-text)]/90 text-[var(--color-gallery-surface)]
-                text-[0.7rem] tracking-[0.1em] uppercase font-light
-                backdrop-blur-sm
-              "
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
-                />
+          {/* Tap to zoom hint */}
+          <div className="absolute bottom-6 right-4 pointer-events-none">
+            <span className="
+              inline-flex items-center gap-1.5 px-2.5 py-1
+              bg-[var(--color-gallery-text)]/70 text-[var(--color-gallery-surface)]
+              text-[0.65rem] tracking-[0.1em] uppercase font-light
+              backdrop-blur-sm
+            ">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
               </svg>
-              Enlarge
+              Tap to zoom
             </span>
           </div>
         </div>
 
-        {/* Artwork details */}
-        <aside className="lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-32 lg:self-start space-y-8">
+        {/* Info card that overlaps the image */}
+        <div className="
+          relative -mt-12 mx-4 mb-8
+          bg-[var(--color-gallery-surface)]
+          border border-[var(--color-gallery-border)]
+          p-6
+          artwork-detail-card
+        ">
           {/* Title */}
           <header>
             <h1
-              data-testid="artwork-title"
+              data-testid="artwork-title-mobile"
               className="
-                font-[var(--font-serif)] text-[2rem] lg:text-[2.25rem]
+                font-[var(--font-serif)] text-[1.75rem]
                 font-light leading-tight tracking-[0.01em]
               "
             >
               {artwork.title}
             </h1>
             {artwork.year && (
-              <p className="mt-2 text-[var(--color-gallery-muted)] text-[0.9rem] font-light">
+              <p className="mt-1.5 text-[var(--color-gallery-muted)] text-[0.85rem] font-light">
                 {artwork.year}
               </p>
             )}
           </header>
 
-          {/* Divider */}
-          <div className="h-[1px] w-12 bg-[var(--color-gallery-border)]" />
-
           {/* Metadata */}
-          <dl className="space-y-4">
-            {artwork.medium && (
-              <div>
-                <dt
-                  className="
-                    text-[0.7rem] tracking-[0.15em] uppercase
-                    text-[var(--color-gallery-subtle)]
-                    font-light mb-1
-                  "
-                >
-                  Medium
-                </dt>
-                <dd className="text-[0.9rem] text-[var(--color-gallery-text)] font-light">
-                  {artwork.medium}
-                </dd>
-              </div>
-            )}
-            {artwork.dimensions && (
-              <div>
-                <dt
-                  className="
-                    text-[0.7rem] tracking-[0.15em] uppercase
-                    text-[var(--color-gallery-subtle)]
-                    font-light mb-1
-                  "
-                >
-                  Dimensions
-                </dt>
-                <dd className="text-[0.9rem] text-[var(--color-gallery-text)] font-light">
-                  {artwork.dimensions}
-                </dd>
-              </div>
-            )}
-            {artworkCollection && (
-              <div>
-                <dt
-                  className="
-                    text-[0.7rem] tracking-[0.15em] uppercase
-                    text-[var(--color-gallery-subtle)]
-                    font-light mb-1
-                  "
-                >
-                  Collection
-                </dt>
-                <dd>
-                  <Link
-                    to={`/collection/${artworkCollection.slug}`}
-                    className="
-                      relative inline-block text-[0.9rem] font-light
-                      text-[var(--color-gallery-text)]
-                      hover:text-[var(--color-gallery-muted)]
-                      transition-colors duration-300
-                    "
-                  >
-                    {artworkCollection.name}
-                    <span
-                      className="
-                        absolute -bottom-0.5 left-0 w-full h-[1px]
-                        bg-[var(--color-gallery-border)]
-                      "
-                    />
-                  </Link>
-                </dd>
-              </div>
-            )}
-          </dl>
+          {(artwork.medium || artwork.dimensions || artworkCollection) && (
+            <>
+              <div className="h-[1px] w-10 bg-[var(--color-gallery-border)] my-5" />
+              <dl className="space-y-3">
+                {artwork.medium && (
+                  <div className="flex items-baseline gap-3">
+                    <dt className="text-[0.65rem] tracking-[0.15em] uppercase text-[var(--color-gallery-subtle)] font-light shrink-0">
+                      Medium
+                    </dt>
+                    <dd className="text-[0.85rem] text-[var(--color-gallery-text)] font-light">
+                      {artwork.medium}
+                    </dd>
+                  </div>
+                )}
+                {artwork.dimensions && (
+                  <div className="flex items-baseline gap-3">
+                    <dt className="text-[0.65rem] tracking-[0.15em] uppercase text-[var(--color-gallery-subtle)] font-light shrink-0">
+                      Size
+                    </dt>
+                    <dd className="text-[0.85rem] text-[var(--color-gallery-text)] font-light">
+                      {artwork.dimensions}
+                    </dd>
+                  </div>
+                )}
+                {artworkCollection && (
+                  <div className="flex items-baseline gap-3">
+                    <dt className="text-[0.65rem] tracking-[0.15em] uppercase text-[var(--color-gallery-subtle)] font-light shrink-0">
+                      Collection
+                    </dt>
+                    <dd>
+                      <Link
+                        to={`/collection/${artworkCollection.slug}`}
+                        className="
+                          relative inline-block text-[0.85rem] font-light
+                          text-[var(--color-gallery-text)]
+                        "
+                      >
+                        {artworkCollection.name}
+                        <span className="absolute -bottom-0.5 left-0 w-full h-[1px] bg-[var(--color-gallery-border)]" />
+                      </Link>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </>
+          )}
 
           {/* Description */}
           {artwork.description && (
             <>
-              <div className="h-[1px] w-12 bg-[var(--color-gallery-border)]" />
-              <p
-                className="
-                  text-[0.9rem] leading-relaxed font-light
-                  text-[var(--color-gallery-muted)]
-                "
-              >
+              <div className="h-[1px] w-10 bg-[var(--color-gallery-border)] my-5" />
+              <p className="text-[0.85rem] leading-relaxed font-light text-[var(--color-gallery-muted)]">
                 {artwork.description}
               </p>
             </>
           )}
-        </aside>
-      </div>
+        </div>
+      </article>
+
+      {/* ===== DESKTOP LAYOUT ===== */}
+      <article className="hidden lg:block max-w-6xl mx-auto px-12 py-16 opacity-0 animate-fade-in">
+        {/* Back navigation */}
+        <nav className="mb-10">
+          <Link
+            to={backLink}
+            data-testid="back-button"
+            className="
+              group inline-flex items-center gap-3
+              text-[0.8rem] tracking-[0.1em] uppercase font-light
+              text-[var(--color-gallery-muted)]
+              hover:text-[var(--color-gallery-text)]
+              transition-colors duration-300
+            "
+          >
+            <span
+              className="
+                inline-block w-6 h-[1px] bg-current
+                transition-transform duration-300
+                group-hover:-translate-x-1
+              "
+            />
+            {backLabel}
+          </Link>
+        </nav>
+
+        {/* Main content layout */}
+        <div className="flex flex-row gap-16">
+          {/* Artwork image with frame */}
+          <div
+            className="
+              relative cursor-zoom-in group
+              bg-[var(--color-gallery-surface)]
+              border border-[var(--color-gallery-border)]
+              p-6
+              gallery-frame
+              flex-1 min-w-0 self-start
+            "
+            onClick={() => setViewerOpen(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setViewerOpen(true)}
+            aria-label="View artwork in fullscreen"
+          >
+            {hasImage ? (
+              <img
+                src={imageSrc}
+                alt={artwork.title}
+                data-testid="artwork-image"
+                className="
+                  w-full h-auto
+                  transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]
+                  group-hover:scale-[1.01]
+                "
+              />
+            ) : (
+              <div className="aspect-[3/4] flex items-center justify-center bg-[var(--color-gallery-hover)]">
+                <span className="text-[var(--color-gallery-subtle)] text-sm tracking-wide">
+                  No image available
+                </span>
+              </div>
+            )}
+
+            {/* Zoom hint */}
+            <div
+              className="
+                absolute bottom-8 right-8
+                opacity-0 group-hover:opacity-100
+                transition-opacity duration-300
+                pointer-events-none
+              "
+            >
+              <span
+                className="
+                  inline-flex items-center gap-2 px-3 py-1.5
+                  bg-[var(--color-gallery-text)]/90 text-[var(--color-gallery-surface)]
+                  text-[0.7rem] tracking-[0.1em] uppercase font-light
+                  backdrop-blur-sm
+                "
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
+                  />
+                </svg>
+                Enlarge
+              </span>
+            </div>
+          </div>
+
+          {/* Artwork details */}
+          <aside className="w-80 flex-shrink-0 sticky top-32 self-start space-y-8">
+            {/* Title */}
+            <header>
+              <h1
+                data-testid="artwork-title"
+                className="
+                  font-[var(--font-serif)] text-[2.25rem]
+                  font-light leading-tight tracking-[0.01em]
+                "
+              >
+                {artwork.title}
+              </h1>
+              {artwork.year && (
+                <p className="mt-2 text-[var(--color-gallery-muted)] text-[0.9rem] font-light">
+                  {artwork.year}
+                </p>
+              )}
+            </header>
+
+            {/* Divider */}
+            <div className="h-[1px] w-12 bg-[var(--color-gallery-border)]" />
+
+            {/* Metadata */}
+            <dl className="space-y-4">
+              {artwork.medium && (
+                <div>
+                  <dt
+                    className="
+                      text-[0.7rem] tracking-[0.15em] uppercase
+                      text-[var(--color-gallery-subtle)]
+                      font-light mb-1
+                    "
+                  >
+                    Medium
+                  </dt>
+                  <dd className="text-[0.9rem] text-[var(--color-gallery-text)] font-light">
+                    {artwork.medium}
+                  </dd>
+                </div>
+              )}
+              {artwork.dimensions && (
+                <div>
+                  <dt
+                    className="
+                      text-[0.7rem] tracking-[0.15em] uppercase
+                      text-[var(--color-gallery-subtle)]
+                      font-light mb-1
+                    "
+                  >
+                    Dimensions
+                  </dt>
+                  <dd className="text-[0.9rem] text-[var(--color-gallery-text)] font-light">
+                    {artwork.dimensions}
+                  </dd>
+                </div>
+              )}
+              {artworkCollection && (
+                <div>
+                  <dt
+                    className="
+                      text-[0.7rem] tracking-[0.15em] uppercase
+                      text-[var(--color-gallery-subtle)]
+                      font-light mb-1
+                    "
+                  >
+                    Collection
+                  </dt>
+                  <dd>
+                    <Link
+                      to={`/collection/${artworkCollection.slug}`}
+                      className="
+                        relative inline-block text-[0.9rem] font-light
+                        text-[var(--color-gallery-text)]
+                        hover:text-[var(--color-gallery-muted)]
+                        transition-colors duration-300
+                      "
+                    >
+                      {artworkCollection.name}
+                      <span
+                        className="
+                          absolute -bottom-0.5 left-0 w-full h-[1px]
+                          bg-[var(--color-gallery-border)]
+                        "
+                      />
+                    </Link>
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            {/* Description */}
+            {artwork.description && (
+              <>
+                <div className="h-[1px] w-12 bg-[var(--color-gallery-border)]" />
+                <p
+                  className="
+                    text-[0.9rem] leading-relaxed font-light
+                    text-[var(--color-gallery-muted)]
+                  "
+                >
+                  {artwork.description}
+                </p>
+              </>
+            )}
+          </aside>
+        </div>
+      </article>
 
       {/* Image Viewer - use DZI tiles if available, fall back to viewer image */}
-      {(artwork.viewerImageUrl || artwork.imageUrl) && (
+      {hasImage && (
         <ImageViewer
-          imageUrl={artwork.viewerImageUrl || artwork.imageUrl!}
+          imageUrl={imageSrc}
           dziUrl={artwork.dziUrl}
           title={artwork.title}
           isOpen={viewerOpen}
           onClose={() => setViewerOpen(false)}
         />
       )}
-    </article>
+    </>
   );
 }

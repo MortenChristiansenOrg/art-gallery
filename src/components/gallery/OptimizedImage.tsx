@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { rewriteStorageUrl } from "../../lib/rewriteStorageUrl";
 
 interface OptimizedImageProps {
   src: string | null;
@@ -20,6 +21,7 @@ export function OptimizedImage({
   loading = "lazy",
   onLoad,
 }: OptimizedImageProps) {
+  const resolvedSrc = rewriteStorageUrl(src);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -27,14 +29,14 @@ export function OptimizedImage({
   useEffect(() => {
     setIsLoaded(false);
     setHasError(false);
-  }, [src]);
+  }, [resolvedSrc]);
 
   useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
       setIsLoaded(true);
       onLoad?.();
     }
-  }, [src, onLoad]);
+  }, [resolvedSrc, onLoad]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -45,7 +47,7 @@ export function OptimizedImage({
     setHasError(true);
   };
 
-  if (!src || hasError) {
+  if (!resolvedSrc || hasError) {
     return (
       <div
         className={`flex items-center justify-center bg-[var(--color-gallery-hover)] ${placeholderClassName}`}
@@ -71,7 +73,7 @@ export function OptimizedImage({
       {/* Main image */}
       <img
         ref={imgRef}
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         loading={loading}
         onLoad={handleLoad}

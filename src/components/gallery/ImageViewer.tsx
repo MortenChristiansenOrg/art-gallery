@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import OpenSeadragon from "openseadragon";
+import { rewriteStorageUrl } from "../../lib/rewriteStorageUrl";
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -57,9 +58,10 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
     } else if (convexUrl?.includes("127.0.0.1:3210") || convexUrl?.includes("localhost:3210")) {
       convexSiteUrl = convexUrl.replace(":3210", ":3211");
     }
+    const resolvedImageUrl = rewriteStorageUrl(imageUrl) ?? imageUrl;
     const tileSources = dziUrl && convexSiteUrl
       ? `${convexSiteUrl}${dziUrl}`
-      : { type: "image", url: imageUrl };
+      : { type: "image", url: resolvedImageUrl };
 
     // Create viewer
     const viewer = OpenSeadragon({
@@ -73,6 +75,7 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
       showRotationControl: false,
       // Allow full resolution zoom with DZI tiles
       maxZoomPixelRatio: dziUrl ? 1 : 2,
+      maxZoomLevel: dziUrl ? 20 : 5,
       minZoomLevel: 0.5,
       visibilityRatio: 0.5,
       constrainDuringPan: true,

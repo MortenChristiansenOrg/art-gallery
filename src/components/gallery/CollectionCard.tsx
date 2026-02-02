@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { rewriteStorageUrl } from "../../lib/rewriteStorageUrl";
 
 interface CollectionCardProps {
   collection: {
@@ -52,7 +53,7 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
             <>
               {/* Cover image with zoom effect */}
               <img
-                src={collection.coverImageUrl!}
+                src={rewriteStorageUrl(collection.coverImageUrl)!}
                 alt={collection.name}
                 className="
                   w-full h-full object-cover

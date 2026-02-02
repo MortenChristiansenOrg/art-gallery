@@ -194,6 +194,13 @@ html {
   transform: translateY(-4px);
 }
 
+/* Mobile artwork detail card */
+.artwork-detail-card {
+  box-shadow:
+    0 -4px 16px rgba(0, 0, 0, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
 /* Skeleton shimmer */
 .skeleton-shimmer {
   background: linear-gradient(
