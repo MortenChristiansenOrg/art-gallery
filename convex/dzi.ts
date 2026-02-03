@@ -177,6 +177,7 @@ export const generateBatch = internalAction({
       const imageBuffer = Buffer.from(await response.arrayBuffer());
 
       // Process each tile in this batch
+      let failedCount = 0;
       for (const tileSpec of args.tiles) {
         try {
           const tileBuffer = await generateTile(
@@ -202,12 +203,21 @@ export const generateBatch = internalAction({
             storageId: tileStorageId,
           });
         } catch (err) {
+          failedCount++;
           console.error(
             `Failed to generate tile ${tileSpec.level}/${tileSpec.col}_${tileSpec.row}:`,
             err
           );
-          // Continue with other tiles
         }
+      }
+
+      // If all tiles in batch failed, mark as failed
+      if (failedCount === args.tiles.length) {
+        await ctx.runMutation(internal.tiles.setDziStatus, {
+          artworkId: args.artworkId,
+          status: "failed",
+        });
+        return;
       }
 
       // Schedule next batch or mark complete
@@ -222,7 +232,9 @@ export const generateBatch = internalAction({
           maxLevel: args.maxLevel,
         });
       } else {
-        // Mark complete
+        if (failedCount > 0) {
+          console.warn(`DZI for ${args.artworkId} completed with ${failedCount} failed tiles`);
+        }
         await ctx.runMutation(internal.tiles.setDziStatus, {
           artworkId: args.artworkId,
           status: "complete",
