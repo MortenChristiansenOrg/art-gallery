@@ -231,10 +231,13 @@ export const generateBatch = internalAction({
           height: args.height,
           maxLevel: args.maxLevel,
         });
+      } else if (failedCount > 0) {
+        console.warn(`DZI for ${args.artworkId} failed: ${failedCount} tiles could not be generated`);
+        await ctx.runMutation(internal.tiles.setDziStatus, {
+          artworkId: args.artworkId,
+          status: "failed",
+        });
       } else {
-        if (failedCount > 0) {
-          console.warn(`DZI for ${args.artworkId} completed with ${failedCount} failed tiles`);
-        }
         await ctx.runMutation(internal.tiles.setDziStatus, {
           artworkId: args.artworkId,
           status: "complete",
@@ -297,6 +300,14 @@ export const cleanupTiles = internalAction({
     expectedImageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
+    // Guard against race: if image was replaced, don't cleanup old tiles
+    if (args.expectedImageId) {
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+        artworkId: args.artworkId,
+      });
+      if (artwork && artwork.imageId !== args.expectedImageId) return;
+    }
+
     // Get all tiles
     const tiles = await ctx.runQuery(internal.tiles.listByArtwork, {
       artworkId: args.artworkId,
@@ -306,15 +317,6 @@ export const cleanupTiles = internalAction({
     for (const tile of tiles) {
       await ctx.storage.delete(tile.storageId);
       await ctx.runMutation(internal.tiles.deleteTile, { tileId: tile._id });
-    }
-
-    // Only reset status if the artwork still has the image we're cleaning up for,
-    // or if no expectedImageId was provided (deletion case)
-    if (args.expectedImageId) {
-      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
-        artworkId: args.artworkId,
-      });
-      if (artwork && artwork.imageId !== args.expectedImageId) return;
     }
 
     await ctx.runMutation(internal.tiles.setDziStatus, {
