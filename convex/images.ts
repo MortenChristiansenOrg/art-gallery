@@ -17,7 +17,18 @@ export const generateVariants = action({
     storageId: v.id("_storage"),
     artworkId: v.id("artworks"),
   },
-  handler: async (ctx, args): Promise<{ thumbnailId: Id<"_storage">; viewerImageId: Id<"_storage"> }> => {
+  handler: async (ctx, args): Promise<{ thumbnailId: Id<"_storage">; viewerImageId: Id<"_storage"> } | null> => {
+    // Check if already generating (idempotency guard for multiple clicks)
+    const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+      artworkId: args.artworkId,
+    });
+    if (artwork?.dziStatus === "generating") {
+      console.log(`Skipping generateVariants for ${args.artworkId}: already generating`);
+      return artwork.thumbnailId && artwork.viewerImageId
+        ? { thumbnailId: artwork.thumbnailId, viewerImageId: artwork.viewerImageId }
+        : null;
+    }
+
     // Get the original image URL
     const imageUrl = await ctx.storage.getUrl(args.storageId);
     if (!imageUrl) {
