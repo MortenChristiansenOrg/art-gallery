@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
-import { ArtworkForm, CollectionForm, AddExistingArtworkDialog } from "../components/admin";
+import { ArtworkForm, CollectionForm, AddExistingArtworkDialog, RetryButton } from "../components/admin";
 import type { Id } from "../../convex/_generated/dataModel";
 
 type Tab = "artworks" | "collections" | "messages" | "content";
@@ -301,18 +301,16 @@ export function Admin() {
                                 ? "Generating tiles..."
                                 : "Processing..."}
                           </span>
-                          <button
-                            className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              retryTileGeneration({
-                                storageId: artwork.imageId,
-                                artworkId: artwork._id,
-                              }).catch(console.error);
-                            }}
-                          >
-                            Retry
-                          </button>
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <RetryButton
+                              onRetry={() =>
+                                retryTileGeneration({
+                                  storageId: artwork.imageId,
+                                  artworkId: artwork._id,
+                                })
+                              }
+                            />
+                          </span>
                         </>
                       )}
                     </div>
