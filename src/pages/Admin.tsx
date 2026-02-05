@@ -301,20 +301,18 @@ export function Admin() {
                                 ? "Generating tiles..."
                                 : "Processing..."}
                           </span>
-                          {artwork.dziStatus === "failed" && (
-                            <button
-                              className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                retryTileGeneration({
-                                  storageId: artwork.imageId,
-                                  artworkId: artwork._id,
-                                }).catch(console.error);
-                              }}
-                            >
-                              Retry
-                            </button>
-                          )}
+                          <button
+                            className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 hover:bg-blue-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              retryTileGeneration({
+                                storageId: artwork.imageId,
+                                artworkId: artwork._id,
+                              }).catch(console.error);
+                            }}
+                          >
+                            Retry
+                          </button>
                         </>
                       )}
                     </div>
