@@ -169,6 +169,7 @@ export const update = mutation({
         if (artwork.viewerImageId) await ctx.storage.delete(artwork.viewerImageId);
         await ctx.scheduler.runAfter(0, internal.dzi.cleanupTiles, {
           artworkId: id,
+          expectedImageId: artwork.imageId,
         });
         await ctx.db.patch(id, {
           dziStatus: "pending",
