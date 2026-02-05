@@ -83,6 +83,12 @@ export const startGeneration = action({
   },
   handler: async (ctx, args) => {
     try {
+      // Verify artwork still uses this image (guard against race with image replacement)
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+        artworkId: args.artworkId,
+      });
+      if (!artwork || artwork.imageId !== args.storageId) return;
+
       // Get image dimensions
       const imageUrl = await ctx.storage.getUrl(args.storageId);
       if (!imageUrl) throw new Error("Image not found");
