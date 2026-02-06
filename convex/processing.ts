@@ -125,7 +125,8 @@ export const onBatchComplete = internalMutation({
   },
   handler: async (ctx, args) => {
     const artwork = await ctx.db.get(args.artworkId);
-    const tilesCompleted = (artwork?.tilesCompleted ?? 0) + args.completedInBatch;
+    if (!artwork) return;
+    const tilesCompleted = (artwork.tilesCompleted ?? 0) + args.completedInBatch;
 
     if (args.remainingTiles.length > 0) {
       // Heartbeat: reset timestamp so stuck detection uses last progress time
@@ -147,7 +148,8 @@ export const onBatchComplete = internalMutation({
         height: args.height,
         maxLevel: args.maxLevel,
       });
-    } else if (args.batchHadFailures) {
+    } else if (tilesCompleted < (artwork.tilesTotal ?? 0)) {
+      // Some tiles from earlier batches failed — mark failed
       await ctx.db.patch(args.artworkId, {
         dziStatus: "failed",
         dziGenerationStartedAt: undefined,
@@ -246,6 +248,7 @@ export const checkStuck = internalMutation({
           await ctx.db.patch(artwork._id, {
             dziGenerationStartedAt: Date.now(),
             processingRetryCount: retryCount + 1,
+            processingError: undefined,
           });
           const action = artwork.dziMetadata && artwork.thumbnailId
             ? internal.processingActions.resumeTiles

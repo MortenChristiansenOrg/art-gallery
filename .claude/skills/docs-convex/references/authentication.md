@@ -29,7 +29,7 @@ export const create = mutation({
 // convex/auth.ts
 export function requireAuth(token: string | undefined): void {
   if (!token || !validateToken(token)) {
-    throw new Error("Unauthorized");
+    throw new ConvexError("Unauthorized");
   }
 }
 
