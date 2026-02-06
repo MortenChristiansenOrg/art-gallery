@@ -65,59 +65,53 @@ function getAllTileSpecs(width: number, height: number): TileSpec[] {
   return allTiles;
 }
 
-async function resizeImage(
-  buffer: Buffer,
-  originalWidth: number,
-  originalHeight: number,
+async function resizeVariant(
+  source: Awaited<ReturnType<typeof Jimp.read>>,
   maxDimension: number,
   quality: number
 ): Promise<Buffer> {
-  const image = await Jimp.read(buffer);
-  if (originalWidth <= maxDimension && originalHeight <= maxDimension) {
+  const image = source.clone();
+  const { width, height } = image;
+  if (width <= maxDimension && height <= maxDimension) {
     return await image.getBuffer("image/jpeg", { quality });
   }
-  const aspectRatio = originalWidth / originalHeight;
-  let newWidth: number;
-  let newHeight: number;
-  if (originalWidth > originalHeight) {
-    newWidth = maxDimension;
-    newHeight = Math.round(maxDimension / aspectRatio);
+  const aspectRatio = width / height;
+  if (width > height) {
+    image.resize({ w: maxDimension, h: Math.round(maxDimension / aspectRatio) });
   } else {
-    newHeight = maxDimension;
-    newWidth = Math.round(maxDimension * aspectRatio);
+    image.resize({ w: Math.round(maxDimension * aspectRatio), h: maxDimension });
   }
-  image.resize({ w: newWidth, h: newHeight });
   return await image.getBuffer("image/jpeg", { quality });
 }
 
-async function generateTile(
-  imageBuffer: Buffer,
-  originalWidth: number,
-  originalHeight: number,
-  maxLevel: number,
-  level: number,
+/** Extract tile pixels directly from source — O(tileSize) memory, not O(imageSize). */
+async function extractTile(
+  source: Awaited<ReturnType<typeof Jimp.read>>,
   col: number,
-  row: number
+  row: number,
+  levelWidth: number,
+  levelHeight: number
 ): Promise<Buffer> {
-  const image = await Jimp.read(imageBuffer);
-  const scale = Math.pow(2, level - maxLevel);
-  const levelWidth = Math.ceil(originalWidth * scale);
-  const levelHeight = Math.ceil(originalHeight * scale);
-  if (scale < 1) {
-    image.resize({ w: levelWidth, h: levelHeight });
-  }
   const x = col * TILE_SIZE - (col > 0 ? TILE_OVERLAP : 0);
   const y = row * TILE_SIZE - (row > 0 ? TILE_OVERLAP : 0);
-  const tileWidth = Math.min(
+  const w = Math.min(
     TILE_SIZE + (col > 0 ? TILE_OVERLAP : 0) + TILE_OVERLAP,
     levelWidth - x
   );
-  const tileHeight = Math.min(
+  const h = Math.min(
     TILE_SIZE + (row > 0 ? TILE_OVERLAP : 0) + TILE_OVERLAP,
     levelHeight - y
   );
-  image.crop({ x, y, w: tileWidth, h: tileHeight });
-  return await image.getBuffer("image/jpeg", { quality: TILE_QUALITY });
+
+  // Copy pixel region directly instead of cloning full image
+  const tile = new Jimp({ width: w, height: h });
+  const srcData = source.bitmap.data;
+  const dstData = tile.bitmap.data;
+  for (let r = 0; r < h; r++) {
+    const srcOff = ((y + r) * source.bitmap.width + x) * 4;
+    dstData.set(srcData.subarray(srcOff, srcOff + w * 4), r * w * 4);
+  }
+  return await tile.getBuffer("image/jpeg", { quality: TILE_QUALITY });
 }
 
 // --- Pipeline: Actions (do work, then call back into mutations) ---
@@ -153,31 +147,16 @@ export const processVariants = internalAction({
       const width = image.width;
       const height = image.height;
 
-      // Generate thumbnail + viewer
-      const thumbnailBuffer = await resizeImage(
-        imageBuffer,
-        width,
-        height,
-        THUMBNAIL_MAX,
-        THUMBNAIL_QUALITY
-      );
-      const viewerBuffer = await resizeImage(
-        imageBuffer,
-        width,
-        height,
-        VIEWER_MAX,
-        VIEWER_QUALITY
-      );
+      // Generate thumbnail + viewer (clone from decoded image, no re-decode)
+      const thumbnailBuffer = await resizeVariant(image, THUMBNAIL_MAX, THUMBNAIL_QUALITY);
+      const viewerBuffer = await resizeVariant(image, VIEWER_MAX, VIEWER_QUALITY);
 
-      const thumbnailBlob = new Blob([new Uint8Array(thumbnailBuffer)], {
-        type: "image/jpeg",
-      });
-      const viewerBlob = new Blob([new Uint8Array(viewerBuffer)], {
-        type: "image/jpeg",
-      });
-
-      const thumbnailId = await ctx.storage.store(thumbnailBlob);
-      const viewerImageId = await ctx.storage.store(viewerBlob);
+      const thumbnailId = await ctx.storage.store(
+        new Blob([new Uint8Array(thumbnailBuffer)], { type: "image/jpeg" })
+      );
+      const viewerImageId = await ctx.storage.store(
+        new Blob([new Uint8Array(viewerBuffer)], { type: "image/jpeg" })
+      );
 
       const maxLevel = calculateMaxLevel(width, height);
       const allTiles = getAllTileSpecs(width, height);
@@ -227,49 +206,68 @@ export const generateTileBatch = internalAction({
   },
   handler: async (ctx, args) => {
     try {
-      // Guard: verify artwork still uses this image
       const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
         artworkId: args.artworkId,
       });
       if (!artwork || artwork.imageId !== args.storageId) return;
 
-      // Download original image
+      // Decode original image once for the entire batch
       const imageUrl = await ctx.storage.getUrl(args.storageId);
       if (!imageUrl) throw new Error("Image not found");
-
       const response = await fetch(imageUrl);
       if (!response.ok) throw new Error("Failed to download image");
-      const imageBuffer = Buffer.from(await response.arrayBuffer());
+      const image = await Jimp.read(Buffer.from(await response.arrayBuffer()));
+
+      // Group tiles by level to resize once per level
+      const tilesByLevel = new Map<number, TileSpec[]>();
+      for (const tile of args.tiles) {
+        const arr = tilesByLevel.get(tile.level);
+        if (arr) arr.push(tile);
+        else tilesByLevel.set(tile.level, [tile]);
+      }
 
       let failedCount = 0;
-      for (const tileSpec of args.tiles) {
-        try {
-          const tileBuffer = await generateTile(
-            imageBuffer,
-            args.width,
-            args.height,
-            args.maxLevel,
-            tileSpec.level,
-            tileSpec.col,
-            tileSpec.row
-          );
-          const tileBlob = new Blob([new Uint8Array(tileBuffer)], {
-            type: "image/jpeg",
-          });
-          const tileStorageId = await ctx.storage.store(tileBlob);
-          await ctx.runMutation(internal.tiles.createTile, {
-            artworkId: args.artworkId,
-            level: tileSpec.level,
-            col: tileSpec.col,
-            row: tileSpec.row,
-            storageId: tileStorageId,
-          });
-        } catch (err) {
-          failedCount++;
-          console.error(
-            `Tile ${tileSpec.level}/${tileSpec.col}_${tileSpec.row} failed:`,
-            err
-          );
+      for (const [level, tiles] of tilesByLevel) {
+        const scale = Math.pow(2, level - args.maxLevel);
+        const levelWidth = Math.ceil(args.width * scale);
+        const levelHeight = Math.ceil(args.height * scale);
+
+        // At max level use original directly; otherwise clone + resize once
+        let levelImage: Awaited<ReturnType<typeof Jimp.read>>;
+        if (scale < 1) {
+          levelImage = image.clone();
+          levelImage.resize({ w: levelWidth, h: levelHeight });
+        } else {
+          levelImage = image;
+        }
+
+        for (const tileSpec of tiles) {
+          try {
+            // Direct pixel extraction — O(tileSize) memory, no full-image clone
+            const tileBuffer = await extractTile(
+              levelImage,
+              tileSpec.col,
+              tileSpec.row,
+              levelWidth,
+              levelHeight
+            );
+            const tileStorageId = await ctx.storage.store(
+              new Blob([new Uint8Array(tileBuffer)], { type: "image/jpeg" })
+            );
+            await ctx.runMutation(internal.tiles.createTile, {
+              artworkId: args.artworkId,
+              level: tileSpec.level,
+              col: tileSpec.col,
+              row: tileSpec.row,
+              storageId: tileStorageId,
+            });
+          } catch (err) {
+            failedCount++;
+            console.error(
+              `Tile ${tileSpec.level}/${tileSpec.col}_${tileSpec.row} failed:`,
+              err
+            );
+          }
         }
       }
 

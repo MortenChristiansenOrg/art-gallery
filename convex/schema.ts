@@ -39,6 +39,7 @@ export default defineSchema({
     tilesTotal: v.optional(v.number()),
     tilesCompleted: v.optional(v.number()),
     processingError: v.optional(v.string()),
+    processingRetryCount: v.optional(v.number()),
   })
     .index("by_collection", ["collectionId"])
     .index("by_order", ["order"])

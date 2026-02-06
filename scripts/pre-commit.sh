@@ -13,6 +13,10 @@ bunx vite build || { echo "Build failed"; exit 1; }
 
 echo "→ Validating Convex functions..."
 bunx convex codegen --typecheck enable || { echo "Convex codegen failed"; exit 1; }
+
+echo "→ Validating Convex schema + functions against dev DB..."
+bunx convex dev --once || { echo "Convex dev push failed"; exit 1; }
+
 if [ -n "${CONVEX_DEPLOYMENT:-}" ]; then
   echo "→ Deploying Convex functions..."
   bunx convex deploy || { echo "Convex deploy failed"; exit 1; }

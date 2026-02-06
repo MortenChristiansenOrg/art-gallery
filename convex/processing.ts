@@ -3,8 +3,16 @@ import { mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./auth";
 
-const BATCH_SIZE = 20;
 const STUCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_RETRIES = 3;
+
+/** Smaller batches for larger images to stay within action memory limits. */
+function getBatchSize(width: number, height: number): number {
+  const mp = (width * height) / 1_000_000;
+  if (mp > 100) return 5;
+  if (mp > 50) return 10;
+  return 20;
+}
 
 // --- Pipeline: Mutations (atomic state transitions) ---
 
@@ -35,6 +43,7 @@ export const start = mutation({
       tilesTotal: undefined,
       tilesCompleted: undefined,
       processingError: undefined,
+      processingRetryCount: 0,
     });
 
     await ctx.scheduler.runAfter(0, internal.processingActions.processVariants, {
@@ -72,8 +81,9 @@ export const onVariantsComplete = internalMutation({
       tilesCompleted: 0,
     });
 
-    const firstBatch = args.allTiles.slice(0, BATCH_SIZE);
-    const remaining = args.allTiles.slice(BATCH_SIZE);
+    const batchSize = getBatchSize(args.dziMetadata.width, args.dziMetadata.height);
+    const firstBatch = args.allTiles.slice(0, batchSize);
+    const remaining = args.allTiles.slice(batchSize);
 
     if (firstBatch.length === 0) {
       await ctx.db.patch(args.artworkId, {
@@ -120,8 +130,9 @@ export const onBatchComplete = internalMutation({
         tilesCompleted,
       });
 
-      const nextBatch = args.remainingTiles.slice(0, BATCH_SIZE);
-      const remaining = args.remainingTiles.slice(BATCH_SIZE);
+      const batchSize = getBatchSize(args.width, args.height);
+      const nextBatch = args.remainingTiles.slice(0, batchSize);
+      const remaining = args.remainingTiles.slice(batchSize);
 
       await ctx.scheduler.runAfter(0, internal.processingActions.generateTileBatch, {
         artworkId: args.artworkId,
@@ -164,7 +175,7 @@ export const onFailed = internalMutation({
   },
 });
 
-/** Cron target: find artworks stuck in "generating" >10min, mark failed. */
+/** Cron target: find artworks stuck in "generating" >10min, auto-retry or mark failed. */
 export const checkStuck = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -176,14 +187,33 @@ export const checkStuck = internalMutation({
         ? now - artwork.dziGenerationStartedAt
         : Infinity;
       if (elapsed > STUCK_TIMEOUT_MS) {
-        console.log(
-          `Marking artwork ${artwork._id} as failed (stuck for ${Math.round(elapsed / 1000)}s)`
-        );
-        await ctx.db.patch(artwork._id, {
-          dziStatus: "failed",
-          dziGenerationStartedAt: undefined,
-          processingError: "Processing timed out",
-        });
+        const retryCount = artwork.processingRetryCount ?? 0;
+        if (retryCount < MAX_RETRIES) {
+          console.log(
+            `Retrying artwork ${artwork._id} (attempt ${retryCount + 1}/${MAX_RETRIES}, stuck ${Math.round(elapsed / 1000)}s)`
+          );
+          await ctx.db.patch(artwork._id, {
+            dziGenerationStartedAt: Date.now(),
+            processingRetryCount: retryCount + 1,
+          });
+          await ctx.scheduler.runAfter(
+            0,
+            internal.processingActions.processVariants,
+            {
+              artworkId: artwork._id,
+              storageId: artwork.imageId,
+            }
+          );
+        } else {
+          console.log(
+            `Marking artwork ${artwork._id} as failed (exhausted ${MAX_RETRIES} retries)`
+          );
+          await ctx.db.patch(artwork._id, {
+            dziStatus: "failed",
+            dziGenerationStartedAt: undefined,
+            processingError: `Processing timed out after ${MAX_RETRIES} retries`,
+          });
+        }
       }
     }
   },
@@ -205,6 +235,7 @@ export const retryAllIncomplete = internalMutation({
         tilesTotal: undefined,
         tilesCompleted: undefined,
         processingError: undefined,
+        processingRetryCount: 0,
       });
 
       await ctx.scheduler.runAfter(count * 100, internal.processingActions.processVariants, {
