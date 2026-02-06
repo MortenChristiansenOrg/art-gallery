@@ -8,8 +8,7 @@ export default defineSchema({
     imageId: v.id("_storage"),
     thumbnailId: v.optional(v.id("_storage")), // 600px max, quality 85
     viewerImageId: v.optional(v.id("_storage")), // 2000px max, quality 90
-    collectionId: v.optional(v.id("collections")),
-    seriesId: v.optional(v.any()), // DEPRECATED: old field, kept for backwards compat
+    collectionId: v.optional(v.id("collections")), // DEPRECATED: legacy field, use artworkCollections junction table
     year: v.optional(v.number()),
     medium: v.optional(v.string()),
     dimensions: v.optional(v.string()),
@@ -35,10 +34,15 @@ export default defineSchema({
         v.literal("failed")
       )
     ),
+    dziGenerationStartedAt: v.optional(v.number()), // timestamp when generation started
+    tilesTotal: v.optional(v.number()),
+    tilesCompleted: v.optional(v.number()),
+    processingError: v.optional(v.string()),
+    processingRetryCount: v.optional(v.number()),
   })
-    .index("by_collection", ["collectionId"])
     .index("by_order", ["order"])
-    .index("by_published", ["published"]),
+    .index("by_published", ["published"])
+    .index("by_dziStatus", ["dziStatus"]),
 
   tiles: defineTable({
     artworkId: v.id("artworks"),

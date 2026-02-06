@@ -4,8 +4,11 @@ import { requireAuth } from "./auth";
 
 export const list = query({
   handler: async (ctx) => {
-    const collections = await ctx.db.query("collections").collect();
-    collections.sort((a, b) => a.order - b.order);
+    const collections = await ctx.db
+      .query("collections")
+      .withIndex("by_order")
+      .order("asc")
+      .collect();
 
     return Promise.all(
       collections.map(async (c) => ({
@@ -20,23 +23,25 @@ export const list = query({
 
 export const listWithCounts = query({
   handler: async (ctx) => {
-    const collections = await ctx.db.query("collections").collect();
-    collections.sort((a, b) => a.order - b.order);
-
-    // Count via junction table
-    const allJunction = await ctx.db.query("artworkCollections").collect();
-    const allArtworks = await ctx.db.query("artworks").collect();
-    const publishedIds = new Set(
-      allArtworks
-        .filter((a) => a.published && a.thumbnailId && a.dziStatus === "complete")
-        .map((a) => a._id)
-    );
+    const collections = await ctx.db
+      .query("collections")
+      .withIndex("by_order")
+      .order("asc")
+      .collect();
 
     return Promise.all(
       collections.map(async (c) => {
-        const artworkCount = allJunction.filter(
-          (j) => j.collectionId === c._id && publishedIds.has(j.artworkId)
-        ).length;
+        const junctionEntries = await ctx.db
+          .query("artworkCollections")
+          .withIndex("by_collection", (q) => q.eq("collectionId", c._id))
+          .collect();
+        let artworkCount = 0;
+        for (const j of junctionEntries) {
+          const artwork = await ctx.db.get(j.artworkId);
+          if (artwork?.published && artwork.thumbnailId && artwork.dziStatus === "complete") {
+            artworkCount++;
+          }
+        }
         return {
           ...c,
           coverImageUrl: c.coverImageId
@@ -81,8 +86,12 @@ export const create = mutation({
   handler: async (ctx, args) => {
     requireAuth(args.token);
     const { token: _, coverImageId, iconSvg, nativeAspectRatio, ...rest } = args;
-    const existing = await ctx.db.query("collections").collect();
-    const maxOrder = existing.reduce((max, c) => Math.max(max, c.order), -1);
+    const last = await ctx.db
+      .query("collections")
+      .withIndex("by_order")
+      .order("desc")
+      .first();
+    const maxOrder = last?.order ?? -1;
 
     return ctx.db.insert("collections", {
       ...rest,

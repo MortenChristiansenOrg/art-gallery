@@ -1,6 +1,6 @@
 import { useState, useCallback, useTransition } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation, useAction } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
 import { ArtworkForm, CollectionForm, AddExistingArtworkDialog, RetryButton } from "../components/admin";
@@ -44,7 +44,7 @@ export function Admin() {
   const markMessageRead = useMutation(api.messages.markRead);
   const setContent = useMutation(api.siteContent.set);
   const reorderArtworks = useMutation(api.artworks.reorder);
-  const retryTileGeneration = useAction(api.images.generateVariants);
+  const retryProcessing = useMutation(api.processing.start);
 
   const [aboutText, setAboutText] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -294,21 +294,26 @@ export function Admin() {
                                 ? "bg-red-100 text-red-700"
                                 : "bg-yellow-100 text-yellow-700"
                             }`}
+                            title={artwork.dziStatus === "failed" && artwork.processingError ? artwork.processingError : undefined}
                           >
                             {artwork.dziStatus === "failed"
                               ? "Processing failed"
                               : artwork.dziStatus === "generating"
-                                ? "Generating tiles..."
+                                ? artwork.tilesTotal
+                                  ? `Generating tiles ${artwork.tilesCompleted ?? 0}/${artwork.tilesTotal}`
+                                  : "Generating tiles..."
                                 : "Processing..."}
                           </span>
                           <span onClick={(e) => e.stopPropagation()}>
                             <RetryButton
-                              onRetry={() =>
-                                retryTileGeneration({
-                                  storageId: artwork.imageId,
-                                  artworkId: artwork._id,
-                                })
-                              }
+                              onRetry={async () => {
+                                if (token) {
+                                  await retryProcessing({
+                                    token,
+                                    artworkId: artwork._id,
+                                  });
+                                }
+                              }}
                             />
                           </span>
                         </>
