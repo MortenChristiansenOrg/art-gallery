@@ -97,7 +97,20 @@ export const setDziStatus = internalMutation({
     ),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.artworkId, { dziStatus: args.status });
+    // Track when generation started for staleness detection
+    const patch: {
+      dziStatus?: typeof args.status;
+      dziGenerationStartedAt?: number;
+    } = { dziStatus: args.status };
+
+    if (args.status === "generating") {
+      patch.dziGenerationStartedAt = Date.now();
+    } else if (args.status === "complete" || args.status === "failed" || args.status === undefined) {
+      // Clear timestamp when generation ends
+      patch.dziGenerationStartedAt = undefined;
+    }
+
+    await ctx.db.patch(args.artworkId, patch);
   },
 });
 
@@ -158,6 +171,23 @@ export const getTileInternal = internalQuery({
       storageId: tile.storageId,
       url: await ctx.storage.getUrl(tile.storageId),
     };
+  },
+});
+
+// Internal: delete all tiles + storage blobs for an artwork (atomic)
+export const deleteAllForArtwork = internalMutation({
+  args: {
+    artworkId: v.id("artworks"),
+  },
+  handler: async (ctx, args) => {
+    const tiles = await ctx.db
+      .query("tiles")
+      .withIndex("by_artwork", (q) => q.eq("artworkId", args.artworkId))
+      .collect();
+    for (const tile of tiles) {
+      await ctx.storage.delete(tile.storageId);
+      await ctx.db.delete(tile._id);
+    }
   },
 });
 

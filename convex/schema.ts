@@ -35,6 +35,10 @@ export default defineSchema({
         v.literal("failed")
       )
     ),
+    dziGenerationStartedAt: v.optional(v.number()), // timestamp when generation started
+    tilesTotal: v.optional(v.number()),
+    tilesCompleted: v.optional(v.number()),
+    processingError: v.optional(v.string()),
   })
     .index("by_collection", ["collectionId"])
     .index("by_order", ["order"])
