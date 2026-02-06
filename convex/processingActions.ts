@@ -189,6 +189,56 @@ export const processVariants = internalAction({
   },
 });
 
+/** Resume: find missing tiles and schedule batches for them only. */
+export const resumeTiles = internalAction({
+  args: {
+    artworkId: v.id("artworks"),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const artwork = await ctx.runQuery(internal.tiles.getArtworkInternal, {
+        artworkId: args.artworkId,
+      });
+      if (!artwork || artwork.imageId !== args.storageId || !artwork.dziMetadata) return;
+
+      const { width, height, maxLevel } = artwork.dziMetadata;
+      const allTiles = getAllTileSpecs(width, height);
+
+      const existingTiles = await ctx.runQuery(internal.tiles.listByArtwork, {
+        artworkId: args.artworkId,
+      });
+      const existingSet = new Set(
+        existingTiles.map((t) => `${t.level}/${t.col}/${t.row}`)
+      );
+      const missingTiles = allTiles.filter(
+        (t) => !existingSet.has(`${t.level}/${t.col}/${t.row}`)
+      );
+
+      console.log(
+        `Resuming ${args.artworkId}: ${existingTiles.length} existing, ${missingTiles.length} missing of ${allTiles.length} total`
+      );
+
+      await ctx.runMutation(internal.processing.onResumeReady, {
+        artworkId: args.artworkId,
+        storageId: args.storageId,
+        missingTiles,
+        width,
+        height,
+        maxLevel,
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unknown error in resumeTiles";
+      console.error(`resumeTiles failed for ${args.artworkId}:`, err);
+      await ctx.runMutation(internal.processing.onFailed, {
+        artworkId: args.artworkId,
+        error: message,
+      });
+    }
+  },
+});
+
 /** Process a batch of tiles, then call onBatchComplete. */
 export const generateTileBatch = internalAction({
   args: {

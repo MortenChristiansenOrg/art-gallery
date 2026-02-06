@@ -36,17 +36,21 @@ export const start = mutation({
       if (!isStale) return;
     }
 
-    // ATOMIC: set status + schedule processVariants
+    // Resume from tiles if variants already done, otherwise full restart
+    const canResume = artwork.dziMetadata && artwork.thumbnailId;
+
     await ctx.db.patch(args.artworkId, {
       dziStatus: "generating",
       dziGenerationStartedAt: Date.now(),
-      tilesTotal: undefined,
-      tilesCompleted: undefined,
+      ...(canResume ? {} : { tilesTotal: undefined, tilesCompleted: undefined }),
       processingError: undefined,
       processingRetryCount: 0,
     });
 
-    await ctx.scheduler.runAfter(0, internal.processingActions.processVariants, {
+    const action = canResume
+      ? internal.processingActions.resumeTiles
+      : internal.processingActions.processVariants;
+    await ctx.scheduler.runAfter(0, action, {
       artworkId: args.artworkId,
       storageId: artwork.imageId,
     });
@@ -160,6 +164,51 @@ export const onBatchComplete = internalMutation({
   },
 });
 
+/** Resume: compute missing tiles and schedule batches for them. */
+export const onResumeReady = internalMutation({
+  args: {
+    artworkId: v.id("artworks"),
+    storageId: v.id("_storage"),
+    missingTiles: v.array(
+      v.object({ level: v.number(), col: v.number(), row: v.number() })
+    ),
+    width: v.number(),
+    height: v.number(),
+    maxLevel: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const artwork = await ctx.db.get(args.artworkId);
+    if (!artwork) return;
+
+    const existingCount = (artwork.tilesTotal ?? 0) - args.missingTiles.length;
+
+    if (args.missingTiles.length === 0) {
+      await ctx.db.patch(args.artworkId, {
+        dziStatus: "complete",
+        dziGenerationStartedAt: undefined,
+        tilesCompleted: artwork.tilesTotal ?? existingCount,
+      });
+      return;
+    }
+
+    await ctx.db.patch(args.artworkId, { tilesCompleted: existingCount });
+
+    const batchSize = getBatchSize(args.width, args.height);
+    const firstBatch = args.missingTiles.slice(0, batchSize);
+    const remaining = args.missingTiles.slice(batchSize);
+
+    await ctx.scheduler.runAfter(0, internal.processingActions.generateTileBatch, {
+      artworkId: args.artworkId,
+      storageId: args.storageId,
+      tiles: firstBatch,
+      remainingTiles: remaining,
+      width: args.width,
+      height: args.height,
+      maxLevel: args.maxLevel,
+    });
+  },
+});
+
 /** Set artwork to "failed" with error message. */
 export const onFailed = internalMutation({
   args: {
@@ -196,14 +245,13 @@ export const checkStuck = internalMutation({
             dziGenerationStartedAt: Date.now(),
             processingRetryCount: retryCount + 1,
           });
-          await ctx.scheduler.runAfter(
-            0,
-            internal.processingActions.processVariants,
-            {
-              artworkId: artwork._id,
-              storageId: artwork.imageId,
-            }
-          );
+          const action = artwork.dziMetadata && artwork.thumbnailId
+            ? internal.processingActions.resumeTiles
+            : internal.processingActions.processVariants;
+          await ctx.scheduler.runAfter(0, action, {
+            artworkId: artwork._id,
+            storageId: artwork.imageId,
+          });
         } else {
           console.log(
             `Marking artwork ${artwork._id} as failed (exhausted ${MAX_RETRIES} retries)`
@@ -229,16 +277,19 @@ export const retryAllIncomplete = internalMutation({
       if (artwork.dziStatus === "complete") continue;
       if (!artwork.imageId) continue;
 
+      const canResume = artwork.dziMetadata && artwork.thumbnailId;
       await ctx.db.patch(artwork._id, {
         dziStatus: "generating",
         dziGenerationStartedAt: Date.now(),
-        tilesTotal: undefined,
-        tilesCompleted: undefined,
+        ...(canResume ? {} : { tilesTotal: undefined, tilesCompleted: undefined }),
         processingError: undefined,
         processingRetryCount: 0,
       });
 
-      await ctx.scheduler.runAfter(count * 100, internal.processingActions.processVariants, {
+      const action = canResume
+        ? internal.processingActions.resumeTiles
+        : internal.processingActions.processVariants;
+      await ctx.scheduler.runAfter(count * 100, action, {
         artworkId: artwork._id,
         storageId: artwork.imageId,
       });
