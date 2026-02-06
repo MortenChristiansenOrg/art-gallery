@@ -4,9 +4,7 @@ import { requireAuth } from "./auth";
 
 export const list = query({
   handler: async (ctx) => {
-    const messages = await ctx.db.query("messages").collect();
-    messages.sort((a, b) => b.createdAt - a.createdAt);
-    return messages;
+    return await ctx.db.query("messages").order("desc").collect();
   },
 });
 

@@ -18,7 +18,6 @@ import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
 import type * as messages from "../messages.js";
-import type * as migrateToJunction from "../migrateToJunction.js";
 import type * as processing from "../processing.js";
 import type * as processingActions from "../processingActions.js";
 import type * as siteContent from "../siteContent.js";
@@ -41,7 +40,6 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   init: typeof init;
   messages: typeof messages;
-  migrateToJunction: typeof migrateToJunction;
   processing: typeof processing;
   processingActions: typeof processingActions;
   siteContent: typeof siteContent;

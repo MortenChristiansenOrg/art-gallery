@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // Token valid for 24 hours
@@ -64,6 +64,6 @@ export const validateSession = query({
 // Helper to require auth in mutations
 export function requireAuth(token: string | undefined): void {
   if (!token || !validateToken(token)) {
-    throw new Error("Unauthorized");
+    throw new ConvexError("Unauthorized");
   }
 }

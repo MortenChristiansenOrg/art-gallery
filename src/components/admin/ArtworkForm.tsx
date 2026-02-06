@@ -197,7 +197,6 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           id: artwork._id,
           title: editTitle,
           description: form.description,
-          collectionId,
           year: form.year ? parseInt(form.year) : undefined,
           medium: form.medium,
           dimensions: form.dimensions,

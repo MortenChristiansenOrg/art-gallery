@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./auth";
@@ -26,7 +26,7 @@ export const start = mutation({
     requireAuth(args.token);
 
     const artwork = await ctx.db.get(args.artworkId);
-    if (!artwork) throw new Error("Artwork not found");
+    if (!artwork) throw new ConvexError("Artwork not found");
 
     // Idempotency: skip if fresh generating
     if (artwork.dziStatus === "generating") {
@@ -228,10 +228,12 @@ export const onFailed = internalMutation({
 export const checkStuck = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const artworks = await ctx.db.query("artworks").collect();
+    const artworks = await ctx.db
+      .query("artworks")
+      .withIndex("by_dziStatus", (q) => q.eq("dziStatus", "generating"))
+      .collect();
     const now = Date.now();
     for (const artwork of artworks) {
-      if (artwork.dziStatus !== "generating") continue;
       const elapsed = artwork.dziGenerationStartedAt
         ? now - artwork.dziGenerationStartedAt
         : Infinity;

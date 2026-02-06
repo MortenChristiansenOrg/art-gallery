@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./auth";
@@ -28,7 +28,11 @@ export const list = query({
       );
       artworks = fetched.filter((a) => a !== null);
     } else {
-      artworks = await ctx.db.query("artworks").collect();
+      artworks = await ctx.db
+        .query("artworks")
+        .withIndex("by_order")
+        .order("asc")
+        .collect();
     }
 
     if (args.publishedOnly) {
@@ -37,33 +41,25 @@ export const list = query({
       );
     }
 
-    if (!args.collectionId) {
-      artworks.sort((a, b) => a.order - b.order);
-    }
-
-    // Get collection counts for each artwork
-    const allJunction = await ctx.db.query("artworkCollections").collect();
-    const countMap = new Map<string, number>();
-    for (const entry of allJunction) {
-      countMap.set(
-        entry.artworkId,
-        (countMap.get(entry.artworkId) ?? 0) + 1
-      );
-    }
-
     return Promise.all(
-      artworks.map(async (artwork) => ({
-        ...artwork,
-        imageUrl: await ctx.storage.getUrl(artwork.imageId),
-        thumbnailUrl: artwork.thumbnailId
-          ? await ctx.storage.getUrl(artwork.thumbnailId)
-          : null,
-        viewerImageUrl: artwork.viewerImageId
-          ? await ctx.storage.getUrl(artwork.viewerImageId)
-          : null,
-        dziUrl: getDziUrl(artwork._id, artwork.dziStatus),
-        collectionCount: countMap.get(artwork._id) ?? 0,
-      }))
+      artworks.map(async (artwork) => {
+        const junctionEntries = await ctx.db
+          .query("artworkCollections")
+          .withIndex("by_artwork", (q) => q.eq("artworkId", artwork._id))
+          .collect();
+        return {
+          ...artwork,
+          imageUrl: await ctx.storage.getUrl(artwork.imageId),
+          thumbnailUrl: artwork.thumbnailId
+            ? await ctx.storage.getUrl(artwork.thumbnailId)
+            : null,
+          viewerImageUrl: artwork.viewerImageId
+            ? await ctx.storage.getUrl(artwork.viewerImageId)
+            : null,
+          dziUrl: getDziUrl(artwork._id, artwork.dziStatus),
+          collectionCount: junctionEntries.length,
+        };
+      })
     );
   },
 });
@@ -113,8 +109,12 @@ export const create = mutation({
   handler: async (ctx, args) => {
     requireAuth(args.token);
     const { token: _, collectionId, ...data } = args;
-    const existing = await ctx.db.query("artworks").collect();
-    const maxOrder = existing.reduce((max, a) => Math.max(max, a.order), -1);
+    const last = await ctx.db
+      .query("artworks")
+      .withIndex("by_order")
+      .order("desc")
+      .first();
+    const maxOrder = last?.order ?? -1;
 
     const artworkId = await ctx.db.insert("artworks", {
       ...data,
@@ -150,7 +150,6 @@ export const update = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     imageId: v.optional(v.id("_storage")),
-    collectionId: v.optional(v.id("collections")),
     year: v.optional(v.number()),
     medium: v.optional(v.string()),
     dimensions: v.optional(v.string()),
@@ -159,7 +158,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     requireAuth(args.token);
-    const { id, token: _, collectionId: _cid, ...updates } = args;
+    const { id, token: _, ...updates } = args;
 
     // If imageId is being updated, cleanup old tiles and reset DZI status
     if (updates.imageId) {
@@ -227,7 +226,7 @@ export const addToCollection = mutation({
       .withIndex("by_artwork", (q) => q.eq("artworkId", args.artworkId))
       .collect();
     if (existing.some((e) => e.collectionId === args.collectionId)) {
-      throw new Error("Artwork already in this collection");
+      throw new ConvexError("Artwork already in this collection");
     }
 
     // Get max order in collection
@@ -273,6 +272,7 @@ export const searchByTitle = query({
   handler: async (ctx, args) => {
     if (!args.query.trim()) return [];
 
+    // Full scan required — no text search index available
     const allArtworks = await ctx.db.query("artworks").collect();
     const searchLower = args.query.toLowerCase();
     const matches = allArtworks.filter((a) =>
