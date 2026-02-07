@@ -65,6 +65,7 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
   const insertTileBatch = useMutation(api.tiles.insertTileBatch);
   const finishClientProcessing = useMutation(api.tiles.finishClientProcessing);
   const failClientProcessing = useMutation(api.tiles.failClientProcessing);
+  const deleteStorageBlobs = useMutation(api.artworks.deleteStorageBlobs);
 
   const [form, setForm] = useState({
     description: artwork?.description ?? "",
@@ -246,9 +247,11 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           setUploadProgress({ current: i + 1, total });
 
           let currentArtworkId: Id<"artworks"> | undefined;
+          const uploadedBlobIds: Id<"_storage">[] = [];
           try {
             // Upload original
             const imageId = await uploadBlob(file);
+            uploadedBlobIds.push(imageId);
 
             if (processLocally) {
               // Client-side processing
@@ -256,6 +259,11 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
                 file,
                 uploadBlob,
                 setLocalProgress
+              );
+              uploadedBlobIds.push(
+                result.thumbnailId,
+                result.viewerImageId,
+                ...result.tiles.map((t) => t.storageId)
               );
 
               currentArtworkId = await createPreprocessed({
@@ -294,6 +302,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
             errors.push(`${title}: ${err instanceof Error ? err.message : "Unknown error"}`);
             if (currentArtworkId) {
               failClientProcessing({ token, artworkId: currentArtworkId, error: err instanceof Error ? err.message : "Unknown error" }).catch(console.error);
+            } else if (uploadedBlobIds.length > 0) {
+              // No artwork created — clean up orphaned blobs
+              deleteStorageBlobs({ token, storageIds: uploadedBlobIds }).catch(console.error);
             }
             setLocalProgress(null);
           }

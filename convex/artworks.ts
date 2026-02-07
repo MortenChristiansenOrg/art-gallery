@@ -398,6 +398,19 @@ export const createPreprocessed = mutation({
   },
 });
 
+export const deleteStorageBlobs = mutation({
+  args: {
+    token: v.string(),
+    storageIds: v.array(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(args.token);
+    for (const id of args.storageIds) {
+      await ctx.storage.delete(id);
+    }
+  },
+});
+
 export const updateVariants = internalMutation({
   args: {
     artworkId: v.id("artworks"),
