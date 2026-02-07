@@ -107,7 +107,7 @@ export const create = mutation({
     published: v.boolean(),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, collectionId, ...data } = args;
     const last = await ctx.db
       .query("artworks")
@@ -157,7 +157,7 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { id, token: _, ...updates } = args;
 
     // If imageId is being updated, cleanup old tiles and reset DZI status
@@ -189,7 +189,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { token: v.string(), id: v.id("artworks") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const artwork = await ctx.db.get(args.id);
     if (artwork) {
       await ctx.storage.delete(artwork.imageId);
@@ -218,7 +218,7 @@ export const addToCollection = mutation({
     collectionId: v.id("collections"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
 
     // Check for duplicate
     const existing = await ctx.db
@@ -251,7 +251,7 @@ export const removeFromCollection = mutation({
     collectionId: v.id("collections"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
 
     const entries = await ctx.db
       .query("artworkCollections")
@@ -309,7 +309,7 @@ export const reorder = mutation({
     collectionId: v.optional(v.id("collections")),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     if (args.collectionId) {
       const entries = await ctx.db
         .query("artworkCollections")
@@ -328,6 +328,85 @@ export const reorder = mutation({
       for (let i = 0; i < args.ids.length; i++) {
         await ctx.db.patch(args.ids[i], { order: i });
       }
+    }
+  },
+});
+
+export const createPreprocessed = mutation({
+  args: {
+    token: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    imageId: v.id("_storage"),
+    thumbnailId: v.id("_storage"),
+    viewerImageId: v.id("_storage"),
+    dziMetadata: v.object({
+      width: v.number(),
+      height: v.number(),
+      tileSize: v.number(),
+      overlap: v.number(),
+      format: v.string(),
+      maxLevel: v.number(),
+    }),
+    tilesTotal: v.number(),
+    collectionId: v.optional(v.id("collections")),
+    year: v.optional(v.number()),
+    medium: v.optional(v.string()),
+    dimensions: v.optional(v.string()),
+    published: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(args.token);
+    const { token: _, collectionId, thumbnailId, viewerImageId, dziMetadata, tilesTotal, ...data } = args;
+    const last = await ctx.db
+      .query("artworks")
+      .withIndex("by_order")
+      .order("desc")
+      .first();
+    const maxOrder = last?.order ?? -1;
+
+    const artworkId = await ctx.db.insert("artworks", {
+      ...data,
+      thumbnailId,
+      viewerImageId,
+      dziMetadata,
+      dziStatus: "generating",
+      dziGenerationStartedAt: Date.now(),
+      tilesTotal,
+      tilesCompleted: 0,
+      order: maxOrder + 1,
+      createdAt: Date.now(),
+    });
+
+    if (collectionId) {
+      const junctionEntries = await ctx.db
+        .query("artworkCollections")
+        .withIndex("by_collection", (q) => q.eq("collectionId", collectionId))
+        .collect();
+      const maxJunctionOrder = junctionEntries.reduce(
+        (max, e) => Math.max(max, e.order),
+        -1
+      );
+      await ctx.db.insert("artworkCollections", {
+        artworkId,
+        collectionId,
+        order: maxJunctionOrder + 1,
+      });
+    }
+
+    return artworkId;
+  },
+});
+
+export const deleteStorageBlobs = mutation({
+  args: {
+    token: v.string(),
+    storageIds: v.array(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(args.token);
+    for (const id of args.storageIds) {
+      await ctx.storage.delete(id);
     }
   },
 });

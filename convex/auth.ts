@@ -1,6 +1,15 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 // Token valid for 24 hours
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
@@ -8,31 +17,44 @@ function getAdminPassword(): string | null {
   return process.env.ADMIN_PASSWORD ?? null;
 }
 
-// Simple hash for token generation
-function simpleHash(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36);
+// HMAC-SHA256 hash for token generation
+export async function deriveHash(str: string): Promise<string> {
+  const secret = getAdminPassword();
+  if (!secret) throw new Error("Admin password not configured");
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(str));
+  return [...new Uint8Array(sig)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
-function generateToken(): string {
+async function generateToken(): Promise<string> {
   const timestamp = Date.now();
-  const secret = getAdminPassword();
-  const hash = simpleHash(`${timestamp}:${secret}:${Math.random()}`);
+  const hash = await deriveHash(String(timestamp));
   return btoa(`${timestamp}:${hash}`);
 }
 
-function validateToken(token: string): boolean {
+async function validateToken(token: string): Promise<boolean> {
   try {
     const decoded = atob(token);
-    const [timestampStr] = decoded.split(":");
+    const colonIdx = decoded.indexOf(":");
+    if (colonIdx === -1) return false;
+    const timestampStr = decoded.slice(0, colonIdx);
+    const hash = decoded.slice(colonIdx + 1);
     const timestamp = parseInt(timestampStr, 10);
     if (isNaN(timestamp)) return false;
     if (Date.now() - timestamp > TOKEN_EXPIRY_MS) return false;
+    const secret = getAdminPassword();
+    if (!secret) return false;
+    const expectedHash = await deriveHash(String(timestamp));
+    if (!constantTimeEqual(hash, expectedHash)) return false;
     return true;
   } catch {
     return false;
@@ -49,7 +71,7 @@ export const login = mutation({
     if (args.password !== adminPassword) {
       return { success: false, token: null, error: "Invalid password" };
     }
-    const token = generateToken();
+    const token = await generateToken();
     return { success: true, token, error: null };
   },
 });
@@ -57,13 +79,15 @@ export const login = mutation({
 export const validateSession = query({
   args: { token: v.string() },
   handler: async (_ctx, args) => {
-    return { valid: validateToken(args.token) };
+    return { valid: await validateToken(args.token) };
   },
 });
 
 // Helper to require auth in mutations
-export function requireAuth(token: string | undefined): void {
-  if (!token || !validateToken(token)) {
+export async function requireAuth(
+  token: string | undefined
+): Promise<void> {
+  if (!token || !(await validateToken(token))) {
     throw new ConvexError("Unauthorized");
   }
 }

@@ -9,6 +9,7 @@
  */
 
 import type * as __tests___setup from "../__tests__/setup.js";
+import type * as __tests___testHelpers from "../__tests__/testHelpers.js";
 import type * as artworks from "../artworks.js";
 import type * as auth from "../auth.js";
 import type * as collections from "../collections.js";
@@ -20,6 +21,7 @@ import type * as init from "../init.js";
 import type * as messages from "../messages.js";
 import type * as processing from "../processing.js";
 import type * as processingActions from "../processingActions.js";
+import type * as sanitize from "../sanitize.js";
 import type * as siteContent from "../siteContent.js";
 import type * as tiles from "../tiles.js";
 
@@ -31,6 +33,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "__tests__/setup": typeof __tests___setup;
+  "__tests__/testHelpers": typeof __tests___testHelpers;
   artworks: typeof artworks;
   auth: typeof auth;
   collections: typeof collections;
@@ -42,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   processing: typeof processing;
   processingActions: typeof processingActions;
+  sanitize: typeof sanitize;
   siteContent: typeof siteContent;
   tiles: typeof tiles;
 }>;

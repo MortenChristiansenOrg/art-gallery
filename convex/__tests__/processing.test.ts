@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import { createTestContext, createTestBlob, Id } from "./setup";
+import { generateTestToken } from "./testHelpers";
 
 // Suppress "Write outside of transaction" errors from convex-test's internal
 // scheduled function tracking. These fire when scheduled actions fail (expected
@@ -15,10 +16,11 @@ process.on("unhandledRejection", (reason) => {
 });
 
 describe("processing", () => {
-  const validToken = btoa(`${Date.now()}:validhash`);
+  let validToken: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.stubEnv("ADMIN_PASSWORD", "test-password");
+    validToken = await generateTestToken();
   });
 
   describe("start", () => {

@@ -5,7 +5,7 @@ import { requireAuth } from "./auth";
 export const generateUploadUrl = mutation({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     return await ctx.storage.generateUploadUrl();
   },
 });

@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useAuth } from "../../lib/auth";
+import { processAndUploadLocally, type ProcessingProgress } from "../../lib/clientProcessing";
 
 const MAX_IMAGES = 50;
 const THUMBNAIL_SIZE = 80;
@@ -58,8 +59,13 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
   const { token } = useAuth();
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createArtwork = useMutation(api.artworks.create);
+  const createPreprocessed = useMutation(api.artworks.createPreprocessed);
   const updateArtwork = useMutation(api.artworks.update);
   const startProcessing = useMutation(api.processing.start);
+  const insertTileBatch = useMutation(api.tiles.insertTileBatch);
+  const finishClientProcessing = useMutation(api.tiles.finishClientProcessing);
+  const failClientProcessing = useMutation(api.tiles.failClientProcessing);
+  const deleteStorageBlobs = useMutation(api.artworks.deleteStorageBlobs);
 
   const [form, setForm] = useState({
     description: artwork?.description ?? "",
@@ -78,6 +84,8 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [processLocally, setProcessLocally] = useState(false);
+  const [localProgress, setLocalProgress] = useState<ProcessingProgress | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -219,6 +227,18 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           published: form.published,
         };
 
+        const uploadBlob = async (blob: Blob): Promise<Id<"_storage">> => {
+          const uploadUrl = await generateUploadUrl({ token });
+          const result = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": blob.type },
+            body: blob,
+          });
+          if (!result.ok) throw new Error(`Upload failed: ${result.statusText}`);
+          const { storageId } = await result.json();
+          return storageId;
+        };
+
         const total = selectedImages.length;
         const errors: string[] = [];
 
@@ -226,31 +246,67 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           const { file, title } = selectedImages[i];
           setUploadProgress({ current: i + 1, total });
 
+          let currentArtworkId: Id<"artworks"> | undefined;
+          const uploadedBlobIds: Id<"_storage">[] = [];
           try {
-            const uploadUrl = await generateUploadUrl({ token });
-            const result = await fetch(uploadUrl, {
-              method: "POST",
-              headers: { "Content-Type": file.type },
-              body: file,
-            });
+            // Upload original
+            const imageId = await uploadBlob(file);
+            uploadedBlobIds.push(imageId);
 
-            if (!result.ok) {
-              throw new Error(`Upload failed: ${result.statusText}`);
+            if (processLocally) {
+              // Client-side processing
+              const result = await processAndUploadLocally(
+                file,
+                uploadBlob,
+                setLocalProgress
+              );
+              uploadedBlobIds.push(
+                result.thumbnailId,
+                result.viewerImageId,
+                ...result.tiles.map((t) => t.storageId)
+              );
+
+              currentArtworkId = await createPreprocessed({
+                token,
+                title: title.trim(),
+                imageId,
+                thumbnailId: result.thumbnailId,
+                viewerImageId: result.viewerImageId,
+                dziMetadata: result.dziMetadata,
+                tilesTotal: result.tiles.length,
+                ...sharedData,
+              });
+
+              // Insert tiles in batches of 50
+              for (let j = 0; j < result.tiles.length; j += 50) {
+                await insertTileBatch({
+                  token,
+                  artworkId: currentArtworkId,
+                  tiles: result.tiles.slice(j, j + 50),
+                });
+              }
+
+              await finishClientProcessing({ token, artworkId: currentArtworkId });
+              setLocalProgress(null);
+            } else {
+              // Server-side processing
+              const artworkId = await createArtwork({
+                token,
+                title: title.trim(),
+                imageId,
+                ...sharedData,
+              });
+              startProcessing({ token, artworkId }).catch(console.error);
             }
-
-            const { storageId } = await result.json();
-
-            const artworkId = await createArtwork({
-              token,
-              title: title.trim(),
-              imageId: storageId,
-              ...sharedData,
-            });
-
-            // Start image processing in the background
-            startProcessing({ token, artworkId }).catch(console.error);
           } catch (err) {
             errors.push(`${title}: ${err instanceof Error ? err.message : "Unknown error"}`);
+            if (currentArtworkId) {
+              failClientProcessing({ token, artworkId: currentArtworkId, error: err instanceof Error ? err.message : "Unknown error" }).catch(console.error);
+            } else if (uploadedBlobIds.length > 0) {
+              // No artwork created — clean up orphaned blobs
+              deleteStorageBlobs({ token, storageIds: uploadedBlobIds }).catch(console.error);
+            }
+            setLocalProgress(null);
           }
         }
 
@@ -319,6 +375,21 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
                 }
               </p>
             </div>
+
+            {/* Process locally toggle (create mode only) */}
+            {!isEditMode && (
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  id="process-locally"
+                  checked={processLocally}
+                  onChange={(e) => setProcessLocally(e.target.checked)}
+                />
+                <label htmlFor="process-locally" className="text-sm text-[var(--color-gallery-muted)]">
+                  Process locally (for large images)
+                </label>
+              </div>
+            )}
 
             {/* Selected images list */}
             {selectedImages.length > 0 && (
@@ -441,7 +512,18 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           {/* Upload progress */}
           {uploadProgress && (
             <div className="text-sm text-[var(--color-gallery-muted)]" data-testid="upload-progress">
-              Uploading {uploadProgress.current} of {uploadProgress.total}...
+              {uploadProgress.total > 1 && `Image ${uploadProgress.current}/${uploadProgress.total}: `}
+              {localProgress
+                ? localProgress.stage === "loading"
+                  ? "Loading image..."
+                  : localProgress.stage === "thumbnail"
+                    ? "Generating thumbnail..."
+                    : localProgress.stage === "viewer"
+                      ? "Generating viewer image..."
+                      : localProgress.stage === "tiles"
+                        ? `Generating tiles (${localProgress.tilesCompleted}/${localProgress.tilesTotal})...`
+                        : "Finishing..."
+                : "Uploading..."}
             </div>
           )}
 

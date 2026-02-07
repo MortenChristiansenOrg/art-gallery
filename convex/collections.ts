@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./auth";
+import { sanitizeSvg } from "./sanitize";
 
 export const list = query({
   handler: async (ctx) => {
@@ -84,7 +85,7 @@ export const create = mutation({
     nativeAspectRatio: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, coverImageId, iconSvg, nativeAspectRatio, ...rest } = args;
     const last = await ctx.db
       .query("collections")
@@ -97,7 +98,7 @@ export const create = mutation({
       ...rest,
       order: maxOrder + 1,
       // Mutual exclusivity: only one of these can be set
-      ...(iconSvg && !coverImageId ? { iconSvg } : {}),
+      ...(iconSvg && !coverImageId ? { iconSvg: sanitizeSvg(iconSvg) } : {}),
       ...(coverImageId && !iconSvg ? { coverImageId } : {}),
       ...(nativeAspectRatio !== undefined ? { nativeAspectRatio } : {}),
     });
@@ -117,12 +118,14 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { id, token: _, ...updates } = args;
+    if (updates.iconSvg) {
+      updates.iconSvg = sanitizeSvg(updates.iconSvg);
+    }
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
-    // Mutual exclusivity handled client-side; just apply the patch
     await ctx.db.patch(id, filtered);
   },
 });
@@ -130,7 +133,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { token: v.string(), id: v.id("collections") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const collection = await ctx.db.get(args.id);
     if (collection) {
       if (collection.coverImageId) {
@@ -155,7 +158,7 @@ export const reorder = mutation({
     ids: v.array(v.id("collections")),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     for (let i = 0; i < args.ids.length; i++) {
       await ctx.db.patch(args.ids[i], { order: i });
     }
