@@ -15,8 +15,8 @@ interface AppProps {
 function App({ client = defaultClient }: AppProps) {
   return (
     <ConvexProvider client={client}>
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
@@ -26,10 +26,10 @@ function App({ client = defaultClient }: AppProps) {
             </Route>
             <Route path="/admin" element={<Admin />} />
           </Routes>
-        </BrowserRouter>
-        <Analytics />
-        <SpeedInsights />
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
+      <Analytics />
+      <SpeedInsights />
     </ConvexProvider>
   );
 }
