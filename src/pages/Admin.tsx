@@ -22,6 +22,9 @@ export function Admin() {
   const [draggedId, setDraggedId] = useState<Id<"artworks"> | null>(null);
   const [dropTargetId, setDropTargetId] = useState<Id<"artworks"> | null>(null);
   const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
+  const [draggedCollectionId, setDraggedCollectionId] = useState<Id<"collections"> | null>(null);
+  const [collectionDropTargetId, setCollectionDropTargetId] = useState<Id<"collections"> | null>(null);
+  const [collectionDropPosition, setCollectionDropPosition] = useState<"before" | "after" | null>(null);
   const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
 
   const collections = useQuery(api.collections.list);
@@ -44,6 +47,7 @@ export function Admin() {
   const markMessageRead = useMutation(api.messages.markRead);
   const setContent = useMutation(api.siteContent.set);
   const reorderArtworks = useMutation(api.artworks.reorder);
+  const reorderCollections = useMutation(api.collections.reorder);
   const retryProcessing = useMutation(api.processing.start);
 
   const [aboutText, setAboutText] = useState("");
@@ -114,6 +118,71 @@ export function Admin() {
     setDraggedId(null);
     setDropTargetId(null);
     setDropPosition(null);
+  }, []);
+
+  const handleCollectionDragStart = useCallback((e: React.DragEvent, id: Id<"collections">) => {
+    setDraggedCollectionId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  }, []);
+
+  const handleCollectionDragOver = useCallback((e: React.DragEvent, id: Id<"collections">) => {
+    e.preventDefault();
+    if (!draggedCollectionId || draggedCollectionId === id) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position = e.clientY < midpoint ? "before" : "after";
+
+    setCollectionDropTargetId(id);
+    setCollectionDropPosition(position);
+  }, [draggedCollectionId]);
+
+  const handleCollectionDragLeave = useCallback(() => {
+    setCollectionDropTargetId(null);
+    setCollectionDropPosition(null);
+  }, []);
+
+  const handleCollectionDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedCollectionId || !collectionDropTargetId || !collections || !token) return;
+
+    const dragIndex = collections.findIndex(c => c._id === draggedCollectionId);
+    let targetIndex = collections.findIndex(c => c._id === collectionDropTargetId);
+
+    if (collectionDropPosition === "after") targetIndex++;
+    if (dragIndex < targetIndex) targetIndex--;
+
+    if (dragIndex === targetIndex) {
+      setDraggedCollectionId(null);
+      setCollectionDropTargetId(null);
+      setCollectionDropPosition(null);
+      return;
+    }
+
+    const newOrder = [...collections];
+    const [moved] = newOrder.splice(dragIndex, 1);
+    newOrder.splice(targetIndex, 0, moved);
+
+    const ids = newOrder.map(c => c._id);
+
+    startTransition(async () => {
+      try {
+        await reorderCollections({ token, ids });
+      } catch (err) {
+        console.error("Collection reorder failed:", err);
+      }
+    });
+
+    setDraggedCollectionId(null);
+    setCollectionDropTargetId(null);
+    setCollectionDropPosition(null);
+  }, [draggedCollectionId, collectionDropTargetId, collectionDropPosition, collections, token, reorderCollections]);
+
+  const handleCollectionDragEnd = useCallback(() => {
+    setDraggedCollectionId(null);
+    setCollectionDropTargetId(null);
+    setCollectionDropPosition(null);
   }, []);
 
   if (!isAuthenticated) {
@@ -377,36 +446,64 @@ export function Admin() {
             Add Collection
           </button>
 
-          <div className="space-y-4 min-h-[1px]" data-testid="collections-list">
-            {collections?.map((c) => (
-              <div
-                key={c._id}
-                className="flex items-center gap-4 p-4 border border-[var(--color-gallery-border)]"
-              >
-                <div className="flex-1">
-                  <p className="font-medium">{c.name}</p>
-                  <p className="text-sm text-[var(--color-gallery-muted)]">/{c.slug}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setEditingCollection(c._id)}
-                    className="text-sm underline"
+          <div className="space-y-1 min-h-[1px]" data-testid="collections-list">
+            {collections?.map((c) => {
+              const isDragging = draggedCollectionId === c._id;
+              const isDropTarget = collectionDropTargetId === c._id;
+
+              return (
+                <div
+                  key={c._id}
+                  draggable
+                  onDragStart={(e) => handleCollectionDragStart(e, c._id)}
+                  onDragOver={(e) => handleCollectionDragOver(e, c._id)}
+                  onDragLeave={handleCollectionDragLeave}
+                  onDrop={handleCollectionDrop}
+                  onDragEnd={handleCollectionDragEnd}
+                  className={`flex items-center gap-4 p-4 border border-[var(--color-gallery-border)] cursor-grab active:cursor-grabbing transition-all ${
+                    isDragging ? "opacity-50" : ""
+                  } ${isDropTarget && collectionDropPosition === "before" ? "border-t-2 border-t-blue-500" : ""} ${
+                    isDropTarget && collectionDropPosition === "after" ? "border-b-2 border-b-blue-500" : ""
+                  }`}
+                >
+                  <div
+                    className="flex items-center justify-center w-6 h-6 text-[var(--color-gallery-muted)] hover:text-[var(--color-gallery-text)]"
+                    title="Drag to reorder"
                   >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm("Delete this collection?") && token) {
-                        deleteCollection({ token, id: c._id });
-                      }
-                    }}
-                    className="text-sm text-red-600"
-                  >
-                    Delete
-                  </button>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                    >
+                      <path d="M2 4h12v1H2zm0 3.5h12v1H2zm0 3.5h12v1H2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{c.name}</p>
+                    <p className="text-sm text-[var(--color-gallery-muted)]">/{c.slug}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingCollection(c._id)}
+                      className="text-sm underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm("Delete this collection?") && token) {
+                          deleteCollection({ token, id: c._id });
+                        }
+                      }}
+                      className="text-sm text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
