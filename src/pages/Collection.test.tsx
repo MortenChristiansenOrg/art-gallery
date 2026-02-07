@@ -18,6 +18,10 @@ vi.mock("convex/react", () => ({
   }),
 }));
 
+vi.mock("../lib/auth", () => ({
+  useAuth: () => ({ isAuthenticated: false, token: null, login: vi.fn(), logout: vi.fn() }),
+}));
+
 function renderCollection(slug: string) {
   return render(
     <MemoryRouter initialEntries={[`/collection/${slug}`]}>

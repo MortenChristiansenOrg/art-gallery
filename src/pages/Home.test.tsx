@@ -13,6 +13,10 @@ vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
 }));
 
+vi.mock("../lib/auth", () => ({
+  useAuth: () => ({ isAuthenticated: false, token: null, login: vi.fn(), logout: vi.fn() }),
+}));
+
 describe("Home", () => {
   beforeEach(() => {
     mockCollections = undefined;

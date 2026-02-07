@@ -48,6 +48,7 @@ describe("artworks", () => {
           name: "Test Collection",
           slug: "test",
           order: 0,
+          published: true,
         });
         const artworkId = await ctx.db.insert("artworks", {
           title: "In Collection",
@@ -159,6 +160,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -276,6 +278,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         await ctx.db.insert("artworkCollections", {
           artworkId: artworkId!,
@@ -321,6 +324,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -346,6 +350,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artworkId = await ctx.db.insert("artworks", {
           title: "Test",
@@ -388,6 +393,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -412,6 +418,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artwork1Id = await ctx.db.insert("artworks", {
           title: "First",
@@ -459,6 +466,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artworkId = await ctx.db.insert("artworks", {
           title: "Test",
@@ -507,6 +515,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -581,6 +590,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const artworkId = await ctx.db.insert("artworks", {
           title: "Already Added",
@@ -664,6 +674,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         id1 = await ctx.db.insert("artworks", {
           title: "First",

@@ -5,21 +5,23 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { ImageViewer } from "../components/gallery";
 import { rewriteStorageUrl } from "../lib/rewriteStorageUrl";
+import { useAuth } from "../lib/auth";
 
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const [viewerOpen, setViewerOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Get collection slug from navigation state (if coming from collection page)
   const fromCollection = (location.state as { fromCollection?: string } | null)?.fromCollection;
 
   const artwork = useQuery(
     api.artworks.get,
-    id ? { id: id as Id<"artworks">, publishedOnly: true } : "skip"
+    id ? { id: id as Id<"artworks">, publishedOnly: !isAuthenticated } : "skip"
   );
 
-  const collections = useQuery(api.collections.list);
+  const collections = useQuery(api.collections.list, {});
 
   if (artwork === undefined) {
     return (
@@ -167,15 +169,22 @@ export function Artwork() {
         ">
           {/* Title */}
           <header>
-            <h1
-              data-testid="artwork-title-mobile"
-              className="
-                font-[var(--font-serif)] text-[1.75rem]
-                font-light leading-tight tracking-[0.01em]
-              "
-            >
-              {artwork.title}
-            </h1>
+            <div className="flex items-start gap-2">
+              <h1
+                data-testid="artwork-title-mobile"
+                className="
+                  font-[var(--font-serif)] text-[1.75rem]
+                  font-light leading-tight tracking-[0.01em]
+                "
+              >
+                {artwork.title}
+              </h1>
+              {artwork.published === false && (
+                <span className="mt-1.5 shrink-0 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+                  Draft
+                </span>
+              )}
+            </div>
             {artwork.year && (
               <p className="mt-1.5 text-[var(--color-gallery-muted)] text-[0.85rem] font-light">
                 {artwork.year}
@@ -345,15 +354,22 @@ export function Artwork() {
           <aside className="w-80 flex-shrink-0 sticky top-32 self-start space-y-8">
             {/* Title */}
             <header>
-              <h1
-                data-testid="artwork-title"
-                className="
-                  font-[var(--font-serif)] text-[2.25rem]
-                  font-light leading-tight tracking-[0.01em]
-                "
-              >
-                {artwork.title}
-              </h1>
+              <div className="flex items-start gap-3">
+                <h1
+                  data-testid="artwork-title"
+                  className="
+                    font-[var(--font-serif)] text-[2.25rem]
+                    font-light leading-tight tracking-[0.01em]
+                  "
+                >
+                  {artwork.title}
+                </h1>
+                {artwork.published === false && (
+                  <span className="mt-2 shrink-0 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+                    Draft
+                  </span>
+                )}
+              </div>
               {artwork.year && (
                 <p className="mt-2 text-[var(--color-gallery-muted)] text-[0.9rem] font-light">
                   {artwork.year}

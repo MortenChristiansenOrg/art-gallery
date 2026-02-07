@@ -27,7 +27,7 @@ export function Admin() {
   const [collectionDropPosition, setCollectionDropPosition] = useState<"before" | "after" | null>(null);
   const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
 
-  const collections = useQuery(api.collections.list);
+  const collections = useQuery(api.collections.list, {});
 
   // Default to first collection if no filter set
   const activeFilter = collectionFilter ?? collections?.[0]?._id ?? null;
@@ -481,7 +481,12 @@ export function Admin() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{c.name}</p>
-                    <p className="text-sm text-[var(--color-gallery-muted)]">/{c.slug}</p>
+                    <div className="flex gap-2 text-sm">
+                      <span className="text-[var(--color-gallery-muted)]">/{c.slug}</span>
+                      <span className="text-[var(--color-gallery-muted)]">
+                        {c.published === false ? "Draft" : "Published"}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button

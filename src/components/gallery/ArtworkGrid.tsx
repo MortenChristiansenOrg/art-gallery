@@ -8,6 +8,7 @@ interface Artwork {
   thumbnailUrl?: string | null;
   year?: number;
   dziMetadata?: { width: number; height: number };
+  published?: boolean;
 }
 
 interface ArtworkGridProps {
@@ -38,6 +39,7 @@ export function ArtworkGrid({ artworks, collectionSlug, nativeAspectRatio }: Art
           collectionSlug={collectionSlug}
           nativeAspectRatio={nativeAspectRatio}
           dziMetadata={artwork.dziMetadata}
+          published={artwork.published}
         />
       ))}
     </div>

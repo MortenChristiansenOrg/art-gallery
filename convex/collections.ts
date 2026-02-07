@@ -4,15 +4,22 @@ import { requireAuth } from "./auth";
 import { sanitizeSvg } from "./sanitize";
 
 export const list = query({
-  handler: async (ctx) => {
+  args: {
+    publishedOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
     const collections = await ctx.db
       .query("collections")
       .withIndex("by_order")
       .order("asc")
       .collect();
 
+    const filtered = args.publishedOnly
+      ? collections.filter((c) => c.published !== false)
+      : collections;
+
     return Promise.all(
-      collections.map(async (c) => ({
+      filtered.map(async (c) => ({
         ...c,
         coverImageUrl: c.coverImageId
           ? await ctx.storage.getUrl(c.coverImageId)
@@ -23,15 +30,22 @@ export const list = query({
 });
 
 export const listWithCounts = query({
-  handler: async (ctx) => {
+  args: {
+    publishedOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
     const collections = await ctx.db
       .query("collections")
       .withIndex("by_order")
       .order("asc")
       .collect();
 
+    const filtered = args.publishedOnly
+      ? collections.filter((c) => c.published !== false)
+      : collections;
+
     return Promise.all(
-      collections.map(async (c) => {
+      filtered.map(async (c) => {
         const junctionEntries = await ctx.db
           .query("artworkCollections")
           .withIndex("by_collection", (q) => q.eq("collectionId", c._id))
@@ -39,8 +53,14 @@ export const listWithCounts = query({
         let artworkCount = 0;
         for (const j of junctionEntries) {
           const artwork = await ctx.db.get(j.artworkId);
-          if (artwork?.published && artwork.thumbnailId && artwork.dziStatus === "complete") {
-            artworkCount++;
+          if (args.publishedOnly) {
+            if (artwork?.published && artwork.thumbnailId && artwork.dziStatus === "complete") {
+              artworkCount++;
+            }
+          } else {
+            if (artwork && artwork.thumbnailId && artwork.dziStatus === "complete") {
+              artworkCount++;
+            }
           }
         }
         return {
@@ -56,7 +76,7 @@ export const listWithCounts = query({
 });
 
 export const getBySlug = query({
-  args: { slug: v.string() },
+  args: { slug: v.string(), publishedOnly: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const collection = await ctx.db
       .query("collections")
@@ -64,6 +84,7 @@ export const getBySlug = query({
       .first();
 
     if (!collection) return null;
+    if (args.publishedOnly && collection.published === false) return null;
 
     return {
       ...collection,
@@ -83,10 +104,11 @@ export const create = mutation({
     coverImageId: v.optional(v.id("_storage")),
     iconSvg: v.optional(v.string()),
     nativeAspectRatio: v.optional(v.boolean()),
+    published: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireAuth(args.token);
-    const { token: _, coverImageId, iconSvg, nativeAspectRatio, ...rest } = args;
+    const { token: _, coverImageId, iconSvg, nativeAspectRatio, published, ...rest } = args;
     const last = await ctx.db
       .query("collections")
       .withIndex("by_order")
@@ -97,6 +119,7 @@ export const create = mutation({
     return ctx.db.insert("collections", {
       ...rest,
       order: maxOrder + 1,
+      published: published ?? true,
       // Mutual exclusivity: only one of these can be set
       ...(iconSvg && !coverImageId ? { iconSvg: sanitizeSvg(iconSvg) } : {}),
       ...(coverImageId && !iconSvg ? { coverImageId } : {}),
@@ -115,6 +138,7 @@ export const update = mutation({
     coverImageId: v.optional(v.id("_storage")),
     iconSvg: v.optional(v.string()),
     nativeAspectRatio: v.optional(v.boolean()),
+    published: v.optional(v.boolean()),
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {

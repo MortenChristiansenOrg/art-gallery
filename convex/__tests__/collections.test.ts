@@ -26,11 +26,13 @@ describe("collections", () => {
           name: "Second",
           slug: "second",
           order: 2,
+          published: true,
         });
         await ctx.db.insert("collections", {
           name: "First",
           slug: "first",
           order: 1,
+          published: true,
         });
       });
 
@@ -50,6 +52,7 @@ describe("collections", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         const art1 = await ctx.db.insert("artworks", {
@@ -94,6 +97,7 @@ describe("collections", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         // Published with thumbnail and complete DZI
@@ -142,7 +146,7 @@ describe("collections", () => {
         });
       });
 
-      const result = await t.query(api.collections.listWithCounts, {});
+      const result = await t.query(api.collections.listWithCounts, { publishedOnly: true });
       expect(result[0].artworkCount).toBe(1);
     });
   });
@@ -156,6 +160,7 @@ describe("collections", () => {
           name: "Test Collection",
           slug: "test-collection",
           order: 0,
+          published: true,
         });
       });
 
@@ -200,6 +205,7 @@ describe("collections", () => {
           name: "Existing",
           slug: "existing",
           order: 3,
+          published: true,
         });
       });
 
@@ -238,6 +244,7 @@ describe("collections", () => {
           name: "Original",
           slug: "original",
           order: 0,
+          published: true,
         });
       });
 
@@ -267,6 +274,7 @@ describe("collections", () => {
           name: "To Delete",
           slug: "to-delete",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         artworkId = await ctx.db.insert("artworks", {
@@ -315,11 +323,13 @@ describe("collections", () => {
           name: "First",
           slug: "first",
           order: 0,
+          published: true,
         });
         id2 = await ctx.db.insert("collections", {
           name: "Second",
           slug: "second",
           order: 1,
+          published: true,
         });
       });
 
