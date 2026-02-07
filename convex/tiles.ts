@@ -246,8 +246,34 @@ export const finishClientProcessing = mutation({
   },
   handler: async (ctx, args) => {
     await requireAuth(args.token);
+    const artwork = await ctx.db.get(args.artworkId);
+    if (!artwork) {
+      throw new ConvexError("Artwork not found");
+    }
+    if (artwork.dziStatus !== "generating") {
+      throw new ConvexError("Artwork is not in generating state");
+    }
     await ctx.db.patch(args.artworkId, {
       dziStatus: "complete",
+      dziGenerationStartedAt: undefined,
+    });
+  },
+});
+
+// Public: mark client-side processing as failed
+export const failClientProcessing = mutation({
+  args: {
+    token: v.string(),
+    artworkId: v.id("artworks"),
+    error: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(args.token);
+    const artwork = await ctx.db.get(args.artworkId);
+    if (!artwork) return;
+    if (artwork.dziStatus !== "generating") return;
+    await ctx.db.patch(args.artworkId, {
+      dziStatus: "failed",
       dziGenerationStartedAt: undefined,
     });
   },

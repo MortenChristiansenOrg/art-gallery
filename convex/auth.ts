@@ -1,6 +1,15 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 // Token valid for 24 hours
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
@@ -45,7 +54,7 @@ async function validateToken(token: string): Promise<boolean> {
     const secret = getAdminPassword();
     if (!secret) return false;
     const expectedHash = await deriveHash(String(timestamp));
-    if (hash !== expectedHash) return false;
+    if (!constantTimeEqual(hash, expectedHash)) return false;
     return true;
   } catch {
     return false;

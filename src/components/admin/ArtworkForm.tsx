@@ -64,6 +64,7 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
   const startProcessing = useMutation(api.processing.start);
   const insertTileBatch = useMutation(api.tiles.insertTileBatch);
   const finishClientProcessing = useMutation(api.tiles.finishClientProcessing);
+  const failClientProcessing = useMutation(api.tiles.failClientProcessing);
 
   const [form, setForm] = useState({
     description: artwork?.description ?? "",
@@ -244,6 +245,7 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
           const { file, title } = selectedImages[i];
           setUploadProgress({ current: i + 1, total });
 
+          let currentArtworkId: Id<"artworks"> | undefined;
           try {
             // Upload original
             const imageId = await uploadBlob(file);
@@ -256,7 +258,7 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
                 setLocalProgress
               );
 
-              const artworkId = await createPreprocessed({
+              currentArtworkId = await createPreprocessed({
                 token,
                 title: title.trim(),
                 imageId,
@@ -271,12 +273,12 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
               for (let j = 0; j < result.tiles.length; j += 50) {
                 await insertTileBatch({
                   token,
-                  artworkId,
+                  artworkId: currentArtworkId,
                   tiles: result.tiles.slice(j, j + 50),
                 });
               }
 
-              await finishClientProcessing({ token, artworkId });
+              await finishClientProcessing({ token, artworkId: currentArtworkId });
               setLocalProgress(null);
             } else {
               // Server-side processing
@@ -290,6 +292,9 @@ export function ArtworkForm({ artwork, collectionId, onClose }: ArtworkFormProps
             }
           } catch (err) {
             errors.push(`${title}: ${err instanceof Error ? err.message : "Unknown error"}`);
+            if (currentArtworkId) {
+              failClientProcessing({ token, artworkId: currentArtworkId, error: err instanceof Error ? err.message : "Unknown error" }).catch(console.error);
+            }
             setLocalProgress(null);
           }
         }
