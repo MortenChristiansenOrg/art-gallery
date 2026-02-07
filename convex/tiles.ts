@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { query, internalQuery, internalMutation } from "./_generated/server";
+import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
+import { requireAuth } from "./auth";
 
 // Public query to get a specific tile's storage URL
 export const getTile = query({
@@ -198,5 +199,55 @@ export const getArtworkInternal = internalQuery({
   },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.artworkId);
+  },
+});
+
+// Public: insert a batch of client-generated tiles
+export const insertTileBatch = mutation({
+  args: {
+    token: v.string(),
+    artworkId: v.id("artworks"),
+    tiles: v.array(
+      v.object({
+        level: v.number(),
+        col: v.number(),
+        row: v.number(),
+        storageId: v.id("_storage"),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    requireAuth(args.token);
+    for (const tile of args.tiles) {
+      await ctx.db.insert("tiles", {
+        artworkId: args.artworkId,
+        level: tile.level,
+        col: tile.col,
+        row: tile.row,
+        storageId: tile.storageId,
+      });
+    }
+    const artwork = await ctx.db.get(args.artworkId);
+    if (artwork) {
+      await ctx.db.patch(args.artworkId, {
+        tilesCompleted: (artwork.tilesCompleted ?? 0) + args.tiles.length,
+        dziGenerationStartedAt: Date.now(), // heartbeat
+      });
+    }
+  },
+});
+
+// Public: mark client-side processing complete
+export const finishClientProcessing = mutation({
+  args: {
+    token: v.string(),
+    artworkId: v.id("artworks"),
+  },
+  handler: async (ctx, args) => {
+    requireAuth(args.token);
+    await ctx.db.patch(args.artworkId, {
+      dziStatus: "complete",
+      dziGenerationStartedAt: undefined,
+    });
   },
 });
