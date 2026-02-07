@@ -107,7 +107,7 @@ export const create = mutation({
     published: v.boolean(),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, collectionId, ...data } = args;
     const last = await ctx.db
       .query("artworks")
@@ -157,7 +157,7 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { id, token: _, ...updates } = args;
 
     // If imageId is being updated, cleanup old tiles and reset DZI status
@@ -189,7 +189,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { token: v.string(), id: v.id("artworks") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const artwork = await ctx.db.get(args.id);
     if (artwork) {
       await ctx.storage.delete(artwork.imageId);
@@ -218,7 +218,7 @@ export const addToCollection = mutation({
     collectionId: v.id("collections"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
 
     // Check for duplicate
     const existing = await ctx.db
@@ -251,7 +251,7 @@ export const removeFromCollection = mutation({
     collectionId: v.id("collections"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
 
     const entries = await ctx.db
       .query("artworkCollections")
@@ -309,7 +309,7 @@ export const reorder = mutation({
     collectionId: v.optional(v.id("collections")),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     if (args.collectionId) {
       const entries = await ctx.db
         .query("artworkCollections")
@@ -356,7 +356,7 @@ export const createPreprocessed = mutation({
     published: v.boolean(),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, collectionId, thumbnailId, viewerImageId, dziMetadata, tilesTotal, ...data } = args;
     const last = await ctx.db
       .query("artworks")

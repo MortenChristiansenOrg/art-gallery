@@ -23,7 +23,7 @@ export const start = mutation({
     artworkId: v.id("artworks"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
 
     const artwork = await ctx.db.get(args.artworkId);
     if (!artwork) throw new ConvexError("Artwork not found");

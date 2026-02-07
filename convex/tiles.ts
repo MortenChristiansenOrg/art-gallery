@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { requireAuth } from "./auth";
 
@@ -217,7 +217,11 @@ export const insertTileBatch = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
+    const artwork = await ctx.db.get(args.artworkId);
+    if (!artwork) {
+      throw new ConvexError("Artwork not found");
+    }
     for (const tile of args.tiles) {
       await ctx.db.insert("tiles", {
         artworkId: args.artworkId,
@@ -227,13 +231,10 @@ export const insertTileBatch = mutation({
         storageId: tile.storageId,
       });
     }
-    const artwork = await ctx.db.get(args.artworkId);
-    if (artwork) {
-      await ctx.db.patch(args.artworkId, {
-        tilesCompleted: (artwork.tilesCompleted ?? 0) + args.tiles.length,
-        dziGenerationStartedAt: Date.now(), // heartbeat
-      });
-    }
+    await ctx.db.patch(args.artworkId, {
+      tilesCompleted: (artwork.tilesCompleted ?? 0) + args.tiles.length,
+      dziGenerationStartedAt: Date.now(), // heartbeat
+    });
   },
 });
 
@@ -244,7 +245,7 @@ export const finishClientProcessing = mutation({
     artworkId: v.id("artworks"),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     await ctx.db.patch(args.artworkId, {
       dziStatus: "complete",
       dziGenerationStartedAt: undefined,

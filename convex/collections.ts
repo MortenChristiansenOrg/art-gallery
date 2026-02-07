@@ -85,7 +85,7 @@ export const create = mutation({
     nativeAspectRatio: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, coverImageId, iconSvg, nativeAspectRatio, ...rest } = args;
     const last = await ctx.db
       .query("collections")
@@ -118,7 +118,7 @@ export const update = mutation({
     order: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { id, token: _, ...updates } = args;
     if (updates.iconSvg) {
       updates.iconSvg = sanitizeSvg(updates.iconSvg);
@@ -133,7 +133,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { token: v.string(), id: v.id("collections") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const collection = await ctx.db.get(args.id);
     if (collection) {
       if (collection.coverImageId) {
@@ -158,7 +158,7 @@ export const reorder = mutation({
     ids: v.array(v.id("collections")),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     for (let i = 0; i < args.ids.length; i++) {
       await ctx.db.patch(args.ids[i], { order: i });
     }

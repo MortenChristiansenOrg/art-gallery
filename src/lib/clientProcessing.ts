@@ -91,6 +91,10 @@ export async function processAndUploadLocally(
   const width = img.naturalWidth;
   const height = img.naturalHeight;
 
+  if (width * height > 100_000_000) {
+    throw new Error("Image too large for client-side processing (max ~100MP)");
+  }
+
   // 2. Generate + upload thumbnail
   onProgress({ stage: "thumbnail" });
   const thumbCanvas = resizeToCanvas(img, THUMBNAIL_MAX);

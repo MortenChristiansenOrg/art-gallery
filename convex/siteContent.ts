@@ -20,7 +20,7 @@ export const set = mutation({
     value: v.string(),
   },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const { token: _, ...data } = args;
     const existing = await ctx.db
       .query("siteContent")

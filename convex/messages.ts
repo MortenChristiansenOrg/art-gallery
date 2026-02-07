@@ -10,7 +10,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const list = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     return await ctx.db.query("messages").order("desc").collect();
   },
 });
@@ -18,7 +18,7 @@ export const list = query({
 export const unreadCount = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const unread = await ctx.db
       .query("messages")
       .withIndex("by_read", (q) => q.eq("read", false))
@@ -34,17 +34,23 @@ export const send = mutation({
     message: v.string(),
   },
   handler: async (ctx, args) => {
-    // Length limits (public endpoint — no auth)
-    if (args.name.length > MAX_NAME_LENGTH) {
+    const name = args.name.trim();
+    const email = args.email.trim();
+    const message = args.message.trim();
+
+    if (!name || !email || !message) {
+      throw new ConvexError("All fields are required");
+    }
+    if (name.length > MAX_NAME_LENGTH) {
       throw new ConvexError("Name is too long");
     }
-    if (args.email.length > MAX_EMAIL_LENGTH) {
+    if (email.length > MAX_EMAIL_LENGTH) {
       throw new ConvexError("Email is too long");
     }
-    if (args.message.length > MAX_MESSAGE_LENGTH) {
+    if (message.length > MAX_MESSAGE_LENGTH) {
       throw new ConvexError("Message is too long");
     }
-    if (!EMAIL_REGEX.test(args.email)) {
+    if (!EMAIL_REGEX.test(email)) {
       throw new ConvexError("Invalid email address");
     }
 
@@ -52,16 +58,16 @@ export const send = mutation({
     const recent = await ctx.db
       .query("messages")
       .order("desc")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      .filter((q) => q.eq(q.field("email"), email))
       .first();
     if (recent && Date.now() - recent.createdAt < 60_000) {
       throw new ConvexError("Please wait before sending another message");
     }
 
     return ctx.db.insert("messages", {
-      name: args.name.trim(),
-      email: args.email.trim(),
-      message: args.message.trim(),
+      name,
+      email,
+      message,
       read: false,
       createdAt: Date.now(),
     });
@@ -71,7 +77,7 @@ export const send = mutation({
 export const markRead = mutation({
   args: { token: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     await ctx.db.patch(args.id, { read: true });
   },
 });
@@ -79,7 +85,7 @@ export const markRead = mutation({
 export const markAllRead = mutation({
   args: { token: v.string() },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     const unread = await ctx.db
       .query("messages")
       .withIndex("by_read", (q) => q.eq("read", false))
@@ -93,7 +99,7 @@ export const markAllRead = mutation({
 export const remove = mutation({
   args: { token: v.string(), id: v.id("messages") },
   handler: async (ctx, args) => {
-    requireAuth(args.token);
+    await requireAuth(args.token);
     await ctx.db.delete(args.id);
   },
 });

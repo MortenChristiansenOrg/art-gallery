@@ -6,9 +6,9 @@ import { generateTestToken } from "./testHelpers";
 describe("siteContent", () => {
   let validToken: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.stubEnv("ADMIN_PASSWORD", "test-password");
-    validToken = generateTestToken();
+    validToken = await generateTestToken();
   });
 
   describe("get", () => {
