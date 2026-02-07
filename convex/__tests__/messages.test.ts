@@ -1,18 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { api } from "../_generated/api";
 import { createTestContext, Id } from "./setup";
+import { generateTestToken } from "./testHelpers";
 
 describe("messages", () => {
-  const validToken = btoa(`${Date.now()}:validhash`);
+  let validToken: string;
 
   beforeEach(() => {
     vi.stubEnv("ADMIN_PASSWORD", "test-password");
+    validToken = generateTestToken();
   });
 
   describe("list", () => {
     it("returns empty array when no messages", async () => {
       const t = createTestContext();
-      const result = await t.query(api.messages.list, {});
+      const result = await t.query(api.messages.list, { token: validToken });
       expect(result).toEqual([]);
     });
 
@@ -36,7 +38,7 @@ describe("messages", () => {
         });
       });
 
-      const result = await t.query(api.messages.list, {});
+      const result = await t.query(api.messages.list, { token: validToken });
       expect(result[0].name).toBe("Second"); // Newer first
       expect(result[1].name).toBe("First");
     });
@@ -45,7 +47,7 @@ describe("messages", () => {
   describe("unreadCount", () => {
     it("returns 0 when no unread messages", async () => {
       const t = createTestContext();
-      const result = await t.query(api.messages.unreadCount, {});
+      const result = await t.query(api.messages.unreadCount, { token: validToken });
       expect(result).toBe(0);
     });
 
@@ -76,7 +78,7 @@ describe("messages", () => {
         });
       });
 
-      const result = await t.query(api.messages.unreadCount, {});
+      const result = await t.query(api.messages.unreadCount, { token: validToken });
       expect(result).toBe(2);
     });
   });
@@ -93,7 +95,7 @@ describe("messages", () => {
 
       expect(id).toBeDefined();
 
-      const messages = await t.query(api.messages.list, {});
+      const messages = await t.query(api.messages.list, { token: validToken });
       expect(messages).toHaveLength(1);
       expect(messages[0].name).toBe("John Doe");
       expect(messages[0].email).toBe("john@example.com");
@@ -122,7 +124,7 @@ describe("messages", () => {
         id: messageId!,
       });
 
-      const messages = await t.query(api.messages.list, {});
+      const messages = await t.query(api.messages.list, { token: validToken });
       expect(messages[0].read).toBe(true);
     });
 
@@ -174,7 +176,7 @@ describe("messages", () => {
         token: validToken,
       });
 
-      const unread = await t.query(api.messages.unreadCount, {});
+      const unread = await t.query(api.messages.unreadCount, { token: validToken });
       expect(unread).toBe(0);
     });
   });
@@ -199,7 +201,7 @@ describe("messages", () => {
         id: messageId!,
       });
 
-      const messages = await t.query(api.messages.list, {});
+      const messages = await t.query(api.messages.list, { token: validToken });
       expect(messages).toHaveLength(0);
     });
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { sanitizeSvg } from "../../lib/sanitizeSvg";
 
 interface IconPickerProps {
   value: string | null;
@@ -46,7 +47,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       );
       if (!res.ok) throw new Error(`Failed to fetch SVG: ${res.status}`);
       const svg = await res.text();
-      onChange(svg);
+      onChange(sanitizeSvg(svg));
     } catch (err) {
       console.error("Failed to fetch icon SVG:", err);
     } finally {
@@ -63,7 +64,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 flex items-center justify-center [&_svg]:w-10 [&_svg]:h-10 [&_svg>path:first-child]:fill-none [&_svg>path:not(:first-child)]:fill-[var(--color-gallery-muted)]"
-            dangerouslySetInnerHTML={{ __html: value }}
+            dangerouslySetInnerHTML={{ __html: sanitizeSvg(value) }}
           />
           <button
             type="button"

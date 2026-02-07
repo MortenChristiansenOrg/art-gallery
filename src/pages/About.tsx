@@ -145,6 +145,7 @@ export function About() {
                   input-elegant
                 "
                 placeholder="Your name"
+                maxLength={200}
               />
             </div>
 
@@ -176,6 +177,7 @@ export function About() {
                   input-elegant
                 "
                 placeholder="your@email.com"
+                maxLength={320}
               />
             </div>
 
@@ -207,6 +209,7 @@ export function About() {
                   input-elegant resize-none
                 "
                 placeholder="Your message..."
+                maxLength={5000}
               />
             </div>
 

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./auth";
+import { sanitizeSvg } from "./sanitize";
 
 export const list = query({
   handler: async (ctx) => {
@@ -97,7 +98,7 @@ export const create = mutation({
       ...rest,
       order: maxOrder + 1,
       // Mutual exclusivity: only one of these can be set
-      ...(iconSvg && !coverImageId ? { iconSvg } : {}),
+      ...(iconSvg && !coverImageId ? { iconSvg: sanitizeSvg(iconSvg) } : {}),
       ...(coverImageId && !iconSvg ? { coverImageId } : {}),
       ...(nativeAspectRatio !== undefined ? { nativeAspectRatio } : {}),
     });
@@ -119,10 +120,12 @@ export const update = mutation({
   handler: async (ctx, args) => {
     requireAuth(args.token);
     const { id, token: _, ...updates } = args;
+    if (updates.iconSvg) {
+      updates.iconSvg = sanitizeSvg(updates.iconSvg);
+    }
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
-    // Mutual exclusivity handled client-side; just apply the patch
     await ctx.db.patch(id, filtered);
   },
 });

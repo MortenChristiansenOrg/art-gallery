@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { rewriteStorageUrl } from "../../lib/rewriteStorageUrl";
+import { sanitizeSvg } from "../../lib/sanitizeSvg";
 
 interface CollectionCardProps {
   collection: {
@@ -204,7 +205,7 @@ function NoImageFallback({ name, iconSvg }: { name: string; iconSvg?: string }) 
             [&_svg>path:not(:first-child)]:fill-current
           "
           style={{ color: `hsl(${hue}, 12%, 45%)` }}
-          dangerouslySetInnerHTML={{ __html: iconSvg! }}
+          dangerouslySetInnerHTML={{ __html: sanitizeSvg(iconSvg!) }}
         />
       ) : (
         <span

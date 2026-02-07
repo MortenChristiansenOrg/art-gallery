@@ -33,8 +33,8 @@ export function Admin() {
     api.artworks.list,
     activeFilter ? { publishedOnly: false, collectionId: activeFilter } : "skip"
   );
-  const messages = useQuery(api.messages.list);
-  const unreadCount = useQuery(api.messages.unreadCount);
+  const messages = useQuery(api.messages.list, token ? { token } : "skip");
+  const unreadCount = useQuery(api.messages.unreadCount, token ? { token } : "skip");
   const aboutContent = useQuery(api.siteContent.get, { key: "about" });
 
   const deleteArtwork = useMutation(api.artworks.remove);

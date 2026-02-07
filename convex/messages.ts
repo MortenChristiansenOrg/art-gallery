@@ -1,15 +1,24 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./auth";
 
+const MAX_NAME_LENGTH = 200;
+const MAX_EMAIL_LENGTH = 320;
+const MAX_MESSAGE_LENGTH = 5000;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const list = query({
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    requireAuth(args.token);
     return await ctx.db.query("messages").order("desc").collect();
   },
 });
 
 export const unreadCount = query({
-  handler: async (ctx) => {
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    requireAuth(args.token);
     const unread = await ctx.db
       .query("messages")
       .withIndex("by_read", (q) => q.eq("read", false))
@@ -25,8 +34,34 @@ export const send = mutation({
     message: v.string(),
   },
   handler: async (ctx, args) => {
+    // Length limits (public endpoint — no auth)
+    if (args.name.length > MAX_NAME_LENGTH) {
+      throw new ConvexError("Name is too long");
+    }
+    if (args.email.length > MAX_EMAIL_LENGTH) {
+      throw new ConvexError("Email is too long");
+    }
+    if (args.message.length > MAX_MESSAGE_LENGTH) {
+      throw new ConvexError("Message is too long");
+    }
+    if (!EMAIL_REGEX.test(args.email)) {
+      throw new ConvexError("Invalid email address");
+    }
+
+    // Basic rate limiting: reject if same email sent a message in last 60s
+    const recent = await ctx.db
+      .query("messages")
+      .order("desc")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
+    if (recent && Date.now() - recent.createdAt < 60_000) {
+      throw new ConvexError("Please wait before sending another message");
+    }
+
     return ctx.db.insert("messages", {
-      ...args,
+      name: args.name.trim(),
+      email: args.email.trim(),
+      message: args.message.trim(),
       read: false,
       createdAt: Date.now(),
     });

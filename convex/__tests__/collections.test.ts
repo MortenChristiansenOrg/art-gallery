@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { api } from "../_generated/api";
 import { createTestContext, createTestBlob, Id } from "./setup";
+import { generateTestToken } from "./testHelpers";
 
 describe("collections", () => {
-  const validToken = btoa(`${Date.now()}:validhash`);
+  let validToken: string;
 
   beforeEach(() => {
     vi.stubEnv("ADMIN_PASSWORD", "test-password");
+    validToken = generateTestToken();
   });
 
   describe("list", () => {
