@@ -80,6 +80,43 @@ describe("artworks", () => {
       expect(result[0].collectionCount).toBe(1);
     });
 
+    it("excludes unpublished artworks by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        const storageId = await ctx.storage.store(createTestBlob());
+        await ctx.db.insert("artworks", {
+          title: "Published",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 0,
+          published: true,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworks", {
+          title: "Unpublished",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 1,
+          published: false,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworks", {
+          title: "No Thumbnail",
+          imageId: storageId,
+          order: 2,
+          published: true,
+          createdAt: Date.now(),
+        });
+      });
+
+      const result = await t.query(api.artworks.list, {});
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe("Published");
+    });
+
     it("sorts by order", async () => {
       const t = createTestContext();
 
@@ -125,6 +162,27 @@ describe("artworks", () => {
         const result = await ctx.db.get(id);
         expect(result).toBeNull();
       });
+    });
+
+    it("returns null for unpublished artwork by default", async () => {
+      const t = createTestContext();
+
+      let artworkId: Id<"artworks"> | undefined;
+      await t.run(async (ctx) => {
+        const storageId = await ctx.storage.store(createTestBlob());
+        artworkId = await ctx.db.insert("artworks", {
+          title: "Draft",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 0,
+          published: false,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+      });
+
+      const result = await t.query(api.artworks.get, { id: artworkId! });
+      expect(result).toBeNull();
     });
 
     it("returns artwork by id", async () => {

@@ -18,6 +18,29 @@ describe("collections", () => {
       expect(result).toEqual([]);
     });
 
+    it("excludes unpublished collections by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("collections", {
+          name: "Published",
+          slug: "published",
+          order: 0,
+          published: true,
+        });
+        await ctx.db.insert("collections", {
+          name: "Draft",
+          slug: "draft",
+          order: 1,
+          published: false,
+        });
+      });
+
+      const result = await t.query(api.collections.list, {});
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Published");
+    });
+
     it("returns all collections sorted by order", async () => {
       const t = createTestContext();
 
@@ -85,6 +108,7 @@ describe("collections", () => {
         });
       });
 
+      // Both artworks are published with thumbnails + complete DZI, so default publishedOnly=true still counts both
       const result = await t.query(api.collections.listWithCounts, {});
       expect(result[0].artworkCount).toBe(2);
     });
@@ -168,6 +192,24 @@ describe("collections", () => {
         slug: "test-collection",
       });
       expect(result?.name).toBe("Test Collection");
+    });
+
+    it("returns null for draft collection by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("collections", {
+          name: "Draft",
+          slug: "draft",
+          order: 0,
+          published: false,
+        });
+      });
+
+      const result = await t.query(api.collections.getBySlug, {
+        slug: "draft",
+      });
+      expect(result).toBeNull();
     });
 
     it("returns null for non-existent slug", async () => {
