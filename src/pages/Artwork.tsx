@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -10,8 +10,13 @@ import { useAuth } from "../lib/auth";
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const [viewerOpen, setViewerOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Get collection slug from navigation state (if coming from collection page)
   const fromCollection = (location.state as { fromCollection?: string } | null)?.fromCollection;
@@ -91,6 +96,15 @@ export function Artwork() {
     backLabel = artworkCollection.name;
   }
 
+  // Use history back when user came from within the app (preserves scroll position)
+  const canGoBack = location.key !== "default";
+  const handleBack = (e: React.MouseEvent) => {
+    if (canGoBack) {
+      e.preventDefault();
+      navigate(-1);
+    }
+  };
+
   const hasImage = artwork.viewerImageUrl || artwork.imageUrl;
   const imageSrc = rewriteStorageUrl(artwork.viewerImageUrl || artwork.imageUrl!) ?? artwork.imageUrl!;
 
@@ -120,7 +134,7 @@ export function Artwork() {
                 text-[var(--color-gallery-muted)]
                 transition-colors duration-300
               "
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); handleBack(e); }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
@@ -259,6 +273,7 @@ export function Artwork() {
           <Link
             to={backLink}
             data-testid="back-button"
+            onClick={handleBack}
             className="
               group inline-flex items-center gap-3
               text-[0.8rem] tracking-[0.1em] uppercase font-light
