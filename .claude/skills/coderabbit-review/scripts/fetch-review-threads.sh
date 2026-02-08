@@ -70,7 +70,7 @@ REVIEW_BODY_COMMENTS=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews" --pa
 import json, re, sys
 
 reviews = json.load(sys.stdin)
-cr_reviews = [r for r in reviews if r["user"]["login"] == "coderabbitai[bot]"]
+cr_reviews = [r for r in reviews if r["user"]["login"] == "coderabbitai[bot]" and r.get("body", "").strip()]
 if not cr_reviews:
     print("[]")
     sys.exit(0)
