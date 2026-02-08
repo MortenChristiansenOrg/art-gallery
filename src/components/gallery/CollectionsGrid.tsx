@@ -8,6 +8,7 @@ interface Collection {
   slug: string;
   coverImageUrl: string | null;
   artworkCount: number;
+  published?: boolean;
 }
 
 interface CollectionsGridProps {

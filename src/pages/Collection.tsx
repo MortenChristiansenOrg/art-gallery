@@ -2,18 +2,20 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { ArtworkGrid } from "../components/gallery";
+import { useAuth } from "../lib/auth";
 
 export function Collection() {
   const { slug } = useParams<{ slug: string }>();
+  const { isAuthenticated } = useAuth();
 
   const collection = useQuery(
     api.collections.getBySlug,
-    slug ? { slug } : "skip"
+    slug ? { slug, publishedOnly: !isAuthenticated } : "skip"
   );
 
   const artworks = useQuery(
     api.artworks.list,
-    collection?._id ? { collectionId: collection._id, publishedOnly: true } : "skip"
+    collection?._id ? { collectionId: collection._id, publishedOnly: !isAuthenticated } : "skip"
   );
 
   // 404 state
@@ -104,15 +106,22 @@ export function Collection() {
 
       {/* Collection header */}
       <header className="mb-12 max-w-2xl">
-        <h1
-          className="
-            text-3xl lg:text-4xl font-light tracking-wide
-            text-[var(--color-gallery-text)]
-            font-[var(--font-serif)]
-          "
-        >
-          {collection.name}
-        </h1>
+        <div className="flex items-start gap-3">
+          <h1
+            className="
+              text-3xl lg:text-4xl font-light tracking-wide
+              text-[var(--color-gallery-text)]
+              font-[var(--font-serif)]
+            "
+          >
+            {collection.name}
+          </h1>
+          {collection.published === false && (
+            <span className="mt-2 shrink-0 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+              Draft
+            </span>
+          )}
+        </div>
         {collection.description && (
           <p className="mt-4 text-[0.95rem] leading-relaxed text-[var(--color-gallery-subtle)] font-light">
             {collection.description}

@@ -20,6 +20,10 @@ vi.mock("convex/react", () => ({
   }),
 }));
 
+vi.mock("../lib/auth", () => ({
+  useAuth: () => ({ isAuthenticated: false, token: null, login: vi.fn(), logout: vi.fn() }),
+}));
+
 // Mock ImageViewer (OpenSeadragon is complex)
 vi.mock("../components/gallery", () => ({
   ImageViewer: ({ isOpen, onClose, title }: { isOpen: boolean; onClose: () => void; title: string }) =>

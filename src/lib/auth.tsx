@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const loginMutation = useMutation(api.auth.login);
+  const navigate = useNavigate();
 
   // Restore token from session storage
   useEffect(() => {
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setIsAuthenticated(false);
     sessionStorage.removeItem(TOKEN_KEY);
+    navigate("/");
   };
 
   return (

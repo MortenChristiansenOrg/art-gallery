@@ -18,6 +18,29 @@ describe("collections", () => {
       expect(result).toEqual([]);
     });
 
+    it("excludes unpublished collections by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("collections", {
+          name: "Published",
+          slug: "published",
+          order: 0,
+          published: true,
+        });
+        await ctx.db.insert("collections", {
+          name: "Draft",
+          slug: "draft",
+          order: 1,
+          published: false,
+        });
+      });
+
+      const result = await t.query(api.collections.list, {});
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("Published");
+    });
+
     it("returns all collections sorted by order", async () => {
       const t = createTestContext();
 
@@ -26,11 +49,13 @@ describe("collections", () => {
           name: "Second",
           slug: "second",
           order: 2,
+          published: true,
         });
         await ctx.db.insert("collections", {
           name: "First",
           slug: "first",
           order: 1,
+          published: true,
         });
       });
 
@@ -50,6 +75,7 @@ describe("collections", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         const art1 = await ctx.db.insert("artworks", {
@@ -82,6 +108,7 @@ describe("collections", () => {
         });
       });
 
+      // Both artworks are published with thumbnails + complete DZI, so default publishedOnly=true still counts both
       const result = await t.query(api.collections.listWithCounts, {});
       expect(result[0].artworkCount).toBe(2);
     });
@@ -94,6 +121,7 @@ describe("collections", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         // Published with thumbnail and complete DZI
@@ -142,7 +170,7 @@ describe("collections", () => {
         });
       });
 
-      const result = await t.query(api.collections.listWithCounts, {});
+      const result = await t.query(api.collections.listWithCounts, { publishedOnly: true });
       expect(result[0].artworkCount).toBe(1);
     });
   });
@@ -156,6 +184,7 @@ describe("collections", () => {
           name: "Test Collection",
           slug: "test-collection",
           order: 0,
+          published: true,
         });
       });
 
@@ -163,6 +192,24 @@ describe("collections", () => {
         slug: "test-collection",
       });
       expect(result?.name).toBe("Test Collection");
+    });
+
+    it("returns null for draft collection by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert("collections", {
+          name: "Draft",
+          slug: "draft",
+          order: 0,
+          published: false,
+        });
+      });
+
+      const result = await t.query(api.collections.getBySlug, {
+        slug: "draft",
+      });
+      expect(result).toBeNull();
     });
 
     it("returns null for non-existent slug", async () => {
@@ -200,6 +247,7 @@ describe("collections", () => {
           name: "Existing",
           slug: "existing",
           order: 3,
+          published: true,
         });
       });
 
@@ -238,6 +286,7 @@ describe("collections", () => {
           name: "Original",
           slug: "original",
           order: 0,
+          published: true,
         });
       });
 
@@ -267,6 +316,7 @@ describe("collections", () => {
           name: "To Delete",
           slug: "to-delete",
           order: 0,
+          published: true,
         });
         const storageId = await ctx.storage.store(createTestBlob());
         artworkId = await ctx.db.insert("artworks", {
@@ -295,11 +345,11 @@ describe("collections", () => {
       expect(collection).toBeNull();
 
       // Artwork should still exist
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).not.toBeNull();
 
       // But not in any collection (junction entry deleted)
-      const listed = await t.query(api.artworks.list, {});
+      const listed = await t.query(api.artworks.list, { publishedOnly: false });
       expect(listed.find((a) => a._id === artworkId!)?.collectionCount).toBe(0);
     });
   });
@@ -315,11 +365,13 @@ describe("collections", () => {
           name: "First",
           slug: "first",
           order: 0,
+          published: true,
         });
         id2 = await ctx.db.insert("collections", {
           name: "Second",
           slug: "second",
           order: 1,
+          published: true,
         });
       });
 

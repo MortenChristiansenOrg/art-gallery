@@ -12,6 +12,7 @@ interface CollectionCardProps {
     coverImageUrl: string | null;
     iconSvg?: string;
     artworkCount: number;
+    published?: boolean;
   };
   index: number;
 }
@@ -38,6 +39,12 @@ export function CollectionCard({ collection, index }: CollectionCardProps) {
           group-hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)]
         "
       >
+        {/* Draft badge */}
+        {collection.published === false && (
+          <span className="absolute top-3 right-3 z-10 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+            Draft
+          </span>
+        )}
         {/* Subtle corner accents */}
         <div className="absolute top-0 left-0 w-8 h-[1px] bg-[var(--color-gallery-border)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute top-0 left-0 w-[1px] h-8 bg-[var(--color-gallery-border)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

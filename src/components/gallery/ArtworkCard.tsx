@@ -13,9 +13,10 @@ interface ArtworkCardProps {
   collectionSlug?: string;
   nativeAspectRatio?: boolean;
   dziMetadata?: { width: number; height: number };
+  published?: boolean;
 }
 
-export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, index = 0, collectionSlug, nativeAspectRatio, dziMetadata }: ArtworkCardProps) {
+export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, index = 0, collectionSlug, nativeAspectRatio, dziMetadata, published }: ArtworkCardProps) {
   // Stagger class based on index (1-9 cycle)
   const staggerClass = `stagger-${(index % 9) + 1}`;
 
@@ -37,6 +38,12 @@ export function ArtworkCard({ id, title, imageUrl, thumbnailUrl, year, onClick, 
           gallery-frame
         "
       >
+        {/* Draft badge */}
+        {published === false && (
+          <span className="absolute top-1.5 right-1.5 z-10 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+            Draft
+          </span>
+        )}
         {/* Inner matting effect */}
         <div className="relative overflow-hidden bg-[var(--color-gallery-hover)]">
           {/* Aspect ratio container */}

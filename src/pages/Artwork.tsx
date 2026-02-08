@@ -1,25 +1,32 @@
-import { useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { ImageViewer } from "../components/gallery";
 import { rewriteStorageUrl } from "../lib/rewriteStorageUrl";
+import { useAuth } from "../lib/auth";
 
 export function Artwork() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const [viewerOpen, setViewerOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Get collection slug from navigation state (if coming from collection page)
   const fromCollection = (location.state as { fromCollection?: string } | null)?.fromCollection;
 
   const artwork = useQuery(
     api.artworks.get,
-    id ? { id: id as Id<"artworks">, publishedOnly: true } : "skip"
+    id ? { id: id as Id<"artworks">, publishedOnly: !isAuthenticated } : "skip"
   );
 
-  const collections = useQuery(api.collections.list);
+  const collections = useQuery(api.collections.list, { publishedOnly: !isAuthenticated });
 
   if (artwork === undefined) {
     return (
@@ -89,6 +96,15 @@ export function Artwork() {
     backLabel = artworkCollection.name;
   }
 
+  // Use history back when user came from within the app (preserves scroll position)
+  const canGoBack = location.key !== "default";
+  const handleBack = (e: React.MouseEvent) => {
+    if (canGoBack) {
+      e.preventDefault();
+      navigate(-1);
+    }
+  };
+
   const hasImage = artwork.viewerImageUrl || artwork.imageUrl;
   const imageSrc = rewriteStorageUrl(artwork.viewerImageUrl || artwork.imageUrl!) ?? artwork.imageUrl!;
 
@@ -99,7 +115,14 @@ export function Artwork() {
         {/* Full-bleed hero image */}
         <div
           className="relative cursor-zoom-in"
+          style={{ touchAction: 'pan-y' }}
           onClick={() => setViewerOpen(true)}
+          onTouchStart={(e) => {
+            if (e.touches.length >= 2) {
+              e.preventDefault();
+              setViewerOpen(true);
+            }
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && setViewerOpen(true)}
@@ -118,7 +141,7 @@ export function Artwork() {
                 text-[var(--color-gallery-muted)]
                 transition-colors duration-300
               "
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); handleBack(e); }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
@@ -141,20 +164,6 @@ export function Artwork() {
             </div>
           )}
 
-          {/* Tap to zoom hint */}
-          <div className="absolute bottom-6 right-4 pointer-events-none">
-            <span className="
-              inline-flex items-center gap-1.5 px-2.5 py-1
-              bg-[var(--color-gallery-text)]/70 text-[var(--color-gallery-surface)]
-              text-[0.65rem] tracking-[0.1em] uppercase font-light
-              backdrop-blur-sm
-            ">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-              </svg>
-              Tap to zoom
-            </span>
-          </div>
         </div>
 
         {/* Info card that overlaps the image */}
@@ -167,15 +176,22 @@ export function Artwork() {
         ">
           {/* Title */}
           <header>
-            <h1
-              data-testid="artwork-title-mobile"
-              className="
-                font-[var(--font-serif)] text-[1.75rem]
-                font-light leading-tight tracking-[0.01em]
-              "
-            >
-              {artwork.title}
-            </h1>
+            <div className="flex items-start gap-2">
+              <h1
+                data-testid="artwork-title-mobile"
+                className="
+                  font-[var(--font-serif)] text-[1.75rem]
+                  font-light leading-tight tracking-[0.01em]
+                "
+              >
+                {artwork.title}
+              </h1>
+              {artwork.published === false && (
+                <span className="mt-1.5 shrink-0 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+                  Draft
+                </span>
+              )}
+            </div>
             {artwork.year && (
               <p className="mt-1.5 text-[var(--color-gallery-muted)] text-[0.85rem] font-light">
                 {artwork.year}
@@ -250,6 +266,7 @@ export function Artwork() {
           <Link
             to={backLink}
             data-testid="back-button"
+            onClick={handleBack}
             className="
               group inline-flex items-center gap-3
               text-[0.8rem] tracking-[0.1em] uppercase font-light
@@ -345,15 +362,22 @@ export function Artwork() {
           <aside className="w-80 flex-shrink-0 sticky top-32 self-start space-y-8">
             {/* Title */}
             <header>
-              <h1
-                data-testid="artwork-title"
-                className="
-                  font-[var(--font-serif)] text-[2.25rem]
-                  font-light leading-tight tracking-[0.01em]
-                "
-              >
-                {artwork.title}
-              </h1>
+              <div className="flex items-start gap-3">
+                <h1
+                  data-testid="artwork-title"
+                  className="
+                    font-[var(--font-serif)] text-[2.25rem]
+                    font-light leading-tight tracking-[0.01em]
+                  "
+                >
+                  {artwork.title}
+                </h1>
+                {artwork.published === false && (
+                  <span className="mt-2 shrink-0 bg-[var(--color-gallery-text)]/10 text-[var(--color-gallery-muted)] text-[0.6rem] tracking-[0.15em] uppercase px-2 py-0.5">
+                    Draft
+                  </span>
+                )}
+              </div>
               {artwork.year && (
                 <p className="mt-2 text-[var(--color-gallery-muted)] text-[0.9rem] font-light">
                   {artwork.year}

@@ -15,6 +15,7 @@ interface CollectionFormProps {
     coverImageUrl?: string | null;
     iconSvg?: string;
     nativeAspectRatio?: boolean;
+    published?: boolean;
   };
   onClose: () => void;
 }
@@ -38,6 +39,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
     description: collection?.description ?? "",
     slug: collection?.slug ?? "",
     nativeAspectRatio: collection?.nativeAspectRatio ?? false,
+    published: collection?.published ?? true,
   });
 
   const [coverSource, setCoverSource] = useState<CoverSource>(
@@ -166,6 +168,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
           description: form.description || undefined,
           slug: form.slug,
           nativeAspectRatio: form.nativeAspectRatio,
+          published: form.published,
           ...(coverImageId && { coverImageId }),
           ...(iconSvg && { iconSvg }),
         });
@@ -176,6 +179,7 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
           description: form.description || undefined,
           slug: form.slug,
           nativeAspectRatio: form.nativeAspectRatio,
+          published: form.published,
           ...(coverImageId && { coverImageId }),
           ...(iconSvg && { iconSvg }),
         });
@@ -242,6 +246,15 @@ export function CollectionForm({ collection, onClose }: CollectionFormProps) {
                 onChange={(e) => setForm({ ...form, nativeAspectRatio: e.target.checked })}
               />
               Native aspect ratio
+            </label>
+
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.published}
+                onChange={(e) => setForm({ ...form, published: e.target.checked })}
+              />
+              Published
             </label>
 
             {/* Cover Image Section */}

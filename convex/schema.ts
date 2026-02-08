@@ -62,9 +62,11 @@ export default defineSchema({
     coverImageId: v.optional(v.id("_storage")),
     iconSvg: v.optional(v.string()),
     nativeAspectRatio: v.optional(v.boolean()),
+    published: v.optional(v.boolean()),
   })
     .index("by_slug", ["slug"])
-    .index("by_order", ["order"]),
+    .index("by_order", ["order"])
+    .index("by_published", ["published"]),
 
   artworkCollections: defineTable({
     artworkId: v.id("artworks"),

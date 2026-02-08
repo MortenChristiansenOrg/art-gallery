@@ -32,7 +32,7 @@ describe("artworks", () => {
         });
       });
 
-      const result = await t.query(api.artworks.list, {});
+      const result = await t.query(api.artworks.list, { publishedOnly: false });
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("Test Artwork");
       expect(result[0].collectionCount).toBe(0);
@@ -48,6 +48,7 @@ describe("artworks", () => {
           name: "Test Collection",
           slug: "test",
           order: 0,
+          published: true,
         });
         const artworkId = await ctx.db.insert("artworks", {
           title: "In Collection",
@@ -72,10 +73,48 @@ describe("artworks", () => {
 
       const result = await t.query(api.artworks.list, {
         collectionId: collectionId!,
+        publishedOnly: false,
       });
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("In Collection");
       expect(result[0].collectionCount).toBe(1);
+    });
+
+    it("excludes unpublished artworks by default", async () => {
+      const t = createTestContext();
+
+      await t.run(async (ctx) => {
+        const storageId = await ctx.storage.store(createTestBlob());
+        await ctx.db.insert("artworks", {
+          title: "Published",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 0,
+          published: true,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworks", {
+          title: "Unpublished",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 1,
+          published: false,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+        await ctx.db.insert("artworks", {
+          title: "No Thumbnail",
+          imageId: storageId,
+          order: 2,
+          published: true,
+          createdAt: Date.now(),
+        });
+      });
+
+      const result = await t.query(api.artworks.list, {});
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe("Published");
     });
 
     it("sorts by order", async () => {
@@ -99,7 +138,7 @@ describe("artworks", () => {
         });
       });
 
-      const result = await t.query(api.artworks.list, {});
+      const result = await t.query(api.artworks.list, { publishedOnly: false });
       expect(result[0].title).toBe("First");
       expect(result[1].title).toBe("Second");
     });
@@ -125,6 +164,27 @@ describe("artworks", () => {
       });
     });
 
+    it("returns null for unpublished artwork by default", async () => {
+      const t = createTestContext();
+
+      let artworkId: Id<"artworks"> | undefined;
+      await t.run(async (ctx) => {
+        const storageId = await ctx.storage.store(createTestBlob());
+        artworkId = await ctx.db.insert("artworks", {
+          title: "Draft",
+          imageId: storageId,
+          thumbnailId: storageId,
+          order: 0,
+          published: false,
+          dziStatus: "complete",
+          createdAt: Date.now(),
+        });
+      });
+
+      const result = await t.query(api.artworks.get, { id: artworkId! });
+      expect(result).toBeNull();
+    });
+
     it("returns artwork by id", async () => {
       const t = createTestContext();
 
@@ -142,6 +202,7 @@ describe("artworks", () => {
 
       const result = await t.query(api.artworks.get, {
         id: artworkId!,
+        publishedOnly: false,
       });
       expect(result?.title).toBe("Test");
     });
@@ -159,6 +220,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -172,13 +234,13 @@ describe("artworks", () => {
 
       expect(id).toBeDefined();
 
-      const artwork = await t.query(api.artworks.get, { id });
+      const artwork = await t.query(api.artworks.get, { id, publishedOnly: false });
       expect(artwork?.title).toBe("New Artwork");
       // collectionId should NOT be on the artwork itself
       expect(artwork?.collectionId).toBeUndefined();
 
       // Verify junction entry
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(1);
       expect(listed[0]._id).toBe(id);
     });
@@ -205,7 +267,7 @@ describe("artworks", () => {
         published: false,
       });
 
-      const artwork = await t.query(api.artworks.get, { id });
+      const artwork = await t.query(api.artworks.get, { id, publishedOnly: false });
       expect(artwork?.order).toBe(6);
     });
 
@@ -251,7 +313,7 @@ describe("artworks", () => {
         published: true,
       });
 
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork?.title).toBe("Updated");
       expect(artwork?.published).toBe(true);
     });
@@ -276,6 +338,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         await ctx.db.insert("artworkCollections", {
           artworkId: artworkId!,
@@ -291,11 +354,11 @@ describe("artworks", () => {
 
       await t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(1));
 
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).toBeNull();
 
       // Junction entries should be cleaned up
-      const listed = await t.query(api.artworks.list, {});
+      const listed = await t.query(api.artworks.list, { publishedOnly: false });
       expect(listed).toHaveLength(0);
 
       vi.useRealTimers();
@@ -321,6 +384,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -330,7 +394,7 @@ describe("artworks", () => {
         collectionId: collectionId!,
       });
 
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(1);
       expect(listed[0]._id).toBe(artworkId!);
     });
@@ -346,6 +410,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artworkId = await ctx.db.insert("artworks", {
           title: "Test",
@@ -388,6 +453,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -412,6 +478,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artwork1Id = await ctx.db.insert("artworks", {
           title: "First",
@@ -440,7 +507,7 @@ describe("artworks", () => {
         collectionId: collectionId!,
       });
 
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(2);
       expect(listed[0].title).toBe("First");
       expect(listed[1].title).toBe("Second");
@@ -459,6 +526,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         artworkId = await ctx.db.insert("artworks", {
           title: "Test",
@@ -481,11 +549,11 @@ describe("artworks", () => {
       });
 
       // Artwork still exists
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).not.toBeNull();
 
       // But not in collection
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(0);
     });
 
@@ -507,6 +575,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
       });
 
@@ -581,6 +650,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         const artworkId = await ctx.db.insert("artworks", {
           title: "Already Added",
@@ -644,8 +714,8 @@ describe("artworks", () => {
         ids: [id2!, id1!],
       });
 
-      const art1 = await t.query(api.artworks.get, { id: id1! });
-      const art2 = await t.query(api.artworks.get, { id: id2! });
+      const art1 = await t.query(api.artworks.get, { id: id1!, publishedOnly: false });
+      const art2 = await t.query(api.artworks.get, { id: id2!, publishedOnly: false });
 
       expect(art1?.order).toBe(1);
       expect(art2?.order).toBe(0);
@@ -664,6 +734,7 @@ describe("artworks", () => {
           name: "Test",
           slug: "test",
           order: 0,
+          published: true,
         });
         id1 = await ctx.db.insert("artworks", {
           title: "First",
@@ -712,6 +783,7 @@ describe("artworks", () => {
 
       const listed = await t.query(api.artworks.list, {
         collectionId: collectionId!,
+        publishedOnly: false,
       });
       expect(listed.map((a) => a.title)).toEqual(["Third", "First", "Second"]);
     });

@@ -14,6 +14,7 @@ export const ensureDefaultCollection = mutation({
       slug: "cabinet-of-curiosities",
       description: "Uncategorized works and experiments",
       order: 0,
+      published: true,
     });
 
     // Bump existing collections' order by 1

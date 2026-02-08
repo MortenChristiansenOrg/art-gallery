@@ -2,9 +2,11 @@ import { useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { CollectionsGrid } from "../components/gallery";
+import { useAuth } from "../lib/auth";
 
 export function Home() {
-  const collections = useQuery(api.collections.listWithCounts);
+  const { isAuthenticated } = useAuth();
+  const collections = useQuery(api.collections.listWithCounts, { publishedOnly: !isAuthenticated });
   const ensureDefault = useMutation(api.init.ensureDefaultCollection);
   const initCalled = useRef(false);
 
