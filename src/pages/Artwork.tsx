@@ -115,7 +115,14 @@ export function Artwork() {
         {/* Full-bleed hero image */}
         <div
           className="relative cursor-zoom-in"
+          style={{ touchAction: 'pan-y' }}
           onClick={() => setViewerOpen(true)}
+          onTouchStart={(e) => {
+            if (e.touches.length >= 2) {
+              e.preventDefault();
+              setViewerOpen(true);
+            }
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === 'Enter' && setViewerOpen(true)}
@@ -157,20 +164,6 @@ export function Artwork() {
             </div>
           )}
 
-          {/* Tap to zoom hint */}
-          <div className="absolute bottom-6 right-4 pointer-events-none">
-            <span className="
-              inline-flex items-center gap-1.5 px-2.5 py-1
-              bg-[var(--color-gallery-text)]/70 text-[var(--color-gallery-surface)]
-              text-[0.65rem] tracking-[0.1em] uppercase font-light
-              backdrop-blur-sm
-            ">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-              </svg>
-              Tap to zoom
-            </span>
-          </div>
         </div>
 
         {/* Info card that overlaps the image */}

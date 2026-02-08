@@ -10,7 +10,13 @@ interface ImageViewerProps {
   onClose: () => void;
 }
 
-export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageViewerProps) {
+export function ImageViewer({
+  imageUrl,
+  dziUrl,
+  title,
+  isOpen,
+  onClose,
+}: ImageViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<OpenSeadragon.Viewer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,13 +61,17 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
     let convexSiteUrl: string | undefined;
     if (convexUrl?.includes(".cloud")) {
       convexSiteUrl = convexUrl.replace(".cloud", ".site");
-    } else if (convexUrl?.includes("127.0.0.1:3210") || convexUrl?.includes("localhost:3210")) {
+    } else if (
+      convexUrl?.includes("127.0.0.1:3210") ||
+      convexUrl?.includes("localhost:3210")
+    ) {
       convexSiteUrl = convexUrl.replace(":3210", ":3211");
     }
     const resolvedImageUrl = rewriteStorageUrl(imageUrl) ?? imageUrl;
-    const tileSources = dziUrl && convexSiteUrl
-      ? `${convexSiteUrl}${dziUrl}`
-      : { type: "image", url: resolvedImageUrl };
+    const tileSources =
+      dziUrl && convexSiteUrl
+        ? `${convexSiteUrl}${dziUrl}`
+        : { type: "image", url: resolvedImageUrl };
 
     // Create viewer
     const viewer = OpenSeadragon({
@@ -145,7 +155,7 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
         bg-[var(--color-gallery-bg)]/[0.97]
         backdrop-blur-sm
         transition-opacity duration-300 ease-[var(--transition-elegant)]
-        ${isClosing ? 'opacity-0' : 'opacity-100'}
+        ${isClosing ? "opacity-0" : "opacity-100"}
       `}
       role="dialog"
       aria-modal="true"
@@ -165,7 +175,7 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
         className={`
           absolute inset-0
           transition-all duration-300 ease-[var(--transition-elegant)]
-          ${isClosing ? 'opacity-90' : 'opacity-100'}
+          ${isClosing ? "opacity-90" : "opacity-100"}
         `}
         data-testid="image-viewer-container"
       />
@@ -185,8 +195,18 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
         aria-label="Close viewer"
         data-testid="close-viewer"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
 
@@ -211,8 +231,18 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
           aria-label="Zoom out"
           data-testid="zoom-out"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M20 12H4"
+            />
           </svg>
         </button>
 
@@ -236,8 +266,18 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
           aria-label="Zoom in"
           data-testid="zoom-in"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         </button>
 
@@ -253,8 +293,18 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
           aria-label="Reset zoom"
           data-testid="reset-zoom"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+            />
           </svg>
         </button>
       </div>
@@ -283,7 +333,7 @@ export function ImageViewer({ imageUrl, dziUrl, title, isOpen, onClose }: ImageV
           font-[var(--font-sans)] font-light
         "
       >
-        <p>Scroll to zoom · Drag to pan</p>
+        <p>Scroll/pinch to zoom · Drag to pan</p>
       </div>
     </div>
   );
