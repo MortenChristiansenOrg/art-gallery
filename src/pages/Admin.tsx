@@ -27,7 +27,7 @@ export function Admin() {
   const [collectionDropPosition, setCollectionDropPosition] = useState<"before" | "after" | null>(null);
   const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
 
-  const collections = useQuery(api.collections.list, {});
+  const collections = useQuery(api.collections.list, { publishedOnly: false });
 
   // Default to first collection if no filter set
   const activeFilter = collectionFilter ?? collections?.[0]?._id ?? null;

@@ -15,6 +15,7 @@ export const list = query({
     publishedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const publishedOnly = args.publishedOnly !== false;
     let artworks;
     if (args.collectionId) {
       // Query junction table to find artworks in this collection
@@ -35,7 +36,7 @@ export const list = query({
         .collect();
     }
 
-    if (args.publishedOnly) {
+    if (publishedOnly) {
       artworks = artworks.filter(
         (a) => a.published && a.thumbnailId && a.dziStatus === "complete"
       );
@@ -73,8 +74,9 @@ export const get = query({
     const artwork = await ctx.db.get(args.id);
     if (!artwork) return null;
 
+    const publishedOnly = args.publishedOnly !== false;
     if (
-      args.publishedOnly &&
+      publishedOnly &&
       (!artwork.published || !artwork.thumbnailId || artwork.dziStatus !== "complete")
     ) {
       return null;

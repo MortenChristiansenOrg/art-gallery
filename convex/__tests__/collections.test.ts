@@ -303,11 +303,11 @@ describe("collections", () => {
       expect(collection).toBeNull();
 
       // Artwork should still exist
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).not.toBeNull();
 
       // But not in any collection (junction entry deleted)
-      const listed = await t.query(api.artworks.list, {});
+      const listed = await t.query(api.artworks.list, { publishedOnly: false });
       expect(listed.find((a) => a._id === artworkId!)?.collectionCount).toBe(0);
     });
   });

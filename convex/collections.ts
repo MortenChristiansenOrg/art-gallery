@@ -8,13 +8,14 @@ export const list = query({
     publishedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const publishedOnly = args.publishedOnly !== false;
     const collections = await ctx.db
       .query("collections")
       .withIndex("by_order")
       .order("asc")
       .collect();
 
-    const filtered = args.publishedOnly
+    const filtered = publishedOnly
       ? collections.filter((c) => c.published !== false)
       : collections;
 
@@ -34,13 +35,14 @@ export const listWithCounts = query({
     publishedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const publishedOnly = args.publishedOnly !== false;
     const collections = await ctx.db
       .query("collections")
       .withIndex("by_order")
       .order("asc")
       .collect();
 
-    const filtered = args.publishedOnly
+    const filtered = publishedOnly
       ? collections.filter((c) => c.published !== false)
       : collections;
 
@@ -53,7 +55,7 @@ export const listWithCounts = query({
         let artworkCount = 0;
         for (const j of junctionEntries) {
           const artwork = await ctx.db.get(j.artworkId);
-          if (args.publishedOnly) {
+          if (publishedOnly) {
             if (artwork && artwork.published !== false && artwork.thumbnailId && artwork.dziStatus === "complete") {
               artworkCount++;
             }
@@ -78,13 +80,14 @@ export const listWithCounts = query({
 export const getBySlug = query({
   args: { slug: v.string(), publishedOnly: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
+    const publishedOnly = args.publishedOnly !== false;
     const collection = await ctx.db
       .query("collections")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
     if (!collection) return null;
-    if (args.publishedOnly && collection.published === false) return null;
+    if (publishedOnly && collection.published === false) return null;
 
     return {
       ...collection,

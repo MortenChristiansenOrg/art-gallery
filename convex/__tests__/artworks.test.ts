@@ -32,7 +32,7 @@ describe("artworks", () => {
         });
       });
 
-      const result = await t.query(api.artworks.list, {});
+      const result = await t.query(api.artworks.list, { publishedOnly: false });
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("Test Artwork");
       expect(result[0].collectionCount).toBe(0);
@@ -73,6 +73,7 @@ describe("artworks", () => {
 
       const result = await t.query(api.artworks.list, {
         collectionId: collectionId!,
+        publishedOnly: false,
       });
       expect(result).toHaveLength(1);
       expect(result[0].title).toBe("In Collection");
@@ -100,7 +101,7 @@ describe("artworks", () => {
         });
       });
 
-      const result = await t.query(api.artworks.list, {});
+      const result = await t.query(api.artworks.list, { publishedOnly: false });
       expect(result[0].title).toBe("First");
       expect(result[1].title).toBe("Second");
     });
@@ -143,6 +144,7 @@ describe("artworks", () => {
 
       const result = await t.query(api.artworks.get, {
         id: artworkId!,
+        publishedOnly: false,
       });
       expect(result?.title).toBe("Test");
     });
@@ -174,13 +176,13 @@ describe("artworks", () => {
 
       expect(id).toBeDefined();
 
-      const artwork = await t.query(api.artworks.get, { id });
+      const artwork = await t.query(api.artworks.get, { id, publishedOnly: false });
       expect(artwork?.title).toBe("New Artwork");
       // collectionId should NOT be on the artwork itself
       expect(artwork?.collectionId).toBeUndefined();
 
       // Verify junction entry
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(1);
       expect(listed[0]._id).toBe(id);
     });
@@ -207,7 +209,7 @@ describe("artworks", () => {
         published: false,
       });
 
-      const artwork = await t.query(api.artworks.get, { id });
+      const artwork = await t.query(api.artworks.get, { id, publishedOnly: false });
       expect(artwork?.order).toBe(6);
     });
 
@@ -253,7 +255,7 @@ describe("artworks", () => {
         published: true,
       });
 
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork?.title).toBe("Updated");
       expect(artwork?.published).toBe(true);
     });
@@ -294,11 +296,11 @@ describe("artworks", () => {
 
       await t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(1));
 
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).toBeNull();
 
       // Junction entries should be cleaned up
-      const listed = await t.query(api.artworks.list, {});
+      const listed = await t.query(api.artworks.list, { publishedOnly: false });
       expect(listed).toHaveLength(0);
 
       vi.useRealTimers();
@@ -334,7 +336,7 @@ describe("artworks", () => {
         collectionId: collectionId!,
       });
 
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(1);
       expect(listed[0]._id).toBe(artworkId!);
     });
@@ -447,7 +449,7 @@ describe("artworks", () => {
         collectionId: collectionId!,
       });
 
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(2);
       expect(listed[0].title).toBe("First");
       expect(listed[1].title).toBe("Second");
@@ -489,11 +491,11 @@ describe("artworks", () => {
       });
 
       // Artwork still exists
-      const artwork = await t.query(api.artworks.get, { id: artworkId! });
+      const artwork = await t.query(api.artworks.get, { id: artworkId!, publishedOnly: false });
       expect(artwork).not.toBeNull();
 
       // But not in collection
-      const listed = await t.query(api.artworks.list, { collectionId: collectionId! });
+      const listed = await t.query(api.artworks.list, { collectionId: collectionId!, publishedOnly: false });
       expect(listed).toHaveLength(0);
     });
 
@@ -654,8 +656,8 @@ describe("artworks", () => {
         ids: [id2!, id1!],
       });
 
-      const art1 = await t.query(api.artworks.get, { id: id1! });
-      const art2 = await t.query(api.artworks.get, { id: id2! });
+      const art1 = await t.query(api.artworks.get, { id: id1!, publishedOnly: false });
+      const art2 = await t.query(api.artworks.get, { id: id2!, publishedOnly: false });
 
       expect(art1?.order).toBe(1);
       expect(art2?.order).toBe(0);
@@ -723,6 +725,7 @@ describe("artworks", () => {
 
       const listed = await t.query(api.artworks.list, {
         collectionId: collectionId!,
+        publishedOnly: false,
       });
       expect(listed.map((a) => a.title)).toEqual(["Third", "First", "Second"]);
     });
