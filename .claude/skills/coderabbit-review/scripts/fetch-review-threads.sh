@@ -165,8 +165,8 @@ print(json.dumps(comments))
 ' 2>"$_review_body_stderr" || { echo "Warning: review-body fetch failed:" >&2; cat "$_review_body_stderr" >&2; echo '[]'; })
 rm -f "$_review_body_stderr"
 
-# 3. Merge both arrays (pipe via stdin to avoid ARG_MAX)
-python3 -c "
+# 3. Merge both arrays
+printf '%s\n%s' "$THREADS" "$REVIEW_BODY_COMMENTS" | python3 -c "
 import json, sys
 decoder = json.JSONDecoder()
 data = sys.stdin.read().strip()
@@ -174,7 +174,4 @@ first, idx = decoder.raw_decode(data)
 rest = data[idx:].strip()
 second = json.loads(rest) if rest else []
 print(json.dumps(first + second, indent=2))
-" <<EOF
-${THREADS}
-${REVIEW_BODY_COMMENTS}
-EOF
+"

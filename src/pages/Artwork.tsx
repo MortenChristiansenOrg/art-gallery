@@ -26,7 +26,7 @@ export function Artwork() {
     id ? { id: id as Id<"artworks">, publishedOnly: !isAuthenticated } : "skip"
   );
 
-  const collections = useQuery(api.collections.list, {});
+  const collections = useQuery(api.collections.list, { publishedOnly: !isAuthenticated });
 
   if (artwork === undefined) {
     return (

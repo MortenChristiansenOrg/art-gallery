@@ -54,7 +54,7 @@ export const listWithCounts = query({
         for (const j of junctionEntries) {
           const artwork = await ctx.db.get(j.artworkId);
           if (args.publishedOnly) {
-            if (artwork?.published && artwork.thumbnailId && artwork.dziStatus === "complete") {
+            if (artwork && artwork.published !== false && artwork.thumbnailId && artwork.dziStatus === "complete") {
               artworkCount++;
             }
           } else {
